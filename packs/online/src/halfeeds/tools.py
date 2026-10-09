@@ -111,7 +111,9 @@ def refresh() -> dict:
             link = kids.get("link")
             href = (link.text or link.get("href") or "") if link is not None else ""
             title = _strip(kids["title"].text) if "title" in kids else href
-            summ = _strip((kids.get("description") or kids.get("summary") or kids.get("content") or ET.Element("x")).text)
+            # An element with no children is falsy, so pick the first present one explicitly.
+            body = next((kids[k] for k in ("description", "summary", "content") if k in kids), None)
+            summ = _strip(body.text if body is not None else "")
             new += con.execute("INSERT OR IGNORE INTO items (link, feed, title, summary, seen) VALUES (?, ?, ?, ?, ?)",
                                (href or title, f["url"], title, summ[:400], datetime.now().isoformat())).rowcount
     con.commit()
