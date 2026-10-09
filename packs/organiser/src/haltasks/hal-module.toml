@@ -1,0 +1,74 @@
+[module]
+name = "tasks"
+summary = "To-do list with due dates, priorities, projects, repeats and reminders, mirrored to the vault"
+python = "haltasks.tools"
+
+[[tools]]
+name = "tasks_add"
+function = "add"
+description = "Add a to-do. Due dates in plain English ('friday', 'tomorrow at 5pm', 'every monday'). Use for things to do; use calendar_add for events at a set time with other people."
+keywords = "todo to-do task chore need to must remember to buy errand"
+[tools.params.title]
+description = "the task"
+required = true
+[tools.params.due]
+description = "when it is due, word for word from the user"
+[tools.params.priority]
+enum = ["high", "normal", "low"]
+[tools.params.tags]
+type = "array"
+[tools.params.project]
+[tools.params.notes]
+[tools.params.repeat]
+description = "for example 'every week'"
+
+[[tools]]
+name = "tasks_list"
+function = "list_tasks"
+description = "List to-dos: open, today (due today or earlier), overdue, upcoming, done (last week) or all."
+keywords = "what do i need to do todo list outstanding"
+[tools.params.which]
+enum = ["open", "today", "overdue", "upcoming", "done", "all"]
+[tools.params.project]
+[tools.params.tag]
+
+[[tools]]
+name = "tasks_done"
+function = "done"
+description = "Mark a to-do done, found by id or words in its title."
+keywords = "finished completed tick off"
+[tools.params.task]
+required = true
+
+[[tools]]
+name = "tasks_undo"
+function = "undo"
+description = "Reopen a to-do marked done by mistake."
+[tools.params.task]
+required = true
+
+[[tools]]
+name = "tasks_edit"
+function = "edit"
+description = "Change a to-do's title, due date, priority, project or notes."
+keywords = "postpone change rename"
+[tools.params.task]
+required = true
+[tools.params.title]
+[tools.params.due]
+[tools.params.priority]
+[tools.params.project]
+[tools.params.notes]
+
+[[tools]]
+name = "tasks_delete"
+function = "delete"
+description = "Delete a to-do for good."
+confirm = true
+[tools.params.task]
+required = true
+
+[[tools]]
+name = "tasks_projects"
+function = "projects"
+description = "List projects with open to-dos."
