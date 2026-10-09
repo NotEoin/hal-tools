@@ -92,8 +92,10 @@ class Client:
             if comps and "VEVENT" not in comps:
                 continue
             name = resp.find(".//d:displayname", NS)
-            out.append({"name": name.text if name is not None and name.text else resp.find("d:href", NS).text,
-                        "href": resp.find("d:href", NS).text})
+            href = resp.find("d:href", NS).text
+            # Servers without display names (Radicale) are named by the last part of the path.
+            out.append({"name": name.text if name is not None and name.text else href.rstrip("/").rsplit("/", 1)[-1],
+                        "href": href})
         return out
 
     def events(self, href: str, start: datetime, end: datetime) -> list[tuple[str, str, str]]:
@@ -139,13 +141,20 @@ def sync() -> dict:
     cfg = settings().get("caldav", {})
     c = client()
     cals = c.calendars()
-    wanted = set(cfg.get("calendars") or [x["name"] for x in cals])
+    wanted = {w.lower() for w in (cfg.get("calendars") or [x["name"] for x in cals])}
     push_to = cfg.get("push_to") or (cals[0]["name"] if cals else None)
     now = datetime.now(timezone.utc)
     pulled = pushed = deleted = 0
     con = store.db()
+    # Deletions go first, so a deleted event is not pulled straight back from the server.
+    for r in con.execute("SELECT uid, href, etag FROM events WHERE deleted = 1").fetchall():
+        if r["href"]:
+            c.delete(r["href"], r["etag"])
+            deleted += 1
+        con.execute("DELETE FROM events WHERE uid = ?", (r["uid"],))
+    con.commit()
     for cal in cals:
-        if cal["name"] not in wanted:
+        if cal["name"].lower() not in wanted:
             continue
         seen = set()
         for href, etag, text in c.events(cal["href"], now - timedelta(days=PAST_DAYS), now + timedelta(days=FUTURE_DAYS)):
@@ -163,7 +172,9 @@ def sync() -> dict:
             if uid not in seen:
                 con.execute("DELETE FROM events WHERE uid = ?", (uid,))
     con.commit()
-    target = next((x for x in cals if x["name"] == push_to), None)
+    want = (push_to or "").lower()
+    target = next((x for x in cals if want in (x["name"].lower(), x["href"].rstrip("/").rsplit("/", 1)[-1].lower())),
+                  None)
     for e in store.dirty():
         if e.href:
             cal_href = e.href.rsplit("/", 1)[0]
@@ -175,10 +186,4 @@ def sync() -> dict:
         e.href, e.etag = c.put(cal_href, e)
         store.save(e, dirty=False)
         pushed += 1
-    for r in con.execute("SELECT uid, href, etag FROM events WHERE deleted = 1").fetchall():
-        if r["href"]:
-            c.delete(r["href"], r["etag"])
-            deleted += 1
-        con.execute("DELETE FROM events WHERE uid = ?", (r["uid"],))
-    con.commit()
     return {"calendars": [x["name"] for x in cals], "pulled": pulled, "pushed": pushed, "deleted": deleted}
