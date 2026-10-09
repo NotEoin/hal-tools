@@ -1,0 +1,9 @@
+[Unit]
+Description=Hal morning briefing
+
+[Timer]
+OnCalendar=*-*-* 07:30
+Unit=hal-briefing@morning.service
+
+[Install]
+WantedBy=timers.target
