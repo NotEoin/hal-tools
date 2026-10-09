@@ -1,0 +1,108 @@
+[module]
+name = "system"
+summary = "The computer: hardware, CPU, memory, disks, GPU, temperatures, processes, services and logs"
+python = "halsys.tools"
+
+[[tools]]
+name = "system_overview"
+function = "overview"
+description = "Summary of the computer now: OS, uptime, CPU and memory use, GPU, disks, battery."
+keywords = "computer pc status health how is my machine specs"
+
+[[tools]]
+name = "system_cpu"
+function = "cpu"
+description = "CPU model, core count, current use and load."
+keywords = "processor load busy"
+
+[[tools]]
+name = "system_memory"
+function = "memory"
+description = "RAM and swap: total, used and available."
+keywords = "ram memory how much"
+
+[[tools]]
+name = "system_disks"
+function = "disks"
+description = "Disks and free space on each mounted drive."
+keywords = "storage space free full drive"
+
+[[tools]]
+name = "system_gpu"
+function = "gpu"
+description = "Graphics card use, VRAM, temperature, power and the programs on it."
+keywords = "graphics card vram nvidia"
+
+[[tools]]
+name = "system_temperatures"
+function = "temperatures"
+description = "Temperatures of the CPU, GPU, drives and board."
+keywords = "hot heat fan thermal"
+
+[[tools]]
+name = "system_processes"
+function = "processes"
+description = "Running programs, top by CPU or memory, optionally matching a name."
+keywords = "running program task manager what is using"
+[tools.params.sort]
+enum = ["cpu", "memory"]
+[tools.params.limit]
+type = "integer"
+[tools.params.name]
+
+[[tools]]
+name = "system_kill"
+function = "kill"
+description = "Stop a program by its process id or name."
+confirm = true
+keywords = "close quit end force stop frozen"
+[tools.params.process]
+required = true
+[tools.params.force]
+type = "boolean"
+
+[[tools]]
+name = "system_services"
+function = "services"
+description = "Background services: the failed ones, or every running user service."
+keywords = "systemd daemon failed broken"
+[tools.params.failed_only]
+type = "boolean"
+
+[[tools]]
+name = "system_service_status"
+function = "service_status"
+description = "State and recent log of one service."
+[tools.params.name]
+required = true
+[tools.params.user]
+type = "boolean"
+
+[[tools]]
+name = "system_service_restart"
+function = "service_restart"
+description = "Restart a service."
+confirm = true
+[tools.params.name]
+required = true
+[tools.params.user]
+type = "boolean"
+
+[[tools]]
+name = "system_logs"
+function = "logs"
+description = "Recent errors (or other priority) from the system and user logs."
+keywords = "error crash journal what went wrong problem"
+[tools.params.since]
+description = "for example '1 hour ago', 'today'"
+[tools.params.priority]
+enum = ["emerg", "alert", "crit", "err", "warning", "info"]
+[tools.params.unit]
+[tools.params.limit]
+type = "integer"
+
+[[tools]]
+name = "system_hardware"
+function = "hardware"
+description = "Hardware inventory: CPU, RAM, graphics, audio, network cards, drives and motherboard."
+keywords = "specs parts components inventory"
