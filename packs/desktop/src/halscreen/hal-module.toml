@@ -1,0 +1,37 @@
+[module]
+name = "screen"
+summary = "Sees the screen with a local vision model: describe it, read its text, explain an error, look at images"
+# PyGObject (screenshots) lives in the system Python, so the hub runs this module there.
+exec = ["/usr/bin/python3", "-m", "halscreen", "--stdin"]
+
+[[tools]]
+name = "screen_describe"
+function = "describe"
+description = "Look at the screen now and answer a question about it, or describe it. Use for 'what's on my screen', 'what am I looking at', 'which window is open'."
+keywords = "screen look see what am i looking at describe display"
+timeout = 300
+[tools.params.question]
+
+[[tools]]
+name = "screen_read_text"
+function = "read_text"
+description = "Read out the text that is on the screen."
+keywords = "read text on screen ocr copy what does it say"
+timeout = 300
+
+[[tools]]
+name = "screen_explain_error"
+function = "explain_error"
+description = "Find the error message on the screen, explain it and suggest a fix."
+keywords = "error message problem broken explain fix crash dialog"
+timeout = 300
+
+[[tools]]
+name = "screen_describe_image"
+function = "describe_image"
+description = "Answer a question about an image file, or describe it."
+keywords = "image photo picture describe"
+timeout = 300
+[tools.params.path]
+required = true
+[tools.params.question]
