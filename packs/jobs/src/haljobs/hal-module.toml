@@ -1,0 +1,58 @@
+[module]
+name = "jobs"
+summary = "The job search: queue, applications, to-dos, inbox and status, through jobhunt and Hal Employment"
+python = "haljobs.tools"
+
+[[tools]]
+name = "jobs_queue"
+function = "queue"
+description = "The jobs ready to apply for, best first, and how many are in reserve."
+keywords = "jobs queue apply vacancies roles applications ready"
+
+[[tools]]
+name = "jobs_applications"
+function = "applications"
+description = "Applications in progress and sent, with their stage (applied, assessment, interview, offer)."
+keywords = "applications applied status interview job search progress"
+
+[[tools]]
+name = "jobs_todo"
+function = "todo"
+description = "The job-search to-do list: assessments, interviews and replies waiting."
+keywords = "job todo assessment interview reply"
+
+[[tools]]
+name = "jobs_check_email"
+function = "check_email"
+description = "Check the job inbox now for replies, invitations and rejections."
+keywords = "job email inbox replies recruiter"
+timeout = 900
+
+[[tools]]
+name = "jobs_digest"
+function = "digest"
+description = "A short spoken summary of where the job search stands."
+keywords = "job search summary update how is it going"
+timeout = 120
+
+[[tools]]
+name = "jobs_stats"
+function = "status_counts"
+description = "Counts of jobs by status and source."
+
+[[tools]]
+name = "jobs_open"
+function = "open_employment"
+description = "Open Hal Employment, the job application app, in the browser."
+keywords = "open job app employment"
+
+[[tools]]
+name = "jobs_mark"
+function = "mark"
+description = "Record an application's progress by job id or name: applied, assessment, interview, offer, rejected, withdrawn."
+keywords = "mark applied rejected interview offer"
+[tools.params.job]
+required = true
+[tools.params.status]
+required = true
+[tools.params.note]
