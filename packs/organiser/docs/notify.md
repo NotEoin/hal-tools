@@ -22,7 +22,7 @@ git clone <url> ~/src/hal-ecosystem/hal-notify
 
 ## Use
 
-The tools run from the module folder, or through hal-hub as `hal notify_<tool>`:
+The tools run from the module folder, or through hal-hub as `hal-hub notify_<tool>`:
 
 ```bash
 cd ~/src/hal-ecosystem/hal-notify
