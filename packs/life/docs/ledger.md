@@ -40,7 +40,7 @@ Settings live in the `[ledger]` table of `~/.config/hal/config.toml`:
 
 ```toml
 [ledger]
-symbol = "£"
+symbol = "\u00a3"   # the pound sign
 [ledger.categories]
 pets = ["vet", "pets at home"]
 ```
