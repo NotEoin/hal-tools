@@ -1,0 +1,8 @@
+[Unit]
+Description=Hal habits evening nudge
+
+[Timer]
+OnCalendar=*-*-* 20:00
+
+[Install]
+WantedBy=timers.target
