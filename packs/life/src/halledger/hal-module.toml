@@ -1,0 +1,75 @@
+[module]
+name = "ledger"
+summary = "Spending, monthly budgets, subscriptions with renewal reminders, and bank statement import"
+python = "halledger.tools"
+
+[[tools]]
+name = "ledger_spend"
+function = "spend"
+description = "Record money spent: amount and what it was for ('12.50 lunch'). The category is worked out unless given."
+keywords = "spent paid bought cost money expense pounds"
+[tools.params.amount]
+required = true
+[tools.params.note]
+[tools.params.category]
+[tools.params.day]
+
+[[tools]]
+name = "ledger_summary"
+function = "summary"
+description = "Spending for this month (or YYYY-MM) by category, against budgets."
+keywords = "spending how much spent this month budget money summary"
+[tools.params.month]
+
+[[tools]]
+name = "ledger_recent"
+function = "recent"
+description = "The most recent spending entries."
+[tools.params.limit]
+type = "integer"
+
+[[tools]]
+name = "ledger_budget"
+function = "budget"
+description = "Set a monthly budget for a category, such as eating out 150."
+keywords = "budget limit monthly"
+[tools.params.category]
+required = true
+[tools.params.amount]
+required = true
+
+[[tools]]
+name = "ledger_subscription"
+function = "subscription"
+description = "Record a subscription, its cost, how often it renews and the next payment date."
+keywords = "subscription renew netflix spotify membership"
+[tools.params.name]
+required = true
+[tools.params.amount]
+required = true
+[tools.params.period]
+enum = ["weekly", "monthly", "yearly"]
+[tools.params.next_payment]
+description = "YYYY-MM-DD"
+
+[[tools]]
+name = "ledger_subscriptions"
+function = "subscriptions"
+description = "Every subscription with its next renewal, and the total monthly and yearly cost."
+keywords = "subscriptions how much do i pay"
+
+[[tools]]
+name = "ledger_cancel_subscription"
+function = "cancel_subscription"
+description = "Stop tracking a subscription."
+[tools.params.name]
+required = true
+
+[[tools]]
+name = "ledger_import"
+function = "import_csv"
+description = "Import a bank statement CSV; categories are worked out and repeats skipped."
+keywords = "bank statement import csv"
+timeout = 300
+[tools.params.path]
+required = true
