@@ -1,0 +1,41 @@
+# hal-clock
+
+hal-clock gives Hal timers, alarms, a stopwatch and Pomodoro sessions. When one goes off, Hal says
+so aloud and the alert reaches your phone and desktop, even during quiet hours.
+
+## Highlights
+
+- Timers with names and natural lengths: "9 minutes", "1h30", "an hour and a half", "2:30".
+- Alarms at a time, one-off or repeating ("every weekday at 7"), and snooze.
+- A stopwatch with laps, and Pomodoro sessions that announce each break and return to work.
+- A one-second daemon, so timers fire on time; state lives in SQLite and survives restarts.
+
+## Install
+
+hal-clock needs Python 3.11 or later; alerts go through hal-notify when it is installed.
+
+```bash
+git clone <url> ~/src/hal-ecosystem/hal-clock
+ln -s ~/src/hal-ecosystem/hal-clock/systemd/hal-clock.service ~/.config/systemd/user/
+systemctl --user enable --now hal-clock.service
+```
+
+## Use
+
+The tools run from the module folder, or through hal-hub as `hal-hub clock_<tool>`:
+
+```bash
+cd ~/src/hal-ecosystem/hal-clock
+python3 -m halclock timer duration="9 minutes" label=pasta
+python3 -m halclock alarm when_text="every weekday at 7am" label="Wake up"
+python3 -m halclock pomodoro action=start work=25 rest=5 rounds=4
+python3 -m halclock list
+```
+
+## Configuration
+
+hal-clock has no settings of its own; alerts follow hal-notify's channels.
+
+## Licence
+
+MIT. See [LICENSE](LICENSE).

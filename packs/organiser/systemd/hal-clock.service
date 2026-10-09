@@ -1,0 +1,14 @@
+[Unit]
+Description=Hal clock: fires timers, alarms and Pomodoro changes
+After=graphical-session.target
+
+[Service]
+WorkingDirectory=%h/src/hal-ecosystem/hal-clock
+ExecStart=/usr/bin/python3 -m halclock.daemon
+Environment=PYTHONUNBUFFERED=1
+Environment=PATH=%h/.local/bin:/usr/local/bin:/usr/bin:/bin
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=graphical-session.target
