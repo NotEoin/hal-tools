@@ -47,8 +47,10 @@ def _connect(a: dict) -> imaplib.IMAP4_SSL:
 def _decode(value: str | None) -> str:
     if not value:
         return ""
-    text = "".join(p.decode(enc or "utf-8", errors="replace") if isinstance(p, bytes) else p
-                   for p, enc in email.header.decode_header(value))
+    try:
+        text = str(email.header.make_header(email.header.decode_header(value)))
+    except (LookupError, UnicodeDecodeError):
+        text = value
     return re.sub(r"\s+", " ", text).strip()
 
 
