@@ -1,0 +1,72 @@
+[module]
+name = "contacts"
+summary = "People: contact details, birthdays (added to the calendar), interaction log and who you have not spoken to"
+python = "halcontacts.tools"
+
+[[tools]]
+name = "contacts_add"
+function = "add"
+description = "Add a person or fill in their details: email, phone, birthday, relationship, company, notes. A birthday also goes in the calendar every year."
+keywords = "contact person add phone number email birthday friend family"
+timeout = 60
+[tools.params.name]
+required = true
+[tools.params.email]
+[tools.params.phone]
+[tools.params.birthday]
+description = "for example '3 March' or 1999-03-03"
+[tools.params.relationship]
+[tools.params.company]
+[tools.params.notes]
+
+[[tools]]
+name = "contacts_get"
+function = "get"
+description = "Everything known about a person: details, notes and the log of interactions."
+keywords = "who is phone number email of person contact details"
+[tools.params.name]
+required = true
+
+[[tools]]
+name = "contacts_find"
+function = "find"
+description = "Find people by words in their name, details or notes ('works at Google', 'from uni')."
+keywords = "find person who contact search"
+[tools.params.query]
+required = true
+
+[[tools]]
+name = "contacts_log"
+function = "log"
+description = "Record that you spoke to or saw someone, with a note, so Hal remembers when and what."
+keywords = "spoke to saw met called caught up with"
+[tools.params.name]
+required = true
+[tools.params.note]
+required = true
+[tools.params.when]
+description = "YYYY-MM-DD; today by default"
+
+[[tools]]
+name = "contacts_birthdays"
+function = "birthdays"
+description = "Birthdays coming up in the next N days."
+keywords = "birthday upcoming birthdays"
+[tools.params.days]
+type = "integer"
+
+[[tools]]
+name = "contacts_stale"
+function = "stale"
+description = "People you have not been in touch with for a while."
+keywords = "lost touch catch up haven't spoken"
+[tools.params.days]
+type = "integer"
+
+[[tools]]
+name = "contacts_import"
+function = "import_vcard"
+description = "Import contacts from a .vcf file exported from a phone, Google or iCloud."
+timeout = 600
+[tools.params.path]
+required = true
