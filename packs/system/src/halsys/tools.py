@@ -67,7 +67,7 @@ def memory() -> dict:
 def disks() -> list[dict]:
     """Mounted filesystems with size and free space (real disks only)."""
     out = []
-    for line in _run("df", "-B1", "-x", "tmpfs", "-x", "devtmpfs", "-x", "squashfs", "-x", "overlay",
+    for line in _run("df", "-B1", "-x", "tmpfs", "-x", "devtmpfs", "-x", "squashfs", "-x", "overlay", "-x", "efivarfs",
                      "--output=source,fstype,size,used,avail,pcent,target").splitlines()[1:]:
         p = line.split()
         if len(p) >= 7 and not p[6].startswith(("/snap", "/boot/efi")):
