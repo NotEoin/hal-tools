@@ -28,7 +28,7 @@ systemctl --user enable --now hal-calendar-reminders.service
 
 ## Use
 
-The tools run from the module folder, or through hal-hub as `hal calendar_<tool>`:
+The tools run from the module folder, or through hal-hub as `hal-hub calendar_<tool>`:
 
 ```bash
 cd ~/src/hal-ecosystem/hal-calendar

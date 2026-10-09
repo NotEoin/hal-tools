@@ -12,7 +12,7 @@ keywords = "appointment meeting schedule book remind event diary"
 description = "what the event is"
 required = true
 [tools.params.when_text]
-description = "when, in plain words"
+description = "when, copied word for word from what the user said, including 'next', 'this' and the time"
 [tools.params.duration_minutes]
 type = "integer"
 [tools.params.location]

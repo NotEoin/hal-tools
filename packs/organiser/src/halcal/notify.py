@@ -11,7 +11,7 @@ from .config import _file
 
 def notify(title: str, body: str = "", urgent: bool = False, speak: bool = False) -> None:
     """Sends a notification; never raises."""
-    hal = shutil.which("hal")
+    hal = shutil.which("hal-hub")
     if hal:
         args = [hal, "notify_send", f"title={title}", f"body={body}", f"urgent={urgent}", f"speak={speak}"]
         try:
