@@ -1,0 +1,84 @@
+[module]
+name = "mail"
+summary = "Email over IMAP: unread, search, read and summarise (read-only), drafts, and sending with confirmation"
+python = "halmail.tools"
+
+[[tools]]
+name = "mail_unread"
+function = "unread"
+description = "Unread emails in the inbox, newest first: sender, subject and date. Reading does not mark them read."
+keywords = "email mail inbox unread new messages"
+timeout = 60
+[tools.params.account]
+[tools.params.limit]
+type = "integer"
+
+[[tools]]
+name = "mail_search"
+function = "search"
+description = "Find emails from the last N days by words in the sender, subject or text."
+keywords = "find email search mail from about"
+timeout = 90
+[tools.params.query]
+required = true
+[tools.params.account]
+[tools.params.days]
+type = "integer"
+[tools.params.limit]
+type = "integer"
+
+[[tools]]
+name = "mail_read"
+function = "read"
+description = "Read one email in full, by its id from mail_unread or mail_search."
+timeout = 60
+[tools.params.message_id]
+required = true
+[tools.params.account]
+
+[[tools]]
+name = "mail_summarise"
+function = "summarise"
+description = "A short summary of the unread mail: who wrote and what needs a reply."
+keywords = "summarise inbox email summary anything important"
+timeout = 180
+[tools.params.account]
+[tools.params.limit]
+type = "integer"
+
+[[tools]]
+name = "mail_draft"
+function = "draft"
+description = "Write an email or reply and save it in Drafts for the user to check and send."
+keywords = "draft reply write email compose"
+timeout = 60
+[tools.params.to]
+required = true
+[tools.params.subject]
+required = true
+[tools.params.body]
+required = true
+[tools.params.account]
+[tools.params.reply_to]
+description = "Message-ID being replied to"
+
+[[tools]]
+name = "mail_send"
+function = "send"
+description = "Send an email now."
+confirm = true
+keywords = "send email"
+timeout = 60
+[tools.params.to]
+required = true
+[tools.params.subject]
+required = true
+[tools.params.body]
+required = true
+[tools.params.account]
+[tools.params.reply_to]
+
+[[tools]]
+name = "mail_accounts"
+function = "accounts"
+description = "The email accounts Hal can read."
