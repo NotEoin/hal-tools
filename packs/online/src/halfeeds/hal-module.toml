@@ -1,0 +1,62 @@
+[module]
+name = "feeds"
+summary = "Read-later list with summaries, and RSS or Atom subscriptions with what's new"
+python = "halfeeds.tools"
+
+[[tools]]
+name = "feeds_save"
+function = "save"
+description = "Save a link to read later, optionally with a short summary."
+keywords = "read later save link bookmark article"
+timeout = 180
+[tools.params.url]
+required = true
+[tools.params.summarise]
+type = "boolean"
+
+[[tools]]
+name = "feeds_reading_list"
+function = "reading_list"
+description = "The read-later list."
+keywords = "reading list saved articles"
+[tools.params.include_read]
+type = "boolean"
+
+[[tools]]
+name = "feeds_mark_read"
+function = "mark_read"
+description = "Mark a saved link or feed item as read."
+[tools.params.item]
+required = true
+
+[[tools]]
+name = "feeds_subscribe"
+function = "subscribe"
+description = "Subscribe to an RSS or Atom feed (a blog, podcast, YouTube channel or news feed URL)."
+keywords = "subscribe follow rss feed blog"
+timeout = 60
+[tools.params.url]
+required = true
+[tools.params.name]
+
+[[tools]]
+name = "feeds_unsubscribe"
+function = "unsubscribe"
+description = "Unsubscribe from a feed."
+[tools.params.name]
+required = true
+
+[[tools]]
+name = "feeds_list"
+function = "feeds"
+description = "Subscribed feeds with their unread counts."
+
+[[tools]]
+name = "feeds_whats_new"
+function = "whats_new"
+description = "Unread items across subscriptions (blogs, podcasts, channels), newest first."
+keywords = "what's new updates new posts blogs podcasts episodes"
+timeout = 120
+[tools.params.limit]
+type = "integer"
+[tools.params.feed]
