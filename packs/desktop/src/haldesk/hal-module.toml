@@ -1,7 +1,8 @@
 [module]
 name = "desktop"
 summary = "Launch apps, open files and links, sound, theme, night light, wallpaper, clipboard, screenshots and the session"
-python = "haldesk.tools"
+# PyGObject (screenshots) lives in the system Python, so the hub runs this module there.
+exec = ["/usr/bin/python3", "-m", "haldesk", "--stdin"]
 
 [[tools]]
 name = "desktop_launch"
