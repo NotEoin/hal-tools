@@ -40,7 +40,9 @@ def _weather(day_index: int) -> str | None:
     d = w["days"][day_index]
     now = w["now"]
     lead = f"It's {round(now['temperature_c'])} degrees and {now['sky']} now. " if day_index == 0 else ""
-    rain = f", with a {d['rain_chance']} percent chance of rain" if d.get("rain_chance") else ""
+    chance = d.get("rain_chance")
+    article = "an" if str(chance).startswith("8") or chance in (11, 18) else "a"
+    rain = f", with {article} {chance} percent chance of rain" if chance else ""
     when = "Today" if day_index == 0 else "Tomorrow"
     return f"{lead}{when}: {d['sky']}, {round(d['low_c'])} to {round(d['high_c'])} degrees{rain}."
 
