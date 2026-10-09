@@ -1,0 +1,14 @@
+[Unit]
+Description=Hal routines: scheduled scenes and event triggers
+After=graphical-session.target
+
+[Service]
+WorkingDirectory=%h/src/hal-ecosystem/hal-routines
+ExecStart=/usr/bin/python3 -m halroutines.daemon
+Environment=PYTHONUNBUFFERED=1
+Environment=PATH=%h/.local/bin:/usr/local/bin:/usr/bin:/bin
+Restart=on-failure
+RestartSec=15
+
+[Install]
+WantedBy=graphical-session.target
