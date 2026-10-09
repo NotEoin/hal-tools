@@ -299,10 +299,20 @@ def world_time(place: str = "") -> dict:
         now = datetime.now().astimezone()
         return {"place": "here", "time": now.strftime("%H:%M"), "date": now.strftime("%A %-d %B")}
     zone = next((z for z in available_timezones() if z.lower().endswith("/" + place.lower().replace(" ", "_"))), None)
+    offset = None
     if zone is None:
         loc = _place(place)
-        zone = _json(f"https://api.open-meteo.com/v1/forecast?latitude={loc['latitude']}&longitude={loc['longitude']}"
-                     "&timezone=auto&current=temperature_2m")["timezone"]
-    now = datetime.now(ZoneInfo(zone))
+        d = _json(f"https://api.open-meteo.com/v1/forecast?latitude={loc['latitude']}&longitude={loc['longitude']}"
+                  "&timezone=auto&current=temperature_2m")
+        zone, offset = d["timezone"], d["utc_offset_seconds"]
+    try:
+        now = datetime.now(ZoneInfo(zone))
+    except Exception:  # noqa: BLE001 - some Pythons ship without the zone database; use the live offset
+        if offset is None:
+            loc = _place(place)
+            offset = _json(f"https://api.open-meteo.com/v1/forecast?latitude={loc['latitude']}"
+                           f"&longitude={loc['longitude']}&timezone=auto&current=temperature_2m")["utc_offset_seconds"]
+        from datetime import timedelta, timezone
+        now = datetime.now(timezone(timedelta(seconds=offset)))
     return {"place": place, "zone": zone, "time": now.strftime("%H:%M"), "date": now.strftime("%A %-d %B"),
             "utc_offset": now.strftime("%z")}
