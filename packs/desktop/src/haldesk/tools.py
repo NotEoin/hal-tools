@@ -205,8 +205,12 @@ def clipboard(text: str | None = None) -> dict:
     raise RuntimeError("install wl-clipboard (sudo apt install wl-clipboard) to read the clipboard")
 
 
-def screenshot(path: str = "") -> dict:
-    """Takes a screenshot of the whole screen through the desktop portal and saves it."""
+def _portal_shot(interactive: bool) -> str | None:
+    """Asks the desktop portal for a screenshot; returns its file path, or None if refused.
+
+    GNOME refuses silent screenshots to unsandboxed programs, so callers retry
+    with interactive=True, which shows GNOME's own Share dialog.
+    """
     import gi
     gi.require_version("Gio", "2.0")
     from gi.repository import Gio, GLib
@@ -215,12 +219,11 @@ def screenshot(path: str = "") -> dict:
     token = f"hal{int(time.time() * 1000)}"
     sender = bus.get_unique_name()[1:].replace(".", "_")
     handle = f"/org/freedesktop/portal/desktop/request/{sender}/{token}"
-    loop = GLib.MainLoop()
-    result: dict = {}
+    loop, result = GLib.MainLoop(), {}
 
-    def on_response(_conn, _sender, _path, _iface, _signal, params):
-        code, results = params.unpack()
-        result.update(code=code, uri=results.get("uri"))
+    def on_response(_c, _s, _p, _i, _sig, params):
+        code, res = params.unpack()
+        result.update(code=code, uri=res.get("uri"))
         loop.quit()
 
     sub = bus.signal_subscribe("org.freedesktop.portal.Desktop", "org.freedesktop.portal.Request", "Response",
@@ -228,17 +231,29 @@ def screenshot(path: str = "") -> dict:
     bus.call_sync("org.freedesktop.portal.Desktop", "/org/freedesktop/portal/desktop",
                   "org.freedesktop.portal.Screenshot", "Screenshot",
                   GLib.Variant("(sa{sv})", ("", {"handle_token": GLib.Variant("s", token),
-                                                 "interactive": GLib.Variant("b", False)})),
+                                                 "interactive": GLib.Variant("b", interactive)})),
                   None, Gio.DBusCallFlags.NONE, 10000, None)
-    GLib.timeout_add_seconds(30, loop.quit)
+    GLib.timeout_add_seconds(60 if interactive else 15, loop.quit)
     loop.run()
     bus.signal_unsubscribe(sub)
     if result.get("code") != 0 or not result.get("uri"):
-        raise RuntimeError("the screenshot was refused or timed out; allow Hal screenshots when GNOME asks")
-    src = Path(Gio.File.new_for_uri(result["uri"]).get_path())
+        return None
+    return Gio.File.new_for_uri(result["uri"]).get_path()
+
+
+def _shoot() -> str:
+    """Returns a fresh screenshot's path, asking GNOME's permission dialog if a silent one is refused."""
+    path = _portal_shot(False) or _portal_shot(True)
+    if not path:
+        raise RuntimeError("the screenshot was refused; press Share when GNOME asks")
+    return path
+
+
+def screenshot(path: str = "") -> dict:
+    """Takes a screenshot of the whole screen through the desktop portal and saves it."""
     dest = Path(path).expanduser() if path else data_dir() / f"screen-{datetime.now():%Y%m%d-%H%M%S}.png"
     dest.parent.mkdir(parents=True, exist_ok=True)
-    shutil.move(str(src), dest)
+    shutil.move(_shoot(), dest)
     return {"saved": str(dest)}
 
 
