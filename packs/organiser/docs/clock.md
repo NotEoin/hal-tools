@@ -12,12 +12,13 @@ so aloud and the alert reaches your phone and desktop, even during quiet hours.
 
 ## Install
 
-hal-clock needs Python 3.11 or later; alerts go through hal-notify when it is installed.
+hal-clock needs Python 3.11 or later; alerts go through hal-notify when it is installed. It lives in
+`extensions/hal-clock` and is installed by the ecosystem installer, which renders the units in
+`systemd/` into `~/.config/systemd/user` (replacing `@ROOT@` with this folder) and starts them with
+`hal.target`:
 
 ```bash
-git clone <url> ~/src/hal-ecosystem/hal-clock
-ln -s ~/src/hal-ecosystem/hal-clock/systemd/hal-clock.service ~/.config/systemd/user/
-systemctl --user enable --now hal-clock.service
+hal ext add clock
 ```
 
 ## Use
@@ -25,7 +26,7 @@ systemctl --user enable --now hal-clock.service
 The tools run from the module folder, or through hal-hub as `hal-hub clock_<tool>`:
 
 ```bash
-cd ~/src/hal-ecosystem/hal-clock
+cd ~/src/hal-ecosystem/extensions/hal-clock
 python3 -m halclock timer duration="9 minutes" label=pasta
 python3 -m halclock alarm when_text="every weekday at 7am" label="Wake up"
 python3 -m halclock pomodoro action=start work=25 rest=5 rounds=4
