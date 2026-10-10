@@ -58,6 +58,14 @@ class TasksTest(unittest.TestCase):
             self.t.undo("Buy batteries")
         self.assertEqual(self.t.done("emailed my landlord")["done"], "Email the landlord")
 
+    def test_an_open_task_wins_over_a_done_one_with_the_same_title(self):
+        self.t.add("Buy batteries")
+        self.t.done("bought the batteries")
+        self.t.add("Buy batteries")
+        self.assertEqual(self.t.done("bought the batteries")["done"], "Buy batteries")
+        self.assertEqual(self.t.list_tasks()["count"], 0)
+        self.assertEqual(self.t.undo("batteries")["reopened"], "Buy batteries")
+
     def test_ids_are_exact(self):
         first = self.t.add("Water plants")["added"]["id"]
         self.t.add("Water the garden")

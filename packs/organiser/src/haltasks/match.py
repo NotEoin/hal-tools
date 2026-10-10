@@ -82,19 +82,19 @@ def best(task: str, rows: list, prefer_open: bool = True):
     """Picks the row `task` means from rows with 'id', 'title' and 'done'; raises ValueError
     naming the candidates when none or several fit."""
     q = query_words(task)
-    scored = []
-    for r in rows:
-        s = score(q, r["title"])
-        if s > 0:
-            # Open tasks are meant when completing or editing; done ones when reopening.
-            s += 0.15 if bool(r["done"]) != prefer_open else 0
-            scored.append((s, r))
+    scored = [(s, r) for r in rows if (s := score(q, r["title"])) > 0]
+    # Open tasks are meant when completing or editing, done ones when reopening: a done
+    # "Buy batteries" from last week does not compete with today's open one.
+    preferred = [(s, r) for s, r in scored if bool(r["done"]) != prefer_open]
+    scored = preferred or scored
     scored.sort(key=lambda x: (-x[0], -x[1]["id"]))
     if not scored:
         raise ValueError(f"no task matching {task!r}")
-    if len(scored) > 1 and scored[0][0] - scored[1][0] < CLEAR_MARGIN:
-        close = [r for s, r in scored if scored[0][0] - s < CLEAR_MARGIN][:5]
-        raise ValueError(f"{len(close)} tasks could be {task!r}: "
-                         + "; ".join(f"#{r['id']} {r['title']}" + (" (done)" if r["done"] else "") for r in close)
-                         + ". Ask which one, then call again with its id.")
-    return scored[0][1]
+    close = [r for s, r in scored if scored[0][0] - s < CLEAR_MARGIN]
+    if len({r["title"].strip().lower() for r in close}) == 1:
+        # Copies of one task are interchangeable: take the newest, or the last one completed.
+        return max(close, key=lambda r: (r["done"] or "", r["id"]))
+    close = close[:5]
+    raise ValueError(f"{len(close)} tasks could be {task!r}: "
+                     + "; ".join(f"#{r['id']} {r['title']}" + (" (done)" if r["done"] else "") for r in close)
+                     + ". Ask which one, then call again with its id.")
