@@ -12,7 +12,7 @@ import sqlite3
 from datetime import date, datetime, timedelta
 from pathlib import Path
 
-from . import when
+from . import match, when
 from .config import data_dir, settings, vault
 
 PRIORITY = {"high": 1, "urgent": 1, "normal": 2, "medium": 2, "low": 3}
@@ -36,17 +36,15 @@ def _row(r: sqlite3.Row) -> dict:
             "notes": r["notes"] or "", "done": r["done"]}
 
 
-def _find(con, task: str) -> sqlite3.Row:
-    if str(task).isdigit():
-        r = con.execute("SELECT * FROM tasks WHERE id = ?", (int(task),)).fetchone()
+def _find(con, task: str, prefer_open: bool = True) -> sqlite3.Row:
+    """Returns the task `task` names: by id, else by its words (see match.py)."""
+    n = match.task_id(task)
+    if n is not None:
+        r = con.execute("SELECT * FROM tasks WHERE id = ?", (n,)).fetchone()
         if r:
             return r
-    words = str(task).lower().split()
-    rows = [r for r in con.execute("SELECT * FROM tasks ORDER BY done IS NOT NULL, id DESC")
-            if all(w in r["title"].lower() for w in words)]
-    if not rows:
-        raise ValueError(f"no task matching {task!r}")
-    return rows[0]
+    rows = con.execute("SELECT * FROM tasks ORDER BY done IS NOT NULL, id DESC").fetchall()
+    return match.best(str(task), rows, prefer_open)
 
 
 def add(title: str, due: str = "", priority: str = "normal", tags: list[str] | None = None,
@@ -129,7 +127,7 @@ def _next(due: datetime, rrule: str) -> datetime:
 
 def undo(task: str) -> dict:
     con = _db()
-    r = _find(con, task)
+    r = _find(con, task, prefer_open=False)
     con.execute("UPDATE tasks SET done = NULL WHERE id = ?", (r["id"],))
     con.commit()
     mirror()

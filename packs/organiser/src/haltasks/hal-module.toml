@@ -35,22 +35,22 @@ enum = ["open", "today", "overdue", "upcoming", "done", "all"]
 [[tools]]
 name = "tasks_done"
 function = "done"
-description = "Mark a to-do done, found by id or words in its title."
-keywords = "finished completed tick off"
+description = "Mark a to-do done. The task is found by its id or by the user's own words for it ('I've bought the batteries' finds 'Buy batteries'); if several fit, the error lists them: ask which."
+keywords = "finished completed tick off done bought did"
 [tools.params.task]
 required = true
 
 [[tools]]
 name = "tasks_undo"
 function = "undo"
-description = "Reopen a to-do marked done by mistake."
+description = "Reopen a to-do marked done by mistake, found by its id or the user's words for it."
 [tools.params.task]
 required = true
 
 [[tools]]
 name = "tasks_edit"
 function = "edit"
-description = "Change a to-do's title, due date, priority, project or notes."
+description = "Change a to-do's title, due date, priority, project or notes; the to-do is found by its id or the user's words for it."
 keywords = "postpone change rename"
 [tools.params.task]
 required = true
@@ -63,7 +63,7 @@ required = true
 [[tools]]
 name = "tasks_delete"
 function = "delete"
-description = "Delete a to-do for good."
+description = "Delete a to-do for good, found by its id or the user's words for it."
 confirm = true
 [tools.params.task]
 required = true

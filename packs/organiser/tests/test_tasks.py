@@ -46,5 +46,53 @@ class TasksTest(unittest.TestCase):
             self.t.done("nothing like this")
 
 
+    def test_due_time_with_a_part_of_the_day(self):
+        self.assertEqual(self.t.add("Call mum", due="7 tomorrow morning")["added"]["due"][11:], "07:00")
+        self.assertEqual(self.t.add("Put the bins out", due="tonight at 8")["added"]["due"][11:], "20:00")
+
+    def test_done_from_the_users_own_words(self):
+        self.t.add("Buy batteries")
+        self.t.add("Email the landlord")
+        for said in ("bought the batteries", "I've bought the batteries, tick that off", "batteries", "buy battery"):
+            self.assertEqual(self.t.done(said)["done"], "Buy batteries", said)
+            self.t.undo("Buy batteries")
+        self.assertEqual(self.t.done("emailed my landlord")["done"], "Email the landlord")
+
+    def test_ids_are_exact(self):
+        first = self.t.add("Water plants")["added"]["id"]
+        self.t.add("Water the garden")
+        for said in (str(first), f"#{first}", f"task {first}"):
+            self.assertEqual(self.t.done(said)["done"], "Water plants")
+            self.t.undo(str(first))
+
+    def test_ambiguous_words_list_the_candidates(self):
+        self.t.add("Water plants")
+        self.t.add("Water the garden")
+        with self.assertRaises(ValueError) as err:
+            self.t.done("watering")
+        self.assertIn("Water plants", str(err.exception))
+        self.assertIn("Water the garden", str(err.exception))
+        self.assertEqual(self.t.list_tasks()["count"], 2)
+
+    def test_edit_delete_and_undo_use_the_same_matching(self):
+        self.t.add("Renew passport")
+        self.t.add("Book dentist")
+        self.assertEqual(self.t.edit("renewing my passport", priority="high")["edited"]["priority"], "high")
+        self.t.done("renewed the passport")
+        self.t.add("Renew car insurance")
+        self.assertEqual(self.t.undo("the passport")["reopened"], "Renew passport")
+        self.assertEqual(self.t.delete("booking the dentist")["deleted"], "Book dentist")
+
+    def test_dates_in_the_words_are_ignored(self):
+        self.t.add("Call the bank", due="friday")
+        self.assertEqual(self.t.done("called the bank on friday")["done"], "Call the bank")
+
+    def test_stems(self):
+        from haltasks.match import stem
+        for a, b in [("bought", "buy"), ("batteries", "battery"), ("ticking", "tick"), ("shopping", "shop"),
+                     ("called", "call"), ("made", "make"), ("running", "run"), ("adding", "add")]:
+            self.assertEqual(stem(a), stem(b), (a, b))
+
+
 if __name__ == "__main__":
     unittest.main()
