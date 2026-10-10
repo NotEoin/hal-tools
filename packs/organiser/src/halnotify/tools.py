@@ -1,7 +1,7 @@
 """hal-notify's tools: send an alert everywhere it should go, honouring quiet hours and do-not-disturb.
 
 Channels: ntfy phone push, the desktop's notification daemon, HAL's voice
-(hal-say) and Telegram (the token and chat that old-home's bridge pairs).
+(hal-voice's hal-say) and Telegram (the token and chat that hal-telegram pairs).
 Every alert is kept in a history table. Stdlib only.
 """
 from __future__ import annotations
@@ -19,6 +19,8 @@ from pathlib import Path
 from .config import data_dir, settings
 
 TELEGRAM_DIR = Path("~/.config/hal").expanduser()
+# hal-voice's speaker, beside this module in the ecosystem's extensions folder.
+HAL_SAY = Path(__file__).resolve().parents[2] / "hal-voice" / "bin" / "hal-say"
 
 
 def _db() -> sqlite3.Connection:
@@ -73,7 +75,7 @@ def _ntfy(title: str, body: str, urgent: bool, silent: bool, url: str = "") -> b
 
 
 def _speak(title: str, body: str) -> bool:
-    say = shutil.which("hal-say") or str(Path("~/src/old-home/bin/hal-say").expanduser())
+    say = shutil.which("hal-say") or str(HAL_SAY)
     if not Path(say).exists():
         return False
     try:

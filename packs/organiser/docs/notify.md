@@ -8,7 +8,7 @@ a history.
 
 - One call reaches every channel you configure; each module that alerts uses it when it is installed.
 - Quiet hours (22:00 to 08:00 by default) and do-not-disturb silence phone pushes and speech; urgent alerts still sound.
-- Spoken alerts through old-home's `hal-say`, and Telegram through the chat old-home's bridge pairs.
+- Spoken alerts through hal-voice's `hal-say`, and Telegram through the chat hal-telegram pairs.
 - A history of every alert sent and the channels it reached.
 
 ## Install
