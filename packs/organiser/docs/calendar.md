@@ -6,8 +6,11 @@ Calendar included.
 
 ## Highlights
 
-- "Dentist thursday at 10", "standup every weekday at 9:30 for 15 minutes", "Sam's birthday 3 March":
-  dates, times, lengths and repeats read from plain English, UK style.
+- "Dentist thursday at 10", "standup every weekday at 9:30 for 15 minutes", "Sam's birthday 3 March",
+  "tomorrow from 2 till 3:30pm": dates, times, ranges, lengths and repeats read from plain English, UK
+  style. A bare hour from 1 to 7 is the afternoon unless the morning is named.
+- Events are found from loose words: "delete the pottery class on Friday" finds "Pottery class" on
+  that day, and when several events fit, Hal is told which so it can ask.
 - Reminders at any lead time through hal-notify (phone push, desktop, HAL's voice), with a desktop
   and ntfy fallback when hal-notify is not installed.
 - Clash warnings, free-slot search within working hours, and agendas for any range.
