@@ -1,0 +1,17 @@
+[Unit]
+Description=Hal Employment: job queue, applications and to-dos on http://127.0.0.1:8737
+PartOf=hal.target
+After=network-online.target graphical-session.target
+# Its worker screens jobs and drafts application packs with the local model.
+X-HalGPU=yes
+
+[Service]
+WorkingDirectory=@ROOT@
+# Runs jobhunt serve in [jobs].jobhunt_root, with that checkout's virtualenv.
+ExecStart=@ROOT@/bin/hal-employment-serve
+Environment=PYTHONUNBUFFERED=1
+Restart=on-failure
+RestartSec=10
+
+[Install]
+WantedBy=hal.target
