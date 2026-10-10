@@ -1,6 +1,6 @@
 """hal-jobs' tools: the job search, through jobhunt's command line and Hal Employment's API.
 
-jobhunt lives in its own repository (configured as [jobs].jobhunt); this module
+jobhunt lives in its own repository (configured as [jobs].jobhunt_root); this module
 only calls it, so it holds no job data itself. Applications are still made in
 Hal Employment, where every submit is pressed by the owner.
 """
@@ -15,9 +15,10 @@ from .config import settings
 
 
 def _jobhunt(*args: str, timeout: float = 600) -> str:
-    root = Path(settings()["jobhunt"]).expanduser()
+    s = settings()
+    root = Path(s.get("jobhunt_root") or s["jobhunt"]).expanduser()
     if not (root / "jobhunt").is_dir():
-        raise RuntimeError(f"jobhunt not found at {root}; set [jobs].jobhunt")
+        raise RuntimeError(f"jobhunt not found at {root}; set [jobs].jobhunt_root")
     done = subprocess.run(["/usr/bin/python3", "-m", "jobhunt", *args], cwd=root, capture_output=True, text=True,
                           timeout=timeout)
     if done.returncode:
