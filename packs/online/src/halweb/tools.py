@@ -293,11 +293,16 @@ def calculate(expression: str) -> dict:
     return {"expression": expression, "result": round(value, 10) if isinstance(value, float) else value}
 
 
+def _spoken(now) -> str:
+    """Returns the time as it is said ("8:29 pm"), so a model never converts 24-hour time itself."""
+    return f"{now.hour % 12 or 12}:{now:%M} {'am' if now.hour < 12 else 'pm'}"
+
+
 def world_time(place: str = "") -> dict:
     """The time now in a city or time zone (or here)."""
     if not place:
         now = datetime.now().astimezone()
-        return {"place": "here", "time": now.strftime("%H:%M"), "date": now.strftime("%A %-d %B")}
+        return {"place": "here", "time": now.strftime("%H:%M"), "spoken": _spoken(now), "date": now.strftime("%A %-d %B")}
     zone = next((z for z in available_timezones() if z.lower().endswith("/" + place.lower().replace(" ", "_"))), None)
     offset = None
     if zone is None:
@@ -314,5 +319,5 @@ def world_time(place: str = "") -> dict:
                            f"&longitude={loc['longitude']}&timezone=auto&current=temperature_2m")["utc_offset_seconds"]
         from datetime import timedelta, timezone
         now = datetime.now(timezone(timedelta(seconds=offset)))
-    return {"place": place, "zone": zone, "time": now.strftime("%H:%M"), "date": now.strftime("%A %-d %B"),
+    return {"place": place, "zone": zone, "time": now.strftime("%H:%M"), "spoken": _spoken(now), "date": now.strftime("%A %-d %B"),
             "utc_offset": now.strftime("%z")}
