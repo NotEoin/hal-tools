@@ -15,12 +15,12 @@ marks the task done.
 
 ## Install
 
-hal-tasks needs Python 3.11 or later and nothing from PyPI.
+hal-tasks needs Python 3.11 or later and nothing from PyPI. It lives in `extensions/hal-tasks` and
+is installed by the ecosystem installer, which renders the units in `systemd/` into
+`~/.config/systemd/user` (replacing `@ROOT@` with this folder) and starts them with `hal.target`:
 
 ```bash
-git clone <url> ~/src/hal-ecosystem/hal-tasks
-ln -s ~/src/hal-ecosystem/hal-tasks/systemd/hal-tasks-reminders.service ~/.config/systemd/user/
-systemctl --user enable --now hal-tasks-reminders.service
+hal ext add tasks
 ```
 
 ## Use
@@ -28,7 +28,7 @@ systemctl --user enable --now hal-tasks-reminders.service
 The tools run from the module folder, or through hal-hub as `hal-hub tasks_<tool>`:
 
 ```bash
-cd ~/src/hal-ecosystem/hal-tasks
+cd ~/src/hal-ecosystem/extensions/hal-tasks
 python3 -m haltasks add title="Buy milk tomorrow"
 python3 -m haltasks add title="Water the plants" due="every monday at 9" project=Home
 python3 -m haltasks list which=today
