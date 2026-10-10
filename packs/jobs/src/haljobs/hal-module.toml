@@ -49,10 +49,63 @@ keywords = "open job app employment"
 [[tools]]
 name = "jobs_mark"
 function = "mark"
-description = "Record an application's progress by job id or name: applied, assessment, interview, offer, rejected, withdrawn."
-keywords = "mark applied rejected interview offer"
+description = "Record a job's progress by job id or name: shortlisted, applied, assessment, interview, offer, rejected, withdrawn, or skipped (discarded)."
+keywords = "mark applied rejected interview offer shortlisted skipped discard"
 [tools.params.job]
+description = "job id, or any unique part of it"
 required = true
 [tools.params.status]
+description = "the job's new stage"
+required = true
+enum = ["shortlisted", "applied", "assessment", "interview", "offer", "rejected", "withdrawn", "skipped"]
+[tools.params.note]
+description = "optional note recorded with the change"
+
+[[tools]]
+name = "jobs_status"
+function = "status_digest"
+description = "The written job-search status digest: what needs you, new strong matches and counts by stage, as text (nothing is emailed)."
+keywords = "job search status digest pipeline what needs me written summary"
+timeout = 120
+
+[[tools]]
+name = "jobs_matches"
+function = "matches"
+description = "The best unreviewed job matches, best first, with their scores, notes and job ids for shortlisting or discarding."
+keywords = "jobs matches new unreviewed best vacancies ids shortlist"
+[tools.params.min_score]
+type = "number"
+description = "lowest score to include (default 60)"
+[tools.params.limit]
+type = "integer"
+description = "how many to list (default 8)"
+
+[[tools]]
+name = "jobs_shortlist"
+function = "shortlist"
+description = "Shortlist a job by id or name: mark it worth applying for, so its application pack is drafted next."
+keywords = "shortlist job apply worth it keep"
+[tools.params.job]
+description = "job id, or any unique part of it"
 required = true
 [tools.params.note]
+description = "optional note recorded with the change"
+
+[[tools]]
+name = "jobs_todo_add"
+function = "todo_add"
+description = "Add an item to the job-search to-do list, and return the list."
+keywords = "job todo add task remind follow up"
+[tools.params.text]
+description = "what needs doing"
+required = true
+
+[[tools]]
+name = "jobs_pack"
+function = "pack"
+description = "Draft the application pack (CV, cover letter, answers) for one job by id with the local model; takes several minutes. Returns the pack's files."
+keywords = "application pack draft cover letter cv job"
+timeout = 1800
+[tools.params.job]
+description = "job id, or any unique part of it"
+required = true

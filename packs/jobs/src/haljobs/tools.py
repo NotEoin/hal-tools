@@ -13,6 +13,8 @@ from pathlib import Path
 
 from .config import settings
 
+PACK_TIMEOUT = 1800     # seconds; drafting a pack runs the local model and searches the web
+
 
 def _jobhunt(*args: str, timeout: float = 600) -> str:
     s = settings()
@@ -78,8 +80,39 @@ def open_employment() -> dict:
 
 
 def mark(job: str, status: str, note: str = "") -> str:
-    """Records an application's progress: applied, assessment, interview, offer, rejected, withdrawn."""
-    allowed = {"applied", "assessment", "interview", "offer", "rejected", "withdrawn", "skipped"}
+    """Records a job's progress: shortlisted, applied, assessment, interview, offer, rejected, withdrawn, skipped."""
+    allowed = {"shortlisted", "applied", "assessment", "interview", "offer", "rejected", "withdrawn", "skipped"}
     if status not in allowed:
         raise ValueError(f"status must be one of {', '.join(sorted(allowed))}")
     return _jobhunt("set", job, status, *([note] if note else []))
+
+
+def status_digest() -> str:
+    """The written status digest: what needs attention, new matches and the pipeline (printed, not emailed)."""
+    return _jobhunt("digest", "--dry-run", timeout=120)
+
+
+def matches(min_score: float = 60, limit: int = 8) -> str:
+    """The best unreviewed matches, best first, each with its id."""
+    return _jobhunt("list", "-m", f"{min_score:g}", "-n", str(int(limit)))
+
+
+def shortlist(job: str, note: str = "") -> str:
+    """Marks a job as worth applying for, so its pack is drafted next."""
+    return mark(job, "shortlisted", note)
+
+
+def todo_add(text: str) -> str:
+    """Adds an item to the job-search to-do list; returns the list."""
+    text = text.strip()
+    if not text:
+        raise ValueError("the to-do needs some text")
+    return _jobhunt("todo", "add", "--", text)
+
+
+def pack(job: str) -> dict:
+    """Drafts the application pack for one job; returns the pack's files and jobhunt's output."""
+    output = _jobhunt("pack", job, timeout=PACK_TIMEOUT)
+    pack_md = next((Path(l.strip()) for l in output.splitlines() if l.strip().endswith("pack.md")), None)
+    files = [pack_md, *sorted(pack_md.parent.glob("*.pdf"))] if pack_md and pack_md.exists() else []
+    return {"pack": str(pack_md) if pack_md else None, "files": [str(f) for f in files], "output": output[-1500:]}

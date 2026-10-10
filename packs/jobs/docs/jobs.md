@@ -1,15 +1,17 @@
 # hal-jobs
 
-hal-jobs connects Hal to the job search: the application queue, applications by stage, the job
-to-do list, the job inbox and a spoken summary, through jobhunt's command line and the Hal
-Employment web app.
+hal-jobs connects Hal to the job search: new matches, the application queue, applications by
+stage, the job to-do list, the job inbox, application packs and written or spoken summaries,
+through jobhunt's command line and the Hal Employment web app.
 
 ## Highlights
 
 - Holds no job data: it calls jobhunt and Hal Employment, so they stay the single source of truth.
 - The queue and applications from Hal Employment's API, with jobhunt as the fallback.
 - Checks the job inbox on request and reads out what needs attention.
-- Records progress (applied, interview, offer, rejected) by job id or name.
+- Lists the best unreviewed matches with their ids, and records progress (shortlisted, applied,
+  interview, offer, rejected) by job id or name.
+- Adds to the job to-do list, and drafts a job's application pack on request.
 - Opens Hal Employment, where every application is still submitted by its owner.
 - Runs Hal Employment as a service, with a desktop launcher that starts it on demand.
 
@@ -39,6 +41,20 @@ python3 -m haljobs queue
 python3 -m haljobs digest
 python3 -m haljobs mark job=acme status=interview
 ```
+
+| Tool | Does | jobhunt |
+| --- | --- | --- |
+| `jobs_queue` | Jobs ready to apply for, best first | Hal Employment API, else `queue` |
+| `jobs_applications` | Applications by stage | Hal Employment API, else `list -s all` |
+| `jobs_matches` | Best unreviewed matches, with ids | `list -m 60 -n 8` |
+| `jobs_status` | The written status digest (not emailed) | `digest --dry-run` |
+| `jobs_digest` | A short spoken summary | `digest --spoken` |
+| `jobs_stats` | Counts by status and source | `stats` |
+| `jobs_todo`, `jobs_todo_add` | The to-do list, or add to it | `todo`, `todo add` |
+| `jobs_mark`, `jobs_shortlist` | Record a job's progress | `set ID STATUS` |
+| `jobs_pack` | Draft a job's application pack (up to 30 minutes) | `pack ID` |
+| `jobs_check_email` | Sync the job inbox | `mail -q` |
+| `jobs_open` | Open Hal Employment | |
 
 ## Configuration
 
