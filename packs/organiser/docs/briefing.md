@@ -14,12 +14,13 @@ phone and writes it into the day's note in the vault.
 
 ## Install
 
-hal-briefing needs Python 3.11 or later and hal-hub on the `PATH`; hal-notify delivers it.
+hal-briefing needs Python 3.11 or later and hal-hub on the `PATH`; hal-notify delivers it. It lives
+in `extensions/hal-briefing` and is installed by the ecosystem installer, which renders the units in
+`systemd/` into `~/.config/systemd/user` (replacing `@ROOT@` with this folder) and starts them with
+`hal.target`:
 
 ```bash
-git clone <url> ~/src/hal-ecosystem/hal-briefing
-ln -s ~/src/hal-ecosystem/hal-briefing/systemd/* ~/.config/systemd/user/
-systemctl --user enable --now hal-briefing-morning.timer hal-briefing-evening.timer
+hal ext add briefing
 ```
 
 ## Use
@@ -27,7 +28,7 @@ systemctl --user enable --now hal-briefing-morning.timer hal-briefing-evening.ti
 The tools run from the module folder, or through hal-hub as `hal-hub briefing_<tool>`:
 
 ```bash
-cd ~/src/hal-ecosystem/hal-briefing
+cd ~/src/hal-ecosystem/extensions/hal-briefing
 python3 -m halbrief build kind=morning
 python3 -m halbrief brief kind=evening speak=false
 ```

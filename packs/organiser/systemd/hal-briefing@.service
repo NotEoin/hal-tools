@@ -3,6 +3,6 @@ Description=Hal %i briefing: spoken, pushed and saved to the daily note
 
 [Service]
 Type=oneshot
-WorkingDirectory=%h/src/hal-ecosystem/hal-briefing
+WorkingDirectory=@ROOT@
 Environment=PATH=%h/.local/bin:/usr/local/bin:/usr/bin:/bin
 ExecStart=/usr/bin/python3 -m halbrief brief kind=%i
