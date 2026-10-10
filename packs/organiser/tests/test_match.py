@@ -48,6 +48,13 @@ class MatchTest(Base):
         self.assertEqual(moved["start"], "2026-10-11T15:00")
         self.assertEqual(len(self.t.find("haircut")), 1)
 
+    def test_move_ignores_a_copy_already_at_the_new_time(self):
+        self.add("Haircut", "sunday at 3pm")
+        self.add("Haircut", "saturday at 10am")
+        moved = self.t.move("my haircut", "Sunday at 3pm")["moved"]
+        self.assertEqual(moved["start"], "2026-10-11T15:00")
+        self.assertEqual([o["start"] for o in self.t.find("haircut")], ["2026-10-11T15:00", "2026-10-11T15:00"])
+
     def test_uid_is_exact(self):
         uid = self.add("Pottery class", "friday at 6pm")["uid"]
         self.assertEqual(self.t.delete(uid)["deleted"], "Pottery class")

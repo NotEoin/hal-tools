@@ -90,13 +90,16 @@ def describe(occ: dict) -> str:
     return f"{occ['title']} ({datetime.fromisoformat(occ['start']):%a %-d %b} {when_}, id {occ['uid']})"
 
 
-def resolve(event: str, now: datetime | None = None) -> store.Event:
+def resolve(event: str, now: datetime | None = None, not_at: str = "") -> store.Event:
     """Returns the event `event` names, by uid or by its words; raises ValueError naming the
-    candidates when none or several fit."""
+    candidates when none or several fit. `not_at` ('2026-10-11T15:00') sets aside events already
+    starting then, as a move never means the copy already at the new time."""
     e = store.get(str(event).strip())
     if e:
         return e
     ranked = rank(str(event), now)
+    if not_at:
+        ranked = [x for x in ranked if x[1]["start"] != not_at] or ranked
     if not ranked:
         raise ValueError(f"no event matching {event!r}")
     if len(ranked) > 1 and ranked[0][0] - ranked[1][0] < CLEAR_MARGIN:

@@ -111,7 +111,9 @@ def delete(event: str) -> dict:
 
 
 def move(event: str, when_text: str) -> dict:
-    e = _resolve(event)
+    target = when.parse(when_text, _now())
+    e = match.resolve(event, _now(), "" if target.start is None or target.all_day
+                      else target.start.isoformat(timespec="minutes"))
     w = when.parse(when_text, _now(), default_time=e.start.time() if not e.all_day else None)
     if w.start is None:
         raise ValueError(f"cannot read {when_text!r}")
