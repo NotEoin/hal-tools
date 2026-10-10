@@ -1,0 +1,22 @@
+[Unit]
+Description=Hal Telegram bridge
+PartOf=hal.target
+After=network-online.target
+ConditionPathExists=%h/.config/hal/telegram-token
+X-HalGPU=yes
+
+[Service]
+WorkingDirectory=@ROOT@
+# hal-voice's virtualenv has faster-whisper for voice notes; without it the bridge is text only.
+Environment=HAL_TELEGRAM_PYTHON=@ECOSYSTEM@/extensions/hal-voice/.venv/bin/python
+Environment=HAL_CORE=@CORE@
+# hal-voice's virtualenv Python has no CA bundle of its own.
+Environment=SSL_CERT_FILE=/etc/ssl/certs/ca-certificates.crt
+Environment=PYTHONUNBUFFERED=1
+Environment=PATH=%h/.npm-global/bin:%h/.local/bin:/usr/local/bin:/usr/bin:/bin
+ExecStart=@ROOT@/bin/hal-telegram
+Restart=on-failure
+RestartSec=15
+
+[Install]
+WantedBy=hal.target
