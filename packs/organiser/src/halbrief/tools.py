@@ -1,4 +1,4 @@
-"""hal-briefing's tools: morning and evening briefings assembled from the other modules.
+"""hal-briefing's tools: morning, evening and job-search briefings assembled from the other modules.
 
 Each part (weather, calendar, tasks, job search, headlines, system health) is
 fetched through the hal-hub command, so a module that is not installed simply
@@ -90,13 +90,15 @@ def _health() -> str | None:
 
 
 def build(kind: str = "morning") -> str:
-    """Assembles a morning or evening briefing and returns its text."""
+    """Assembles a morning, evening or job-search briefing and returns its text."""
     name = settings()["name"]
     hour = datetime.now().hour
     greeting = "Good morning" if hour < 12 else "Good afternoon" if hour < 18 else "Good evening"
     parts = [f"{greeting}, {name}. It is {datetime.now():%A %-d %B}."]
     if kind == "morning":
         steps = [lambda: _weather(0), lambda: _agenda("today"), _tasks, lambda: _hub("jobs_digest"), _news, _health]
+    elif kind == "jobs":
+        steps = [lambda: _hub("jobs_digest")]
     else:
         steps = [lambda: _agenda("tomorrow"), _tasks, lambda: _weather(1), lambda: _hub("jobs_digest")]
     for step in steps:

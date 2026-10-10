@@ -13,6 +13,12 @@ class BriefingTest(unittest.TestCase):
         text = tools.build("morning")
         self.assertTrue(text.startswith("Good "))
 
+    def test_job_search_update(self):
+        tools._hub = lambda tool, **k: "Good morning. Two applications are waiting." if tool == "jobs_digest" else None
+        text = tools.build("jobs")
+        self.assertTrue(text.endswith("Two applications are waiting."))
+        self.assertEqual(text.count("Good "), 1)
+
 
 if __name__ == "__main__":
     unittest.main()

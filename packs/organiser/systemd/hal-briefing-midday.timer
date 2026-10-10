@@ -1,0 +1,10 @@
+[Unit]
+Description=Hal midday job-search update
+PartOf=hal.target
+
+[Timer]
+OnCalendar=*-*-* 13:00
+Unit=hal-briefing@jobs.service
+
+[Install]
+WantedBy=hal.target

@@ -10,7 +10,9 @@ phone and writes it into the day's note in the vault.
 - Written to be spoken: short sentences, no lists or symbols.
 - Morning: weather, today's events, tasks, job search, headlines, computer health.
 - Evening: tomorrow's events, tasks still open, tomorrow's weather, job search.
-- Timers for 07:30 and 18:00, and on demand: "Hal, brief me."
+- Midday: a short job-search update (`kind=jobs`), from hal-jobs.
+- Timers for 07:30, 13:00 and 18:00, and on demand: "Hal, brief me."
+- Waits for HAL's voice server when it is still starting after login, so the first briefing is heard.
 
 ## Install
 
@@ -31,6 +33,7 @@ The tools run from the module folder, or through hal-hub as `hal-hub briefing_<t
 cd ~/src/hal-ecosystem/extensions/hal-briefing
 python3 -m halbrief build kind=morning
 python3 -m halbrief brief kind=evening speak=false
+python3 -m halbrief build kind=jobs
 ```
 
 ## Configuration
@@ -42,7 +45,7 @@ Settings live in the `[briefing]` table of `~/.config/hal/config.toml`:
 name = "Dave"      # how the briefing addresses you
 ```
 
-Change the times by editing the two timer units.
+Change the times by editing the timer units in `systemd/` and reinstalling them.
 
 ## Licence
 

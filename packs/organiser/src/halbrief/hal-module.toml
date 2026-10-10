@@ -6,11 +6,11 @@ python = "halbrief.tools"
 [[tools]]
 name = "briefing_build"
 function = "build"
-description = "Put together a morning or evening briefing (weather, calendar, tasks, job search, headlines) and return it to read out."
+description = "Put together a morning or evening briefing (weather, calendar, tasks, job search, headlines), or a job-search update (kind jobs), and return it to read out."
 keywords = "briefing morning summary my day today overview what's happening update"
 timeout = 300
 [tools.params.kind]
-enum = ["morning", "evening"]
+enum = ["morning", "evening", "jobs"]
 
 [[tools]]
 name = "briefing_deliver"
@@ -18,7 +18,7 @@ function = "brief"
 description = "Deliver a briefing now: spoken aloud, pushed to the phone and saved in the daily note."
 timeout = 300
 [tools.params.kind]
-enum = ["morning", "evening"]
+enum = ["morning", "evening", "jobs"]
 [tools.params.speak]
 type = "boolean"
 [tools.params.push]
