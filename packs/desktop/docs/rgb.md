@@ -14,12 +14,13 @@ listening).
 
 ## Install
 
-hal-rgb needs Python 3.11 or later and OpenRGB with its SDK server running:
+hal-rgb needs Python 3.11 or later and OpenRGB with its SDK server running. It lives in
+`extensions/hal-rgb` and is installed by the ecosystem installer, which renders the units in
+`systemd/` into `~/.config/systemd/user` (replacing `@ROOT@` with this folder) and starts them with
+`hal.target`:
 
 ```bash
-git clone <url> ~/src/hal-ecosystem/hal-rgb
-ln -s ~/src/hal-ecosystem/hal-rgb/systemd/hal-rgb-server.service ~/.config/systemd/user/
-systemctl --user enable --now hal-rgb-server.service
+hal ext add rgb
 ```
 
 ## Use
@@ -27,7 +28,7 @@ systemctl --user enable --now hal-rgb-server.service
 The tools run from the module folder, or through hal-hub as `hal-hub rgb_<tool>`:
 
 ```bash
-cd ~/src/hal-ecosystem/hal-rgb
+cd ~/src/hal-ecosystem/extensions/hal-rgb
 python3 -m halrgb devices
 python3 -m halrgb colour colour="warm white" brightness=40
 python3 -m halrgb effect effect=rainbow device=gpu
