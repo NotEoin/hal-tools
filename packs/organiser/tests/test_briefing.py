@@ -20,5 +20,12 @@ class BriefingTest(unittest.TestCase):
         self.assertEqual(text.count("Good "), 1)
 
 
+
+class TimerTest(unittest.TestCase):
+    def test_morning_briefing_comes_after_quiet_hours(self):
+        timer = (Path(__file__).resolve().parents[1] / "systemd" / "hal-briefing-morning.timer").read_text()
+        self.assertIn("OnCalendar=*-*-* 08:05", timer)
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -3,7 +3,7 @@ Description=Hal morning briefing
 PartOf=hal.target
 
 [Timer]
-OnCalendar=*-*-* 07:30
+OnCalendar=*-*-* 08:05
 Unit=hal-briefing@morning.service
 
 [Install]

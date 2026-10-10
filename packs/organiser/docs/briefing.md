@@ -11,7 +11,8 @@ phone and writes it into the day's note in the vault.
 - Morning: weather, today's events, tasks, job search, headlines, computer health.
 - Evening: tomorrow's events, tasks still open, tomorrow's weather, job search.
 - Midday: a short job-search update (`kind=jobs`), from hal-jobs.
-- Timers for 07:30, 13:00 and 18:00, and on demand: "Hal, brief me."
+- Timers for 08:05, 13:00 and 18:00, and on demand: "Hal, brief me." The morning one runs at 08:05
+  so it falls after quiet hours (hal-notify's `quiet_until`, 08:00 by default) and is spoken.
 - Waits for HAL's voice server when it is still starting after login, so the first briefing is heard.
 
 ## Install
