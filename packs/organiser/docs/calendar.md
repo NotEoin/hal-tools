@@ -17,13 +17,12 @@ Calendar included.
 
 ## Install
 
-hal-calendar needs Python 3.11 or later and nothing from PyPI. Clone it into your ecosystem folder
-and start the reminder daemon:
+hal-calendar needs Python 3.11 or later and nothing from PyPI. It lives in `extensions/hal-calendar`
+and is installed by the ecosystem installer, which renders the units in `systemd/` into
+`~/.config/systemd/user` (replacing `@ROOT@` with this folder) and starts them with `hal.target`:
 
 ```bash
-git clone <url> ~/src/hal-ecosystem/hal-calendar
-ln -s ~/src/hal-ecosystem/hal-calendar/systemd/hal-calendar-reminders.service ~/.config/systemd/user/
-systemctl --user enable --now hal-calendar-reminders.service
+hal ext add calendar
 ```
 
 ## Use
@@ -31,7 +30,7 @@ systemctl --user enable --now hal-calendar-reminders.service
 The tools run from the module folder, or through hal-hub as `hal-hub calendar_<tool>`:
 
 ```bash
-cd ~/src/hal-ecosystem/hal-calendar
+cd ~/src/hal-ecosystem/extensions/hal-calendar
 python3 -m halcal add title="Dentist" when_text="thursday at 10" location="Shoreditch"
 python3 -m halcal add title="Gym every monday and wednesday at 7am for an hour"
 python3 -m halcal agenda span="next 7 days"

@@ -1,9 +1,10 @@
 [Unit]
 Description=Hal calendar: event reminders by push, desktop and voice, and CalDAV sync
+PartOf=hal.target
 After=network-online.target graphical-session.target
 
 [Service]
-WorkingDirectory=%h/src/hal-ecosystem/hal-calendar
+WorkingDirectory=@ROOT@
 ExecStart=/usr/bin/python3 -m halcal.reminders
 Environment=PYTHONUNBUFFERED=1
 Environment=PATH=%h/.local/bin:/usr/local/bin:/usr/bin:/bin
@@ -11,4 +12,4 @@ Restart=on-failure
 RestartSec=15
 
 [Install]
-WantedBy=graphical-session.target
+WantedBy=hal.target
