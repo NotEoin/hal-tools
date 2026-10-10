@@ -13,12 +13,12 @@ slept seven hours" and it is logged; an evening nudge lists what is still to do.
 
 ## Install
 
-hal-habits needs Python 3.11 or later.
+hal-habits needs Python 3.11 or later. It lives in `extensions/hal-habits` and is installed by the
+ecosystem installer, which renders the units in `systemd/` into `~/.config/systemd/user` (replacing
+`@ROOT@` with this folder) and starts them with `hal.target`:
 
 ```bash
-git clone <url> ~/src/hal-ecosystem/hal-habits
-ln -s ~/src/hal-ecosystem/hal-habits/systemd/* ~/.config/systemd/user/
-systemctl --user enable --now hal-habits-nudge.timer
+hal ext add habits
 ```
 
 ## Use
@@ -26,7 +26,7 @@ systemctl --user enable --now hal-habits-nudge.timer
 The tools run from the module folder, or through hal-hub as `hal-hub habits_<tool>`:
 
 ```bash
-cd ~/src/hal-ecosystem/hal-habits
+cd ~/src/hal-ecosystem/extensions/hal-habits
 python3 -m halhabits create name=water target=8 unit=glasses
 python3 -m halhabits log name=water
 python3 -m halhabits mood score=4 note="good run"
