@@ -14,12 +14,12 @@ each renews; bank statement CSVs are imported in one go.
 
 ## Install
 
-hal-ledger needs Python 3.11 or later.
+hal-ledger needs Python 3.11 or later. It lives in `extensions/hal-ledger` and is installed by the
+ecosystem installer, which renders the units in `systemd/` into `~/.config/systemd/user` (replacing
+`@ROOT@` with this folder) and starts them with `hal.target`:
 
 ```bash
-git clone <url> ~/src/hal-ecosystem/hal-ledger
-ln -s ~/src/hal-ecosystem/hal-ledger/systemd/* ~/.config/systemd/user/
-systemctl --user enable --now hal-ledger-remind.timer
+hal ext add ledger
 ```
 
 ## Use
@@ -27,7 +27,7 @@ systemctl --user enable --now hal-ledger-remind.timer
 The tools run from the module folder, or through hal-hub as `hal-hub ledger_<tool>`:
 
 ```bash
-cd ~/src/hal-ecosystem/hal-ledger
+cd ~/src/hal-ecosystem/extensions/hal-ledger
 python3 -m halledger spend amount=12.50 note="lunch at Pret"
 python3 -m halledger budget category="eating out" amount=150
 python3 -m halledger subscription name=Spotify amount=11.99 period=monthly next_payment=2026-11-02

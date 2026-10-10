@@ -3,6 +3,6 @@ Description=Hal ledger: subscription renewal reminders
 
 [Service]
 Type=oneshot
-WorkingDirectory=%h/src/hal-ecosystem/hal-ledger
+WorkingDirectory=@ROOT@
 Environment=PATH=%h/.local/bin:/usr/local/bin:/usr/bin:/bin
 ExecStart=/usr/bin/python3 -m halledger.remind
