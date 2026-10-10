@@ -1,44 +1,61 @@
 """hal-calendar's tools, as declared in hal-module.toml."""
 from __future__ import annotations
 
+import re
 from datetime import date, datetime, time, timedelta
 from pathlib import Path
 
-from . import ics, store, when
+from . import ics, match, store, when
 from .config import config_path, settings
 
 
+def _now() -> datetime:
+    return datetime.now().replace(second=0, microsecond=0)
+
+
+def _label(d0: date, days: int, today: date) -> str:
+    fmt = "%A %-d %B" if d0.year == today.year else "%A %-d %B %Y"
+    return f"{d0:{fmt}}" + (f" + {days - 1} days" if days > 1 else "")
+
+
 def _range(span: str) -> tuple[datetime, datetime, str]:
-    """Turns 'today', 'tomorrow', 'week', 'next 3 days', a weekday or a date into a time range."""
-    today = date.today()
-    s = (span or "today").strip().lower()
-    if s in ("today", ""):
+    """Turns 'today', 'tomorrow', 'this weekend', 'week', 'next 3 days', a weekday or a date such as
+    '3 March 2031', 'the 3rd of March 2031' or '2031-03-03' into a time range."""
+    now = _now()
+    today = now.date()
+    s = re.sub(r"[?.!]+$", "", (span or "today").strip().lower())
+    s = re.sub(r"^(?:on|for|in|during|over)\s+", "", s)
+    if s in ("today", "", "now"):
         d0, days = today, 1
     elif s == "tomorrow":
         d0, days = today + timedelta(days=1), 1
-    elif s in ("week", "this week", "7 days"):
+    elif s in ("week", "this week", "7 days", "the week", "next 7 days"):
         d0, days = today, 7
     elif s == "next week":
         d0, days = today + timedelta(days=7 - today.weekday()), 7
-    elif s in ("month", "this month", "30 days"):
+    elif s in ("weekend", "this weekend", "the weekend"):
+        d0 = today + timedelta(days=(5 - today.weekday()) % 7 if today.weekday() < 6 else 0)    # Saturday, or today
+        days = 2 if d0.weekday() == 5 else 1
+    elif s in ("month", "this month", "30 days", "next 30 days"):
         d0, days = today, 30
-    elif s.startswith("next ") and s.split()[1].isdigit():
+    elif re.fullmatch(r"next \d+ days?", s):
         d0, days = today, int(s.split()[1])
     else:
-        w = when.parse(s)
+        w = when.parse(s, now)
         if w.start is None:
-            raise ValueError(f"cannot read the range {span!r}")
+            raise ValueError(f"cannot read the range {span!r}; say a day ('friday', '3 March 2031') "
+                             "or a span ('this week', 'next 5 days')")
         d0, days = w.start.date(), 1
     start = datetime.combine(d0, time())
-    return start, start + timedelta(days=days), f"{d0:%A %-d %B}" + (f" + {days - 1} days" if days > 1 else "")
+    return start, start + timedelta(days=days), _label(d0, days, today)
 
 
 def add(title: str, when_text: str = "", duration_minutes: int = 0, location: str = "", notes: str = "",
         reminders: list[int] | None = None, repeat: str = "") -> dict:
     """Adds an event; the time may be in `when_text` or in the title itself."""
-    w = when.parse(f"{when_text} {repeat}".strip() or title, default_time=None)
+    w = when.parse(f"{when_text} {repeat}".strip() or title, _now(), default_time=None)
     if w.start is None and when_text:
-        w = when.parse(f"{title} {when_text}")
+        w = when.parse(f"{title} {when_text}", _now())
     if w.start is None:
         raise ValueError("no date or time found; say when, for example 'thursday at 10'")
     name = title if when_text else (w.rest or title)
@@ -55,30 +72,36 @@ def add(title: str, when_text: str = "", duration_minutes: int = 0, location: st
 
 
 def agenda(span: str = "today") -> dict:
+    """Lists the events in a day or range; says plainly when there are none."""
     start, end, label = _range(span)
     items = store.between(start, end)
-    return {"range": label, "events": [{"time": "all day" if o["all_day"] else o["start"][11:16] + "-" + o["end"][11:16],
-                                        "date": o["start"][:10], "title": o["title"], "location": o["location"],
-                                        "uid": o["uid"]} for o in items]}
+    out = {"range": label, "events": [{"time": "all day" if o["all_day"] else o["start"][11:16] + "-" + o["end"][11:16],
+                                       "date": o["start"][:10], "title": o["title"], "location": o["location"],
+                                       "uid": o["uid"]} for o in items]}
+    if not items:
+        out["summary"] = f"Nothing on the calendar for {label}: that time is free."
+    return out
 
 
 def find(query: str, days: int = 365) -> list[dict]:
-    """Returns upcoming (and the last month's) occurrences whose title or notes contain the words."""
+    """Returns upcoming (and the last month's) occurrences whose title, notes or location contain the
+    words; failing that, the events the words most likely mean ('pottery class on friday')."""
     words = query.lower().split()
-    now = datetime.now()
+    now = _now()
     hits = store.between(now - timedelta(days=30), now + timedelta(days=int(days)))
-    return [o for o in hits if all(w in f"{o['title']} {o['notes']} {o['location']}".lower() for w in words)][:20]
+    exact = [o for o in hits if all(w in f"{o['title']} {o['notes']} {o['location']}".lower() for w in words)]
+    if exact:
+        return exact[:20]
+    ranked = match.rank(query, now, int(days))
+    if not ranked:
+        return []
+    top = ranked[0][0]
+    uids = {o["uid"] for s, o in ranked if s >= 0.5 and top - s < match.CLEAR_MARGIN}
+    return [o for o in hits if o["uid"] in uids][:20]
 
 
 def _resolve(event: str) -> store.Event:
-    e = store.get(event)
-    if e:
-        return e
-    hits = find(event)
-    if not hits:
-        raise ValueError(f"no event matching {event!r}")
-    upcoming = [h for h in hits if h["start"] >= datetime.now().isoformat()] or hits
-    return store.get(upcoming[0]["uid"])
+    return match.resolve(event, _now())
 
 
 def delete(event: str) -> dict:
@@ -89,7 +112,7 @@ def delete(event: str) -> dict:
 
 def move(event: str, when_text: str) -> dict:
     e = _resolve(event)
-    w = when.parse(when_text, default_time=e.start.time() if not e.all_day else None)
+    w = when.parse(when_text, _now(), default_time=e.start.time() if not e.all_day else None)
     if w.start is None:
         raise ValueError(f"cannot read {when_text!r}")
     length = e.finish() - e.start
