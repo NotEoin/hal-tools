@@ -16,12 +16,13 @@ drive appearing.
 
 ## Install
 
-hal-routines needs Python 3.11 or later and hal-hub on the `PATH`.
+hal-routines needs Python 3.11 or later and hal-hub on the `PATH`. It lives in
+`extensions/hal-routines` and is installed by the ecosystem installer, which renders the units in
+`systemd/` into `~/.config/systemd/user` (replacing `@ROOT@` with this folder) and starts them with
+`hal.target`:
 
 ```bash
-git clone <url> ~/src/hal-ecosystem/hal-routines
-ln -s ~/src/hal-ecosystem/hal-routines/systemd/hal-routines.service ~/.config/systemd/user/
-systemctl --user enable --now hal-routines.service
+hal ext add routines
 ```
 
 ## Use
@@ -29,7 +30,7 @@ systemctl --user enable --now hal-routines.service
 The tools run from the module folder, or through hal-hub as `hal-hub routines_<tool>`:
 
 ```bash
-cd ~/src/hal-ecosystem/hal-routines
+cd ~/src/hal-ecosystem/extensions/hal-routines
 python3 -m halroutines run name=focus
 python3 -m halroutines schedule target=goodnight when_text="every day at 23:30"
 python3 -m halroutines add_trigger event=usb_added target=notify_send args='{"title": "USB drive connected"}'
