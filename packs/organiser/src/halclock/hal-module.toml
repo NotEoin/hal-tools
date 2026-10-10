@@ -15,7 +15,7 @@ required = true
 [[tools]]
 name = "clock_alarm"
 function = "alarm"
-description = "Set an alarm at a time: '7am', 'tomorrow at 6:30', 'every weekday at 7'."
+description = "Set an alarm at a time: '7am', '7 tomorrow morning', 'tomorrow at 6:30', 'in 20 minutes', 'every weekday at 7'. A bare hour means the morning."
 keywords = "alarm wake me up morning"
 [tools.params.when_text]
 required = true

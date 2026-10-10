@@ -6,7 +6,8 @@ so aloud and the alert reaches your phone and desktop, even during quiet hours.
 ## Highlights
 
 - Timers with names and natural lengths: "9 minutes", "1h30", "an hour and a half", "2:30".
-- Alarms at a time, one-off or repeating ("every weekday at 7"), and snooze.
+- Alarms at a time, one-off or repeating ("7 tomorrow morning", "every weekday at 7"), and snooze. A
+  bare hour is the morning: "at 7" wakes you at 07:00.
 - A stopwatch with laps, and Pomodoro sessions that announce each break and return to work.
 - A one-second daemon, so timers fire on time; state lives in SQLite and survives restarts.
 

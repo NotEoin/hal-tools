@@ -4,7 +4,9 @@
     -> When(start=<Thu 10:00>, end=<Thu 11:00>, all_day=False, rrule=None, rest="dentist")
 
 UK conventions: day before month in numeric dates, 24-hour or am/pm times.
-A bare hour from 1 to 7 ("at 3") means the afternoon. Stdlib only.
+A bare hour from 1 to 7 ("at 3") means the afternoon unless the morning is named ("7 tomorrow
+morning") or the caller asks otherwise (alarms do). Ranges ("from 2 till 3:30pm", "2-4pm",
+"between 2 and 4") set the end; the end's am or pm carries back to the start. Stdlib only.
 """
 from __future__ import annotations
 
@@ -64,50 +66,124 @@ class _Text:
     @property
     def rest(self) -> str:
         out = re.sub(r"\s+", " ", self.s).strip(" ,.-")
+        if re.fullmatch(r"(?:on|at|for|from|by|in)", out, re.I):
+            return ""
         return re.sub(r"^(?:on|at|for|from|by|in)\s+|\s+(?:on|at|for|from|by|in)$", "", out, flags=re.I).strip()
 
 
-def _clock(m: re.Match, prefer_pm: bool = True) -> time:
-    """Converts a matched time phrase to a time of day."""
-    g = m.groupdict()
-    if g.get("part"):
-        return PARTS[g["part"].lower()]
-    if g.get("rel"):
-        hour = int(g["rh"]) % 12
-        mins = {"quarter past": 15, "half past": 30, "quarter to": -15}[g["rel"].lower()]
-        if prefer_pm and 1 <= hour <= 7:
-            hour += 12
-        base = datetime.combine(date.today(), time(hour)) + timedelta(minutes=mins)
-        return base.time()
-    hour, minute = int(g["h"]), int(g.get("m") or 0)
-    ampm = (g.get("ap") or "").lower()
-    if ampm.startswith("p") and hour < 12:
-        hour += 12
-    elif ampm.startswith("a") and hour == 12:
-        hour = 0
-    elif not ampm and not g.get("m") and prefer_pm and 1 <= hour <= 7:
-        hour += 12
-    return time(hour % 24, minute)
-
-
+# Words for a part of the day: whether an hour said with them is am or pm, and the time they mean alone.
+HINTS = {"morning": "a", "afternoon": "p", "evening": "p", "tonight": "p", "night": "p"}
+PART = r"(?:\b(?:in\s+the|this|at)\s+)?\b(?P<part>morning|afternoon|evening|tonight|night)\b"
+NAMED = {"noon": time(12), "midday": time(12), "midnight": time(0), "lunchtime": time(12, 30)}
+NOT_A_TIME = r"(?!\s*(?:minutes?|mins?|hours?|hrs?|days?|weeks?|months?|years?|people|of|st|nd|rd|th|%|/))"
+# One end of a range: "2", "3:30pm", "10 am", "noon".
+END = r"(?:(?P<h{n}>\d{{1,2}})(?:[:.](?P<m{n}>\d{{2}}))?\s*(?P<a{n}>[ap]\.?m\.?)?(?![\d:])|(?P<n{n}>noon|midday|midnight))"
+RANGES = (rf"\bbetween\s+{END.format(n=1)}\s+and\s+{END.format(n=2)}" + NOT_A_TIME,
+          rf"(?:\b(?:from|at|@)\s*)?(?<![\d/:.-]){END.format(n=1)}\s*(?:-|–|—|\bto\b|\btill?\b|\buntil\b)\s*"
+          rf"{END.format(n=2)}" + NOT_A_TIME)
 TIME = (r"(?:\b(?:at|@)\s*)?(?:(?P<rel>quarter past|half past|quarter to)\s+(?P<rh>\d{1,2})"
         r"|(?P<h>\d{1,2})(?:[:.](?P<m>\d{2}))?\s*(?P<ap>a\.?m\.?|p\.?m\.?)"
         r"|(?P<h2>\d{1,2})[:.](?P<m2>\d{2})"
-        r"|\bat\s+(?P<h3>\d{1,2})\b"
-        r"|\b(?P<part>noon|midday|midnight|lunchtime|tonight|morning|afternoon|evening|night)\b)")
+        r"|\bat\s+(?P<h3>\d{1,2})\b" + NOT_A_TIME + r"(?:\s*o'?clock)?"
+        r"|\b(?P<h4>\d{1,2})\s*o'?clock"
+        r"|\b(?P<named>noon|midday|midnight|lunchtime)\b)")
 
 
-def _find_time(t: _Text) -> time | None:
-    m = t.take(TIME)
+def _hour(hour: str | int, minute: str | int | None, ap: str, prefer_pm: bool) -> time:
+    """Turns an hour said with 'a' (am), 'p' (pm) or '' (neither) into a time of day.
+
+    With neither, an hour from 1 to 7 is the afternoon when `prefer_pm`, else the morning; a
+    leading zero ("07:30") or an hour past 12 is read as the 24-hour clock.
+    """
+    h, mins = int(hour), int(minute or 0)
+    if ap == "p" and h < 12:
+        h += 12
+    elif ap == "a" and h == 12:
+        h = 0
+    elif not ap and prefer_pm and 1 <= h <= 7 and not str(hour).startswith("0"):
+        h += 12
+    return time(h % 24, mins % 60)
+
+
+def _candidates(hour: str, minute: str) -> list[time]:
+    """The times an hour without am or pm could mean: both halves of the day for 1 to 12."""
+    hour, minute = int(hour), int(minute)
+    if hour == 0 or hour > 12:
+        return [time(hour % 24, minute)]
+    return [time(hour % 12, minute), time(hour % 12 + 12, minute)]
+
+
+def _find_range(t: _Text, hint: str, prefer_pm: bool) -> tuple[time, time] | None:
+    """Reads 'from 2 till 3:30pm', '2-4pm', '10am to 2', 'between 2 and 4' as (start, end).
+
+    An end's am or pm carries back to a start without one: '2 till 3:30pm' starts at 14:00.
+    """
+    m = t.take(RANGES[0]) or t.take(RANGES[1])
     if not m:
         return None
+
+    def side(n: str) -> tuple[str, str, str] | time:
+        if m[f"n{n}"]:
+            return NAMED[m[f"n{n}"].lower()]
+        ap = (m[f"a{n}"] or "")[:1].lower()
+        if not ap and m[f"h{n}"].startswith("0"):
+            ap = "a"     # "09:00" is the 24-hour clock
+        return m[f"h{n}"], m[f"m{n}"] or "0", ap
+
+    a, b = side("1"), side("2")
+    if isinstance(b, tuple) and not b[2] and hint:
+        b = (b[0], b[1], hint)
+    if isinstance(a, time) and isinstance(b, time):
+        return a, b
+    if isinstance(a, tuple) and a[2] or isinstance(a, time):
+        start = a if isinstance(a, time) else _hour(*a, prefer_pm)
+        if isinstance(b, time):
+            return start, b
+        if b[2]:
+            return start, _hour(*b, prefer_pm)
+        later = [c for c in _candidates(b[0], b[1]) if c > start]
+        return start, later[0] if later else _hour(*b, prefer_pm)
+    # The start has no am or pm.
+    if isinstance(b, time) or b[2]:
+        end = b if isinstance(b, time) else _hour(*b, prefer_pm)
+        earlier = [c for c in _candidates(a[0], a[1]) if c < end]
+        return (earlier[-1] if earlier else _hour(*a, prefer_pm)), end
+    start = _hour(*a, prefer_pm)
+    later = [c for c in _candidates(b[0], b[1]) if c > start]
+    return start, later[0] if later else _hour(*b, prefer_pm)
+
+
+def _find_time(t: _Text, prefer_pm: bool = True) -> tuple[time | None, time | None]:
+    """Finds the time of day, and the end time when a range is given, cutting both from the text.
+
+    A part of the day sets am or pm for an hour said with it ('7 tomorrow morning', 'tonight at 8');
+    alone it means a typical time ('evening' is 18:00).
+    """
+    part = re.search(PART, t.s, re.I)
+    hint = HINTS[part["part"].lower()] if part else ""
+    rng = _find_range(t, hint, prefer_pm)
+    if rng:
+        t.take(PART)
+        return rng
+    # A bare hour beside the part of the day: "7 tomorrow morning" (once "tomorrow" is cut), "8 tonight".
+    m = t.take(r"(?:\b(?:at|@)\s*)?(?<!past )(?<!to )\b(?P<h4>\d{1,2})(?:[:.](?P<m4>\d{2}))?\s*(?:o'?clock\s*)?" + PART)
+    if not m:
+        t.take(PART)
+        m = t.take(TIME)
+    if not m:
+        return (PARTS[part["part"].lower()] if part else None), None
     g = m.groupdict()
+    if g.get("named"):
+        return NAMED[g["named"].lower()], None
+    if g.get("rel"):
+        mins = {"quarter past": 15, "half past": 30, "quarter to": -15}[g["rel"].lower()]
+        base = datetime.combine(date.today(), _hour(g["rh"], "0", hint, prefer_pm)) + timedelta(minutes=mins)
+        return base.time(), None
+    if g.get("h"):
+        return _hour(g["h"], g["m"], g["ap"][:1].lower(), prefer_pm), None
     if g.get("h2"):
-        return time(int(g["h2"]) % 24, int(g["m2"]))
-    if g.get("h3"):
-        h = int(g["h3"])
-        return time(h + 12 if 1 <= h <= 7 else h % 24)
-    return _clock(m)
+        return _hour(g["h2"], g["m2"], hint, prefer_pm), None
+    return _hour(g.get("h3") or g["h4"], g.get("m4"), hint, prefer_pm), None
 
 
 def _find_date(t: _Text, now: datetime) -> tuple[date | None, bool]:
@@ -180,24 +256,15 @@ def _find_offset(t: _Text) -> timedelta | None:
 
 
 def _find_duration(t: _Text) -> timedelta | None:
-    m = t.take(rf"\bfor\s+{NUM}\s*(minute|min|mins|hour|hr|hrs|day|week)s?\b")
+    """Reads 'for an hour', 'for 90 minutes', 'for 1 hour 30 minutes', 'for an hour and a half'."""
+    m = t.take(rf"\bfor\s+{NUM}\s*(?P<half1>and a half\s+)?(?P<unit>minute|min|mins|hour|hr|hrs|day|week)s?"
+               r"(?P<half2>\s+and\s+a\s+half)?(?:,?\s*(?:and\s+)?(?P<extra>\d+)\s*(?:minutes?|mins?))?\b")
     if m:
-        return timedelta(seconds=_num(m[1]) * UNITS[m[2].lower()])
+        n = _num(m[1]) + (0.5 if m["half1"] or m["half2"] else 0)
+        return timedelta(seconds=n * UNITS[m["unit"].lower()] + int(m["extra"] or 0) * 60)
     if t.take(r"\bfor half an hour\b"):
         return timedelta(minutes=30)
     return None
-
-
-def _find_until(t: _Text) -> time | None:
-    m = t.take(r"\b(?:until|till|to|-)\s*(\d{1,2})(?:[:.](\d{2}))?\s*(am|pm)?\b")
-    if not m:
-        return None
-    hour = int(m[1])
-    if (m[3] or "").lower() == "pm" and hour < 12:
-        hour += 12
-    elif not m[3] and 1 <= hour <= 7:
-        hour += 12
-    return time(hour % 24, int(m[2] or 0))
 
 
 def _find_repeat(t: _Text) -> str | None:
@@ -221,13 +288,15 @@ def _find_repeat(t: _Text) -> str | None:
     return None
 
 
-def parse(text: str, now: datetime | None = None, default_time: time | None = None) -> When:
+def parse(text: str, now: datetime | None = None, default_time: time | None = None,
+          prefer_pm: bool = True) -> When:
     """Parses the date, time, length and repeat in `text`; `rest` is what is left.
 
     Args:
-        text: For example "lunch with Sam next friday 1pm for 90 minutes".
+        text: For example "lunch with Sam next friday 1pm for 90 minutes" or "tomorrow from 2 till 3:30pm".
         now: The reference time; the current time by default.
         default_time: Time to use when a date is given without one; None makes it all-day.
+        prefer_pm: Whether a bare hour from 1 to 7 ("at 3") means the afternoon; alarms want False.
     """
     now = now or datetime.now().replace(second=0, microsecond=0)
     t = _Text(text)
@@ -238,8 +307,7 @@ def parse(text: str, now: datetime | None = None, default_time: time | None = No
         start = now + offset
         return When(start, start + duration if duration else None, False, rrule, t.rest)
     d, explicit = _find_date(t, now)
-    clock = _find_time(t)
-    until = _find_until(t) if clock else None
+    clock, until = _find_time(t, prefer_pm)
     if d is None and clock is None:
         if rrule:
             d = now.date()
@@ -260,7 +328,7 @@ def parse(text: str, now: datetime | None = None, default_time: time | None = No
             start += timedelta(days=1)
     end = None
     if until is not None:
-        end = datetime.combine(d, until)
+        end = datetime.combine(start.date(), until)
         if end <= start:
             end += timedelta(days=1)
     elif duration:

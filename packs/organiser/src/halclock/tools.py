@@ -70,9 +70,17 @@ def timer(duration: str, label: str = "") -> dict:
             "ends": datetime.fromtimestamp(at).strftime("%H:%M:%S")}
 
 
+def _now() -> datetime:
+    return datetime.now().replace(second=0, microsecond=0)
+
+
 def alarm(when_text: str, label: str = "Alarm") -> dict:
-    """Sets an alarm for a time ('7am', 'tomorrow at 6:30', 'every weekday at 7')."""
-    w = when.parse(when_text, default_time=None)
+    """Sets an alarm for a time ('7am', 'tomorrow at 6:30', '7 tomorrow morning', 'every weekday at 7').
+
+    A bare hour is read as the morning ('at 7' is 07:00), as alarms mostly wake people up; say
+    'pm' or 'evening' for later.
+    """
+    w = when.parse(when_text, _now(), default_time=None, prefer_pm=False)
     if w.start is None or w.all_day:
         raise ValueError(f"say a time for the alarm, for example '7am'; got {when_text!r}")
     con = _db()

@@ -47,5 +47,30 @@ class ClockTest(unittest.TestCase):
         self.assertEqual(datetime.fromtimestamp(nxt).strftime("%a %H:%M"), "Mon 07:00")
 
 
+    def test_alarm_phrases(self):
+        saturday = datetime(2026, 10, 10, 12, 0)
+        real = self.tools._now
+        self.tools._now = lambda: saturday
+        try:
+            cases = {
+                "7 tomorrow morning": "Sun 11 Oct 07:00",
+                "7am tomorrow": "Sun 11 Oct 07:00",
+                "tomorrow at 7": "Sun 11 Oct 07:00",
+                "6:30": "Sun 11 Oct 06:30",
+                "in 20 minutes": "Sat 10 Oct 12:20",
+                "at 7pm": "Sat 10 Oct 19:00",
+                "8 this evening": "Sat 10 Oct 20:00",
+                "every weekday at 7": "Mon 12 Oct 07:00",
+            }
+            for text, at in cases.items():
+                self.assertEqual(self.tools.alarm(text)["at"], at, text)
+        finally:
+            self.tools._now = real
+
+    def test_alarm_needs_a_time(self):
+        with self.assertRaises(ValueError):
+            self.tools.alarm("tomorrow")
+
+
 if __name__ == "__main__":
     unittest.main()
