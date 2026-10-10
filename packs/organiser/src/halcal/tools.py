@@ -169,18 +169,48 @@ def calendars() -> list[dict]:
     return client().calendars()
 
 
+def password_file() -> Path:
+    """The CalDAV password's file, beside config.toml (~/.config/hal/caldav-password)."""
+    return config_path().parent / "caldav-password"
+
+
+def write_caldav_settings(values: dict) -> None:
+    """Sets keys in the [calendar.caldav] table of config.toml, updating the table if it exists."""
+    import json
+    import tomllib
+    path = config_path()
+    path.parent.mkdir(parents=True, exist_ok=True)
+    lines = path.read_text().splitlines() if path.exists() else []
+    todo = {k: v for k, v in values.items() if v is not None}
+    head = next((n for n, line in enumerate(lines) if line.strip() == "[calendar.caldav]"), None)
+    if head is None:
+        lines += ["", "[calendar.caldav]"] + [f"{k} = {json.dumps(v)}" for k, v in todo.items()]
+    else:
+        stop = next((n for n in range(head + 1, len(lines)) if lines[n].lstrip().startswith("[")), len(lines))
+        for n in range(head + 1, stop):
+            key = lines[n].split("=", 1)[0].strip()
+            if "=" in lines[n] and key in todo:
+                lines[n] = f"{key} = {json.dumps(todo.pop(key))}"
+        while stop > head + 1 and not lines[stop - 1].strip():
+            stop -= 1
+        lines[stop:stop] = [f"{k} = {json.dumps(v)}" for k, v in todo.items()]
+    text = "\n".join(lines).strip("\n") + "\n"
+    tomllib.loads(text)     # never leave a config that does not parse
+    path.write_text(text)
+
+
 def setup_caldav(username: str, password: str, url: str = "https://caldav.icloud.com",
                  push_to: str = "") -> dict:
-    """Stores CalDAV credentials (the password in a private file) and tests them."""
-    pw = Path("~/.config/hal/caldav-password").expanduser()
+    """Tests CalDAV credentials, then stores them: the password in a private file, the rest in
+    [calendar.caldav]. Run by `python3 -m halcal connect`; not a tool, so a password never passes
+    through a conversation. A refused password raises CalDAVError and saves nothing."""
+    from .caldav import Client
+    cals = Client(url, username.strip(), password.strip()).calendars()
+    pw = password_file()
     pw.parent.mkdir(parents=True, exist_ok=True)
-    pw.write_text(password.strip())
+    pw.touch(mode=0o600)
     pw.chmod(0o600)
-    cfg_path = config_path()
-    text = cfg_path.read_text() if cfg_path.exists() else ""
-    block = (f'\n[calendar.caldav]\nurl = "{url}"\nusername = "{username}"\n'
-             f'password_file = "{pw}"\n' + (f'push_to = "{push_to}"\n' if push_to else ""))
-    if "[calendar.caldav]" not in text:
-        cfg_path.write_text(text.rstrip("\n") + "\n" + block)
-    from .caldav import client
-    return {"saved": True, "calendars": client().calendars()}
+    pw.write_text(password.strip())
+    write_caldav_settings({"url": url, "username": username.strip(), "password_file": str(pw),
+                           "push_to": push_to or None})
+    return {"saved": True, "calendars": cals}

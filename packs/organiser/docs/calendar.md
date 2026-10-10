@@ -43,21 +43,25 @@ python3 -m halcal move event=Dentist when_text="friday 11am"
 iCloud's CalDAV needs an app-specific password rather than your Apple ID password:
 
 1. Sign in at appleid.apple.com, open **Sign-In and Security**, then **App-Specific Passwords**, and create one called "Hal".
-2. Connect with your Apple ID email and that password:
+2. Connect from a terminal in this folder (hal-hub is not needed):
 
    ```bash
-   python3 -m halcal setup_caldav username=you@icloud.com password=abcd-efgh-ijkl-mnop push_to=Home
+   cd ~/src/hal-ecosystem/extensions/hal-calendar
+   python3 -m halcal connect
    ```
 
-3. Sync once to check, then let the reminder daemon sync every 15 minutes:
+   It asks for your Apple ID email and then the password, which is not shown as you type and never
+   appears in your shell history. It checks them with iCloud before saving anything, lists your
+   calendars, asks which one new events from Hal should go to, and runs a first sync. Run it again
+   at any time to change the password or that calendar; the settings are updated in place.
 
-   ```bash
-   python3 -m halcal sync
-   ```
+3. The reminder daemon then syncs every 15 minutes; `python3 -m halcal sync` syncs straight away.
 
-The password is stored in `~/.config/hal/caldav-password` with owner-only permissions; the URL,
-username and target calendar go in `[calendar.caldav]`. Any other CalDAV server (Nextcloud, Fastmail,
-Radicale) works the same way with its own URL.
+`--username`, `--push-to NAME` and `--url URL` skip or preset those questions. The password is
+stored in `~/.config/hal/caldav-password` with owner-only permissions; the URL, username and target
+calendar go in `[calendar.caldav]`. There is deliberately no tool for this, so a password is never
+typed into a conversation with Hal. Any other CalDAV server (Nextcloud, Fastmail, Radicale) works
+the same way: `python3 -m halcal connect --url https://your.server/dav`.
 
 ## Configuration
 

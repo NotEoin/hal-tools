@@ -99,17 +99,3 @@ name = "calendar_calendars"
 function = "calendars"
 description = "List the calendar names (such as Home and Work) on the connected CalDAV account. Not for events: use calendar_agenda for what is on."
 timeout = 60
-
-[[tools]]
-name = "calendar_setup_caldav"
-function = "setup_caldav"
-description = "Connect a CalDAV account. For Apple iCloud: the Apple ID email and an app-specific password made at appleid.apple.com."
-keywords = "icloud apple connect account"
-timeout = 60
-[tools.params.username]
-required = true
-[tools.params.password]
-required = true
-[tools.params.url]
-[tools.params.push_to]
-description = "calendar name new events go to"

@@ -32,8 +32,9 @@ def account() -> dict:
     """Returns the [calendar.caldav] settings with the password read from its file."""
     cfg = settings().get("caldav", {})
     if not cfg.get("url") or not cfg.get("username"):
-        raise CalDAVError("CalDAV is not set up; run calendar_setup_caldav (for iCloud: url https://caldav.icloud.com, "
-                          "your Apple ID, and an app-specific password from appleid.apple.com)")
+        raise CalDAVError("CalDAV is not set up; the user connects it by running `python3 -m halcal connect` in a "
+                          "terminal in the hal-calendar folder (for iCloud: their Apple ID and an app-specific "
+                          "password from appleid.apple.com)")
     pw_file = Path(cfg.get("password_file", "~/.config/hal/caldav-password")).expanduser()
     if not pw_file.exists():
         raise CalDAVError(f"no CalDAV password at {pw_file}")
@@ -71,7 +72,7 @@ class Client:
         return ET.fromstring(data)
 
     def calendars(self) -> list[dict]:
-        """Returns the account's event calendars as {name, href}."""
+        """Returns the account's event calendars as {name, href, writable}."""
         root = self._propfind(self.base, "<d:current-user-principal/>")
         principal = root.find(".//d:current-user-principal/d:href", NS)
         if principal is None:
@@ -83,7 +84,8 @@ class Client:
         home = home_el.text
         if home.startswith("http"):
             self.base = home.split("/", 3)[0] + "//" + home.split("/", 3)[2] + "/"
-        root = self._propfind(home, "<d:displayname/><d:resourcetype/><c:supported-calendar-component-set/>", "1")
+        root = self._propfind(home, "<d:displayname/><d:resourcetype/><c:supported-calendar-component-set/>"
+                                    "<d:current-user-privilege-set/>", "1")
         out = []
         for resp in root.findall("d:response", NS):
             if resp.find(".//d:resourcetype/c:calendar", NS) is None:
@@ -93,9 +95,11 @@ class Client:
                 continue
             name = resp.find(".//d:displayname", NS)
             href = resp.find("d:href", NS).text
+            # Servers that do not list privileges are taken to allow writing.
+            privs = {p.tag.rsplit("}", 1)[-1] for p in resp.findall(".//d:current-user-privilege-set/d:privilege/*", NS)}
             # Servers without display names (Radicale) are named by the last part of the path.
             out.append({"name": name.text if name is not None and name.text else href.rstrip("/").rsplit("/", 1)[-1],
-                        "href": href})
+                        "href": href, "writable": not privs or bool(privs & {"all", "write", "write-content", "bind"})})
         return out
 
     def events(self, href: str, start: datetime, end: datetime) -> list[tuple[str, str, str]]:

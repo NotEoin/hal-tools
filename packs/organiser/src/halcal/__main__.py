@@ -3,6 +3,8 @@
     python -m halcal                      list the tools
     python -m halcal TOOL [key=value ...] run one (the module prefix is optional)
     python -m halcal --stdin FUNCTION      run a function with JSON arguments on stdin
+    python -m halcal connect [--url URL] [--username U] [--push-to NAME]
+                                          connect iCloud or another CalDAV account (asks for the password)
 """
 import json
 import sys
@@ -35,6 +37,9 @@ def _show(result) -> None:
 def main(argv=None) -> int:
     argv = list(sys.argv[1:] if argv is None else argv)
     spec = tomllib.loads(MANIFEST.read_text())
+    if argv[:1] == ["connect"]:
+        from .connect import main as connect
+        return connect(argv[1:])
     if argv[:1] == ["--stdin"]:
         _show(getattr(tools, argv[1])(**json.loads(sys.stdin.read() or "{}")))
         return 0
