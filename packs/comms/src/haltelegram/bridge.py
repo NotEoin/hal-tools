@@ -158,6 +158,8 @@ class Bridge:
         if command in with_id and arg:
             return with_id[command](arg)
         if command == "/pack" and arg:
+            if not self.jobs.has("jobs_pack"):
+                return self.jobs.pack(arg)[0]
             threading.Thread(target=self._pack, args=(chat, arg), daemon=True).start()
             return "Drafting the pack. I'll send it when it's done."
         return HELP

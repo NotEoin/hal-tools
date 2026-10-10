@@ -19,7 +19,6 @@ DEFAULTS: dict = {
     "whisper_device": "cpu",        # cpu | cuda | auto
     "voice_replies": True,          # answer voice notes and /brief with a voice note too (needs hal-voice)
 }
-JOBHUNT_DEFAULT = "~/src/employment-helper"
 
 ROOT = Path(__file__).resolve().parents[1]      # this checkout
 ECOSYSTEM = ROOT.parents[1]                     # hal-ecosystem, when this sits in extensions/
@@ -64,12 +63,6 @@ def write_private(path: Path, text: str) -> None:
     with os.fdopen(fd, "w") as f:
         f.write(text)
     path.chmod(0o600)
-
-
-def jobhunt_root() -> Path:
-    """Returns the jobhunt checkout: [jobs].jobhunt_root, else [jobs].jobhunt (hal-jobs' key), else the default."""
-    jobs = _file().get("jobs", {})
-    return Path(jobs.get("jobhunt_root") or jobs.get("jobhunt") or JOBHUNT_DEFAULT).expanduser()
 
 
 def find_core() -> Path | None:

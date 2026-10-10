@@ -1,28 +1,13 @@
-"""The job-search commands: hal-jobs and hal-briefing tools through hal-hub, jobhunt where they stop.
+"""The job-search commands: hal-jobs and hal-briefing tools, through hal-hub.
 
-hal-jobs covers the queue, the to-do list and marking jobs applied or discarded.
-Listing matches, adding a to-do, shortlisting, the written status digest and
-drafting a pack have no hal-jobs tool yet, so those run jobhunt's command line
-in [jobs].jobhunt_root.
+Every command maps to one tool, so jobhunt and Hal Employment stay behind
+hal-jobs and this bridge never runs them itself.
 """
 from __future__ import annotations
 
 import json
-import subprocess
 from datetime import datetime
 from pathlib import Path
-
-from . import config
-
-
-def jobhunt(*args: str, timeout: float = 900) -> str:
-    """Runs a jobhunt command and returns its output."""
-    root = config.jobhunt_root()
-    if not (root / "jobhunt").is_dir():
-        return f"jobhunt isn't at {root}; set [jobs].jobhunt_root in ~/.config/hal/config.toml."
-    done = subprocess.run(["/usr/bin/python3", "-m", "jobhunt", *args], cwd=root,
-                          capture_output=True, text=True, timeout=timeout)
-    return (done.stdout + done.stderr).strip()
 
 
 class Jobs:
@@ -34,30 +19,35 @@ class Jobs:
     def has(self, tool: str) -> bool:
         return bool(self.hub and self.hub.get(tool))
 
-    def tool(self, name: str, **args) -> str:
+    def call(self, name: str, **args) -> tuple[object, str | None]:
+        """Calls a tool; returns (result, None), or (None, a message saying why it couldn't)."""
         if not self.has(name):
             module = name.split("_")[0]
-            return f"The {module} extension isn't installed (hal ext add {module})."
+            return None, f"The {module} extension isn't installed (hal ext add {module})."
         out = self.hub.call(name, args)
         if "error" in out:
-            return f"That didn't work: {out['error']}"
-        return render(out.get("result"))
+            return None, f"That didn't work: {out['error']}"
+        return out.get("result"), None
+
+    def tool(self, name: str, **args) -> str:
+        result, problem = self.call(name, **args)
+        return problem or render(result)
 
     def status(self) -> str:
-        return jobhunt("digest", "--dry-run")
+        return self.tool("jobs_status")
 
     def brief(self) -> str:
         kind = "morning" if datetime.now().hour < 14 else "evening"
         return self.tool("briefing_build", kind=kind)
 
     def matches(self) -> str:
-        return jobhunt("list", "-m", "60", "-n", "8")
+        return self.tool("jobs_matches")
 
     def queue(self) -> str:
         return self.tool("jobs_queue")
 
     def todo(self, text: str = "") -> str:
-        return jobhunt("todo", "add", text) if text else self.tool("jobs_todo")
+        return self.tool("jobs_todo_add", text=text) if text else self.tool("jobs_todo")
 
     def discard(self, job: str) -> str:
         return self.tool("jobs_mark", job=job, status="skipped")
@@ -66,16 +56,17 @@ class Jobs:
         return self.tool("jobs_mark", job=job, status="applied")
 
     def shortlist(self, job: str) -> str:
-        return jobhunt("set", job, "shortlisted")
+        return self.tool("jobs_shortlist", job=job)
 
     def pack(self, job: str) -> tuple[str, list[Path]]:
-        """Drafts an application pack; returns the output's tail and the files to send."""
-        output = jobhunt("pack", job, timeout=1800)
-        pack_md = next((Path(line.strip()) for line in output.splitlines() if line.strip().endswith("pack.md")), None)
-        files = []
-        if pack_md and pack_md.exists():
-            files = [pack_md, *sorted(pack_md.parent.glob("*.pdf"))]
-        return output[-1500:], files
+        """Drafts an application pack; returns jobhunt's output (or why it failed) and the files to send."""
+        result, problem = self.call("jobs_pack", job=job)
+        if problem:
+            return problem, []
+        if not isinstance(result, dict):
+            return render(result), []
+        files = [Path(f) for f in result.get("files") or [] if Path(f).is_file()]
+        return result.get("output") or "", files
 
 
 def render(result) -> str:

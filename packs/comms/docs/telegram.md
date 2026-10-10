@@ -61,8 +61,10 @@ Anything that is not a command is a message for Hal. The commands are:
 | `/brief` | Today's briefing, as text and a voice note |
 | `/reset` | Start a new conversation |
 
-`/queue`, `/todo`, `/discard` and `/applied` use hal-jobs' tools. `/status`, `/jobs`, `/shortlist`,
-`/pack` and adding a to-do have no hal-jobs tool yet, so they run jobhunt directly.
+Each job command calls one hal-jobs tool through hal-hub: `/status` is `jobs_status`, `/jobs` is
+`jobs_matches`, `/queue` is `jobs_queue`, `/todo` is `jobs_todo` or `jobs_todo_add`, `/shortlist` is
+`jobs_shortlist`, `/discard` and `/applied` are `jobs_mark`, and `/pack` is `jobs_pack`. Without
+hal-jobs they say so.
 
 ## Configuration
 
@@ -76,10 +78,9 @@ model = ""                   # empty = [brain].model, else [hal].chat_model
 whisper_model = "small.en"   # for voice notes
 whisper_device = "cpu"       # cpu | cuda | auto
 voice_replies = true         # answer voice notes and /brief with a voice note
-
-[jobs]
-jobhunt_root = "~/src/employment-helper"
 ```
+
+The job commands find jobhunt through hal-jobs' own `[jobs]` settings.
 
 ## Licence
 

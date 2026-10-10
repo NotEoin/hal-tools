@@ -170,26 +170,57 @@ class JobCommandTest(Sandbox):
         self.assertIn(("jobs_mark", {"job": "43", "status": "applied"}), hub.calls)
         self.assertEqual(hub.calls[-1][0], "briefing_build")
 
-    def test_jobhunt_fallbacks(self):
-        b = self.paired(FakeHub({}))
-        with mock.patch.object(jobs, "jobhunt", side_effect=lambda *a, **k: " ".join(a)):
-            self.assertEqual(b.respond(PHONE, "/shortlist 7"), "set 7 shortlisted")
-            self.assertEqual(b.respond(PHONE, "/todo ring Arm back"), "todo add ring Arm back")
-            self.assertEqual(b.respond(PHONE, "/jobs"), "list -m 60 -n 8")
-            self.assertEqual(b.respond(PHONE, "/status"), "digest --dry-run")
+    def test_former_jobhunt_commands_use_hub_tools(self):
+        hub = FakeHub({"jobs_status": "Job search: 2 need you", "jobs_matches": "71  Arm  arm-1",
+                       "jobs_shortlist": "Arm | Graduate Engineer -> shortlisted",
+                       "jobs_todo_add": "12  ring Arm back"})
+        b = self.paired(hub)
+        self.assertEqual(b.respond(PHONE, "/status"), "Job search: 2 need you")
+        self.assertEqual(b.respond(PHONE, "/jobs"), "71  Arm  arm-1")
+        self.assertEqual(b.respond(PHONE, "/shortlist 7"), "Arm | Graduate Engineer -> shortlisted")
+        self.assertEqual(b.respond(PHONE, "/todo ring Arm back"), "12  ring Arm back")
+        self.assertEqual(hub.calls, [("jobs_status", {}), ("jobs_matches", {}), ("jobs_shortlist", {"job": "7"}),
+                                     ("jobs_todo_add", {"text": "ring Arm back"})])
+        self.assertFalse(hasattr(jobs, "jobhunt"), "the bridge no longer runs jobhunt itself")
+
+    def test_pack_sends_output_and_files(self):
+        pack_md, pdf = Path(self.tmp.name) / "pack.md", Path(self.tmp.name) / "cv.pdf"
+        pack_md.write_text("# pack")
+        pdf.write_text("%PDF")
+        hub = FakeHub({"jobs_pack": {"pack": str(pack_md), "output": f"7: drafting...\n  {pack_md}",
+                                     "files": [str(pack_md), str(pdf), str(Path(self.tmp.name) / "gone.pdf")]}})
+        b = self.paired(hub)
+        b._pack(PHONE, "7")
+        self.assertEqual(hub.calls, [("jobs_pack", {"job": "7"})])
+        self.assertEqual(self.bot.sent, [(PHONE, f"7: drafting...\n  {pack_md}")])
+        self.assertEqual(self.bot.uploads, [("sendDocument", pack_md), ("sendDocument", pdf)])
+
+    def test_pack_failure_and_missing_tool(self):
+        class Failing(FakeHub):
+            def call(self, name, args):
+                self.calls.append((name, args))
+                return {"error": "RuntimeError: 2 jobs match '7'"}
+        b = self.paired(Failing({"jobs_pack": None}))
+        b._pack(PHONE, "7")
+        self.assertEqual(self.bot.sent, [(PHONE, "That didn't work: RuntimeError: 2 jobs match '7'")])
+        self.assertEqual(self.bot.uploads, [])
+        self.assertIn("hal ext add jobs", self.paired(FakeHub({})).respond(PHONE, "/pack 7"))
+
+    def test_tool_errors_are_reported(self):
+        class Failing(FakeHub):
+            def call(self, name, args):
+                return {"error": "RuntimeError: 0 jobs match '7'"}
+        b = self.paired(Failing({"jobs_shortlist": None}))
+        self.assertEqual(b.respond(PHONE, "/shortlist 7"), "That didn't work: RuntimeError: 0 jobs match '7'")
 
     def test_missing_module_and_unknown_commands(self):
         b = self.paired(FakeHub({}))
         self.assertIn("hal ext add briefing", b.respond(PHONE, "/brief"))
+        for command in ("/status", "/jobs", "/shortlist 7", "/todo ring Arm"):
+            self.assertIn("hal ext add jobs", b.respond(PHONE, command))
         self.assertEqual(b.respond(PHONE, "/shortlist"), bridge.HELP)
         self.assertEqual(b.respond(PHONE, "/nonsense"), bridge.HELP)
         self.assertEqual(FakeBrain.made, 0)
-
-    def test_jobhunt_root_from_config(self):
-        config.config_path().write_text('[jobs]\njobhunt_root = "/srv/jobhunt"\n')
-        self.assertEqual(config.jobhunt_root(), Path("/srv/jobhunt"))
-        config.config_path().write_text('[jobs]\njobhunt = "/srv/old"\n')
-        self.assertEqual(config.jobhunt_root(), Path("/srv/old"))
 
 
 if __name__ == "__main__":
