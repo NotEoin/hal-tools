@@ -1,0 +1,57 @@
+[module]
+name = "media"
+summary = "Control any media player (Spotify, browser, VLC) and play local music"
+# PyGObject (D-Bus) lives in the system Python, so the hub runs this module there.
+exec = ["/usr/bin/python3", "-m", "halmedia", "--stdin"]
+
+[[tools]]
+name = "media_status"
+function = "status"
+description = "What is playing now in each media player: title, artist, album, position."
+keywords = "what's playing song now music track"
+
+[[tools]]
+name = "media_control"
+function = "control"
+description = "Play, pause, toggle, skip to next, go to previous or stop the current media player."
+keywords = "pause play resume skip next previous stop music"
+[tools.params.action]
+enum = ["play", "pause", "toggle", "next", "previous", "stop"]
+required = true
+[tools.params.player]
+description = "player name such as spotify or firefox; the playing one by default"
+
+[[tools]]
+name = "media_seek"
+function = "seek"
+description = "Skip forward or back by some seconds."
+keywords = "rewind fast forward skip ahead"
+[tools.params.seconds]
+type = "integer"
+required = true
+[tools.params.player]
+
+[[tools]]
+name = "media_play_music"
+function = "play_music"
+description = "Play local music by artist, album or song name, or everything."
+keywords = "play song artist album music library"
+[tools.params.query]
+[tools.params.shuffle]
+type = "boolean"
+
+[[tools]]
+name = "media_youtube"
+function = "youtube"
+description = "Search YouTube for something and open the results."
+keywords = "youtube video watch"
+[tools.params.query]
+required = true
+
+[[tools]]
+name = "media_play_url"
+function = "play_url"
+description = "Play a stream or audio URL, such as an internet radio station or podcast episode."
+keywords = "radio stream podcast"
+[tools.params.url]
+required = true
