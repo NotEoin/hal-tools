@@ -1,0 +1,10 @@
+[module]
+name = "telegram"
+summary = "Talk to Hal from your phone through a Telegram bot: chat with tools, voice notes and job-search commands"
+python = "haltelegram.tools"
+
+[[tools]]
+name = "telegram_status"
+function = "status"
+description = "Whether the Telegram bridge has a bot token saved and a phone chat paired."
+keywords = "telegram phone bot paired chat"
