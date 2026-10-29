@@ -1,0 +1,15 @@
+[Unit]
+Description=Hal tasks: due-task reminders and the morning list
+PartOf=hal.target
+After=graphical-session.target
+
+[Service]
+WorkingDirectory=@ROOT@
+ExecStart=/usr/bin/python3 -m haltasks.reminders
+Environment=PYTHONUNBUFFERED=1
+Environment=PATH=%h/.local/bin:/usr/local/bin:/usr/bin:/bin
+Restart=on-failure
+RestartSec=15
+
+[Install]
+WantedBy=hal.target
