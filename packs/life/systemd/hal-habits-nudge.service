@@ -1,0 +1,8 @@
+[Unit]
+Description=Hal habits: evening nudge for habits not done
+
+[Service]
+Type=oneshot
+WorkingDirectory=@ROOT@
+Environment=PATH=%h/.local/bin:/usr/local/bin:/usr/bin:/bin
+ExecStart=/usr/bin/python3 -m halhabits.nudge

@@ -1,0 +1,68 @@
+[module]
+name = "habits"
+summary = "Habits with daily targets and streaks, mood and sleep logs, and an evening nudge"
+python = "halhabits.tools"
+
+[[tools]]
+name = "habits_create"
+function = "create"
+description = "Start tracking a habit with a daily target, such as water 8 glasses, exercise 1, read 30 minutes, medication 1."
+keywords = "track habit start goal daily"
+[tools.params.name]
+required = true
+[tools.params.target]
+type = "number"
+[tools.params.unit]
+
+[[tools]]
+name = "habits_log"
+function = "log"
+description = "Record doing a habit: 'I drank a glass of water', 'I went for a run', 'took my tablets'."
+keywords = "drank water exercised ran took medication read habit did log"
+[tools.params.name]
+required = true
+[tools.params.amount]
+type = "number"
+[tools.params.day]
+
+[[tools]]
+name = "habits_today"
+function = "today"
+description = "Progress on every habit today, with streaks."
+keywords = "habits progress streak today"
+
+[[tools]]
+name = "habits_week"
+function = "week"
+description = "The last seven days: habits met, mood and sleep."
+keywords = "habits week summary trend"
+
+[[tools]]
+name = "habits_mood"
+function = "mood"
+description = "Log mood from 1 (awful) to 5 (great), with an optional note."
+keywords = "mood feeling feel happy sad tired stressed"
+[tools.params.score]
+type = "integer"
+required = true
+[tools.params.note]
+
+[[tools]]
+name = "habits_sleep"
+function = "sleep"
+description = "Log last night's sleep in hours, with quality 1 to 5."
+keywords = "sleep slept hours bed night"
+[tools.params.hours]
+type = "number"
+required = true
+[tools.params.quality]
+type = "integer"
+[tools.params.note]
+
+[[tools]]
+name = "habits_remove"
+function = "remove"
+description = "Stop tracking a habit."
+confirm = true
+[tools.params.name]
+required = true
