@@ -1,0 +1,60 @@
+[module]
+name = "power"
+summary = "Suspend, restart and shut down (now or scheduled), power profiles, battery and uptime"
+python = "halpower.tools"
+
+[[tools]]
+name = "power_suspend"
+function = "suspend"
+description = "Put the computer to sleep."
+confirm = true
+keywords = "sleep suspend standby"
+
+[[tools]]
+name = "power_restart"
+function = "restart"
+description = "Restart the computer now, or in some minutes."
+confirm = true
+keywords = "restart reboot"
+[tools.params.minutes]
+type = "integer"
+
+[[tools]]
+name = "power_shutdown"
+function = "shutdown"
+description = "Turn the computer off now, or in some minutes."
+confirm = true
+keywords = "shut down turn off power off"
+[tools.params.minutes]
+type = "integer"
+
+[[tools]]
+name = "power_cancel"
+function = "cancel_shutdown"
+description = "Cancel a scheduled restart or shutdown."
+keywords = "cancel shutdown abort"
+
+[[tools]]
+name = "power_scheduled"
+function = "scheduled"
+description = "Whether a restart or shutdown is scheduled, and when."
+
+[[tools]]
+name = "power_profile"
+function = "profile"
+description = "Read or set the power profile: power-saver, balanced or performance."
+keywords = "power mode performance battery saver"
+[tools.params.mode]
+enum = ["power-saver", "balanced", "performance"]
+
+[[tools]]
+name = "power_battery"
+function = "battery"
+description = "Battery charge and state."
+keywords = "battery charge"
+
+[[tools]]
+name = "power_uptime"
+function = "uptime"
+description = "How long the computer has been on."
+keywords = "uptime how long on running since boot"
