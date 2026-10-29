@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+# Opens Hal Employment in the browser, starting its service first if needed.
+#
+#   hal-employment
+set -euo pipefail
+
+URL="http://127.0.0.1:8737/"
+if ! curl -s -o /dev/null -m 2 "$URL"; then
+  systemctl --user start hal-employment.service
+  for _ in $(seq 1 20); do
+    curl -s -o /dev/null -m 1 "$URL" && break
+    sleep 0.5
+  done
+fi
+exec xdg-open "$URL"

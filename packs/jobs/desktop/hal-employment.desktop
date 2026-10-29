@@ -1,0 +1,7 @@
+[Desktop Entry]
+Type=Application
+Name=Hal Employment
+Comment=Job queue, applications and to-dos
+Exec=@ROOT@/bin/hal-employment
+Icon=applications-office
+Terminal=false

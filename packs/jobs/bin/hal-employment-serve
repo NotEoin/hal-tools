@@ -1,0 +1,27 @@
+#!/usr/bin/env bash
+# Runs Hal Employment (jobhunt's web app) from the jobhunt checkout named by [jobs].jobhunt_root
+# in ~/.config/hal/config.toml (default ~/src/employment-helper), with its virtualenv.
+#
+#   hal-employment-serve [--port N]
+set -euo pipefail
+
+ROOT="$(python3 - <<'PY'
+import os, tomllib
+from pathlib import Path
+path = Path(os.environ.get("HAL_CONFIG", "~/.config/hal/config.toml")).expanduser()
+try:
+    jobs = tomllib.loads(path.read_text()).get("jobs", {})
+except (OSError, tomllib.TOMLDecodeError):
+    jobs = {}
+print(Path(jobs.get("jobhunt_root") or jobs.get("jobhunt") or "~/src/employment-helper").expanduser())
+PY
+)"
+if [ ! -d "$ROOT/jobhunt" ]; then
+  echo "jobhunt not found at $ROOT; set [jobs].jobhunt_root in ~/.config/hal/config.toml" >&2
+  exit 1
+fi
+# The virtualenv holds Playwright for form filling; everything else is stdlib.
+PY="$ROOT/.venv/bin/python"
+[ -x "$PY" ] || PY="$(command -v python3)"
+cd "$ROOT"
+exec "$PY" -m jobhunt serve "$@"
