@@ -140,7 +140,7 @@ NOT_A_TIME = (
 END = r"(?:(?P<h{n}>\d{{1,2}})(?:[:.](?P<m{n}>\d{{2}}))?\s*(?P<a{n}>[ap]\.?m\.?)?(?![\d:])|(?P<n{n}>noon|midday|midnight))"
 RANGES = (
     rf"\bbetween\s+{END.format(n=1)}\s+and\s+{END.format(n=2)}" + NOT_A_TIME,
-    rf"(?:\b(?:from|at|@)\s*)?(?<![\d/:.-]){END.format(n=1)}\s*(?:-|–|—|\bto\b|\btill?\b|\buntil\b)\s*"
+    rf"(?:\b(?:from|at|@)\s*)?(?<![\d/:.-]){END.format(n=1)}\s*(?:-|\u2013|\u2014|\bto\b|\btill?\b|\buntil\b)\s*"
     rf"{END.format(n=2)}" + NOT_A_TIME,
 )
 TIME = (

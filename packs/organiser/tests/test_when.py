@@ -27,6 +27,13 @@ class RangeTest(unittest.TestCase):
         self.assertEqual(span("tomorrow 11 till 1pm"), ("2026-10-11 11:00", "2026-10-11 13:00"))
         self.assertEqual(span("friday 8-10pm"), ("2026-10-16 20:00", "2026-10-16 22:00"))
 
+    def test_en_and_em_dashes_separate_a_range(self):
+        # Typed dashes (U+2013, U+2014) are common in pasted text; they mean the same as "-".
+        for dash in ("\u2013", "\u2014"):
+            self.assertEqual(
+                span(f"friday 8{dash}10pm"), ("2026-10-16 20:00", "2026-10-16 22:00"), dash
+            )
+
     def test_range_forms(self):
         cases = {
             "monday 2-4pm": ("2026-10-12 14:00", "2026-10-12 16:00"),
