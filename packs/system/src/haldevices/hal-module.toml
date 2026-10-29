@@ -1,0 +1,74 @@
+[module]
+name = "devices"
+summary = "Bluetooth devices, USB, printers and printing, monitors and cameras"
+python = "haldevices.tools"
+
+[[tools]]
+name = "devices_bluetooth"
+function = "bluetooth"
+description = "Bluetooth on or off, and paired devices (headphones, controllers) with connection and battery."
+keywords = "bluetooth headphones earbuds controller paired"
+
+[[tools]]
+name = "devices_bluetooth_connect"
+function = "bluetooth_connect"
+description = "Connect a paired Bluetooth device by name."
+keywords = "connect headphones bluetooth"
+timeout = 30
+[tools.params.device]
+required = true
+
+[[tools]]
+name = "devices_bluetooth_disconnect"
+function = "bluetooth_disconnect"
+description = "Disconnect a Bluetooth device."
+timeout = 30
+[tools.params.device]
+required = true
+
+[[tools]]
+name = "devices_bluetooth_power"
+function = "bluetooth_power"
+description = "Turn Bluetooth on or off."
+[tools.params.on]
+type = "boolean"
+required = true
+
+[[tools]]
+name = "devices_usb"
+function = "usb"
+description = "USB devices plugged in."
+keywords = "usb plugged connected devices drive stick"
+
+[[tools]]
+name = "devices_printers"
+function = "printers"
+description = "Printers, the default one and the print queue."
+keywords = "printer print queue ink"
+
+[[tools]]
+name = "devices_print"
+function = "print_file"
+description = "Print a file (PDF, image or text), with copies and double-sided printing."
+confirm = true
+keywords = "print file document"
+timeout = 90
+[tools.params.path]
+required = true
+[tools.params.printer]
+[tools.params.copies]
+type = "integer"
+[tools.params.double_sided]
+type = "boolean"
+
+[[tools]]
+name = "devices_monitors"
+function = "monitors"
+description = "Connected monitors and their resolution."
+keywords = "monitor screen display resolution"
+
+[[tools]]
+name = "devices_cameras"
+function = "cameras"
+description = "Webcams and other video devices."
+keywords = "webcam camera video"
