@@ -1,0 +1,116 @@
+[module]
+name = "desktop"
+summary = "Launch apps, open files and links, sound, theme, night light, wallpaper, clipboard, screenshots and the session"
+# PyGObject (screenshots) lives in the system Python, so the hub runs this module there.
+exec = ["/usr/bin/python3", "-m", "haldesk", "--stdin"]
+
+[[tools]]
+name = "desktop_launch"
+function = "launch"
+description = "Start an application by name, such as firefox, files, terminal, spotify, code or settings."
+keywords = "open app application program start run launch"
+[tools.params.app]
+required = true
+
+[[tools]]
+name = "desktop_apps"
+function = "apps"
+description = "List installed applications, optionally matching a word."
+keywords = "installed programs which apps"
+[tools.params.query]
+
+[[tools]]
+name = "desktop_open"
+function = "open_item"
+description = "Open a web address, file or folder with its default application."
+keywords = "open url link website file folder show browse"
+[tools.params.target]
+description = "a URL, or a file or folder path"
+required = true
+
+[[tools]]
+name = "desktop_volume"
+function = "volume"
+description = "Read or set the speaker volume (0 to 100), turn it up or down by an amount, or mute and unmute."
+keywords = "volume louder quieter mute unmute sound loud"
+[tools.params.level]
+type = "integer"
+description = "set to this percentage"
+[tools.params.change]
+type = "integer"
+description = "raise (positive) or lower (negative) by this many percent"
+[tools.params.mute]
+enum = ["on", "off", "toggle"]
+
+[[tools]]
+name = "desktop_audio_devices"
+function = "audio_devices"
+description = "List speakers, headsets and microphones, with the defaults."
+keywords = "audio output input speaker headphones microphone"
+
+[[tools]]
+name = "desktop_audio_output"
+function = "set_audio_output"
+description = "Switch sound to another speaker or headset."
+keywords = "switch audio headphones speakers output"
+[tools.params.device]
+required = true
+
+[[tools]]
+name = "desktop_theme"
+function = "theme"
+description = "Read or switch between light and dark mode."
+keywords = "dark mode light mode theme appearance"
+[tools.params.mode]
+enum = ["dark", "light"]
+
+[[tools]]
+name = "desktop_night_light"
+function = "night_light"
+description = "Read or switch the warm night light on or off."
+keywords = "night light warm blue light eyes"
+[tools.params.on]
+enum = ["on", "off"]
+
+[[tools]]
+name = "desktop_wallpaper"
+function = "wallpaper"
+description = "Read or set the desktop wallpaper from an image file."
+keywords = "background wallpaper picture"
+[tools.params.path]
+
+[[tools]]
+name = "desktop_banners"
+function = "banners"
+description = "Show or hide desktop notification banners."
+keywords = "notifications banners popups quiet"
+[tools.params.on]
+enum = ["on", "off"]
+
+[[tools]]
+name = "desktop_clipboard"
+function = "clipboard"
+description = "Read the clipboard, or copy text to it."
+keywords = "copy paste clipboard"
+[tools.params.text]
+description = "text to copy; leave out to read the clipboard"
+
+[[tools]]
+name = "desktop_screenshot"
+function = "screenshot"
+description = "Take a screenshot of the screen and save it; returns the file path."
+keywords = "screenshot capture screen picture"
+timeout = 40
+[tools.params.path]
+
+[[tools]]
+name = "desktop_lock"
+function = "lock"
+description = "Lock the screen."
+keywords = "lock screen away"
+
+[[tools]]
+name = "desktop_session"
+function = "session"
+description = "Desktop and display type, whether the screen is locked, and how long since the last input."
+keywords = "idle away locked session"
