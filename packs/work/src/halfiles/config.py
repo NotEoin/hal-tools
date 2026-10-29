@@ -2,12 +2,15 @@
 
 The shared [hal] table supplies the vault path and the local model settings.
 """
+
 import os
 import tomllib
 from pathlib import Path
 
 SECTION = "files"
-DEFAULTS: dict = {"roots": ["~/Documents", "~/Downloads", "~/Desktop", "~/Pictures", "~/Music", "~/Videos"]}
+DEFAULTS: dict = {
+    "roots": ["~/Documents", "~/Downloads", "~/Desktop", "~/Pictures", "~/Music", "~/Videos"]
+}
 SHARED = {
     "vault": "~/Documents/vaults/Hal",
     "ollama_url": "http://localhost:11434",

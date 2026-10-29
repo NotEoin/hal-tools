@@ -1,4 +1,5 @@
 """Smoke test: the models tools answer when Ollama is running."""
+
 import sys
 import unittest
 from pathlib import Path

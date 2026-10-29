@@ -1,4 +1,5 @@
 """Tests for subscriptions and unread tracking, using a feed file on disk."""
+
 import os
 import sys
 import tempfile
@@ -13,10 +14,13 @@ class FeedsTest(unittest.TestCase):
         self.tmp = tempfile.TemporaryDirectory()
         os.environ["HAL_DATA"] = self.tmp.name
         feed = Path(self.tmp.name) / "f.xml"
-        feed.write_text('<rss><channel><title>Blog</title><item><title>First post</title><link>http://x/1</link>'
-                        '<description>&lt;p&gt;Hello&lt;/p&gt;</description></item></channel></rss>')
+        feed.write_text(
+            "<rss><channel><title>Blog</title><item><title>First post</title><link>http://x/1</link>"
+            "<description>&lt;p&gt;Hello&lt;/p&gt;</description></item></channel></rss>"
+        )
         self.url = feed.as_uri()
         from halfeeds import tools
+
         self.t = tools
 
     def tearDown(self):

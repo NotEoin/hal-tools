@@ -3,6 +3,7 @@
 Both live in hal-voice's virtualenv, which the service runs under when hal-voice
 is installed. Without them the bridge still works in text.
 """
+
 from __future__ import annotations
 
 import subprocess
@@ -29,8 +30,11 @@ def transcribe(audio: Path) -> str:
         raise VoiceUnavailable(NEEDS_VOICE) from e
     if _model is None:
         s = config.settings()
-        _model = WhisperModel(s["whisper_model"], device=s["whisper_device"],
-                              compute_type="int8" if s["whisper_device"] == "cpu" else "default")
+        _model = WhisperModel(
+            s["whisper_model"],
+            device=s["whisper_device"],
+            compute_type="int8" if s["whisper_device"] == "cpu" else "default",
+        )
     segments, _ = _model.transcribe(str(audio), language="en", beam_size=1, vad_filter=True)
     return " ".join(seg.text.strip() for seg in segments).strip()
 
@@ -54,8 +58,23 @@ def synthesise(text: str, workdir: Path) -> Path | None:
     wav, ogg = workdir / "reply.wav", workdir / "reply.ogg"
     soundfile.write(wav, audio, sr)
     try:
-        subprocess.run(["ffmpeg", "-y", "-loglevel", "error", "-i", str(wav), "-c:a", "libopus", "-b:a", "48k",
-                        str(ogg)], check=True, timeout=60)
+        subprocess.run(
+            [
+                "ffmpeg",
+                "-y",
+                "-loglevel",
+                "error",
+                "-i",
+                str(wav),
+                "-c:a",
+                "libopus",
+                "-b:a",
+                "48k",
+                str(ogg),
+            ],
+            check=True,
+            timeout=60,
+        )
     except (OSError, subprocess.SubprocessError):
         return None
     return ogg

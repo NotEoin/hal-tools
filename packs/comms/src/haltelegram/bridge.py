@@ -5,6 +5,7 @@ a desktop notification; sending `/pair <code>` from Telegram saves that chat.
 Free text and voice notes go to a halcore Brain(channel="telegram") with the
 tools of every installed extension, one Brain per chat, kept until /reset.
 """
+
 from __future__ import annotations
 
 import logging
@@ -56,6 +57,7 @@ def load_core():
         sys.path.insert(0, str(core))
     from halcore import hub
     from halcore.brain import Brain
+
     return Brain, hub.load()
 
 
@@ -65,7 +67,9 @@ def brain_factory() -> Callable[[], object] | None:
     if brain_cls is None:
         return None
     s = config.settings()
-    return lambda: brain_cls(channel="telegram", persona=s["persona"] or None, model=s["model"] or None, tools=True)
+    return lambda: brain_cls(
+        channel="telegram", persona=s["persona"] or None, model=s["model"] or None, tools=True
+    )
 
 
 class Bridge:
@@ -93,7 +97,10 @@ class Bridge:
         if self.pairing_code:
             message = f"Send /pair {self.pairing_code} to your Hal bot in Telegram."
             log.info(message)
-            subprocess.run(["notify-send", "-a", "Hal", "-u", "critical", "Pair Telegram", message], check=False)
+            subprocess.run(
+                ["notify-send", "-a", "Hal", "-u", "critical", "Pair Telegram", message],
+                check=False,
+            )
 
     def _pair(self, chat: int, text: str) -> None:
         command, arg = parse(text)
@@ -105,7 +112,9 @@ class Bridge:
             self.bot.send(chat, "Paired. " + HELP)
         elif command == "/pair":
             log.info("rejected pairing attempt from chat %s", chat)
-            self.bot.send(chat, "That code doesn't match. Use the code in the latest desktop notification.")
+            self.bot.send(
+                chat, "That code doesn't match. Use the code in the latest desktop notification."
+            )
 
     # -- messages ------------------------------------------------------------------
     def handle(self, message: dict) -> None:
@@ -122,11 +131,15 @@ class Bridge:
             spoken = "voice" in message
             if spoken:
                 try:
-                    text = voice.transcribe(self.bot.download(message["voice"]["file_id"], workdir / "in.ogg"))
+                    text = voice.transcribe(
+                        self.bot.download(message["voice"]["file_id"], workdir / "in.ogg")
+                    )
                 except voice.VoiceUnavailable as e:
                     self.bot.send(chat, str(e))
                     return
-                self.bot.send(chat, f"Heard: {text}" if text else "I couldn't make out any words in that.")
+                self.bot.send(
+                    chat, f"Heard: {text}" if text else "I couldn't make out any words in that."
+                )
             if not text:
                 return
             self.bot.typing(chat)
@@ -148,13 +161,21 @@ class Bridge:
             if brain is not None:
                 brain.reset()
             return "Starting afresh."
-        simple = {"/status": self.jobs.status, "/brief": self.jobs.brief, "/jobs": self.jobs.matches,
-                  "/queue": self.jobs.queue}
+        simple = {
+            "/status": self.jobs.status,
+            "/brief": self.jobs.brief,
+            "/jobs": self.jobs.matches,
+            "/queue": self.jobs.queue,
+        }
         if command in simple:
             return simple[command]()
         if command == "/todo":
             return self.jobs.todo(arg)
-        with_id = {"/discard": self.jobs.discard, "/shortlist": self.jobs.shortlist, "/applied": self.jobs.applied}
+        with_id = {
+            "/discard": self.jobs.discard,
+            "/shortlist": self.jobs.shortlist,
+            "/applied": self.jobs.applied,
+        }
         if command in with_id and arg:
             return with_id[command](arg)
         if command == "/pack" and arg:
@@ -175,7 +196,9 @@ class Bridge:
         """Returns this chat's Brain, making it on first use."""
         if chat not in self.brains:
             brain = self.make_brain()
-            brain.on_deep_done = lambda text, c=chat: self.bot.send(c, "Background task finished.\n\n" + text[-3500:])
+            brain.on_deep_done = lambda text, c=chat: self.bot.send(
+                c, "Background task finished.\n\n" + text[-3500:]
+            )
             self.brains[chat] = brain
         return self.brains[chat]
 
@@ -202,7 +225,9 @@ def run() -> int:
     _, hub = load_core()
     make_brain = brain_factory()
     if make_brain is None:
-        log.warning("core hal not found (HAL_CORE, the ecosystem layout or [hal].core): commands only")
+        log.warning(
+            "core hal not found (HAL_CORE, the ecosystem layout or [hal].core): commands only"
+        )
     bridge = Bridge(bot, make_brain, hub)
     bridge.announce_pairing()
     offset = None

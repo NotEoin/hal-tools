@@ -5,6 +5,7 @@ mail as read. Drafts are appended to the account's Drafts folder for you to
 review; sending through SMTP needs confirmation through hal-hub. Passwords are
 app passwords kept in files named in the config, never in the config itself.
 """
+
 from __future__ import annotations
 
 import email
@@ -65,16 +66,26 @@ def _body(msg: email.message.Message) -> str:
         if ctype == "text/plain" and not plain:
             plain = text
         elif ctype == "text/html" and not rich:
-            rich = html.unescape(re.sub(r"<[^>]+>", " ", re.sub(r"(?is)<(script|style).*?</\1>", "", text)))
+            rich = html.unescape(
+                re.sub(r"<[^>]+>", " ", re.sub(r"(?is)<(script|style).*?</\1>", "", text))
+            )
     return re.sub(r"\s+\n", "\n", re.sub(r"[ \t]+", " ", plain or rich)).strip()
 
 
 def _summary(uid: bytes, msg: email.message.Message) -> dict:
-    return {"id": uid.decode(), "from": _decode(msg.get("From")), "subject": _decode(msg.get("Subject")),
-            "date": email.utils.parsedate_to_datetime(msg["Date"]).strftime("%a %-d %b %H:%M") if msg.get("Date") else ""}
+    return {
+        "id": uid.decode(),
+        "from": _decode(msg.get("From")),
+        "subject": _decode(msg.get("Subject")),
+        "date": email.utils.parsedate_to_datetime(msg["Date"]).strftime("%a %-d %b %H:%M")
+        if msg.get("Date")
+        else "",
+    }
 
 
-def _fetch(m: imaplib.IMAP4_SSL, uids: list[bytes], headers_only: bool = True) -> list[tuple[bytes, email.message.Message]]:
+def _fetch(
+    m: imaplib.IMAP4_SSL, uids: list[bytes], headers_only: bool = True
+) -> list[tuple[bytes, email.message.Message]]:
     out = []
     part = "BODY.PEEK[HEADER.FIELDS (FROM SUBJECT DATE)]" if headers_only else "BODY.PEEK[]"
     for uid in uids:
@@ -91,9 +102,12 @@ def unread(account: str = "", limit: int = 10) -> dict:
     try:
         m.select("INBOX", readonly=True)
         _, data = m.uid("SEARCH", None, "UNSEEN")
-        uids = data[0].split()[-int(limit):][::-1]
-        return {"account": a["address"], "unread": len(data[0].split()),
-                "messages": [_summary(u, msg) for u, msg in _fetch(m, uids)]}
+        uids = data[0].split()[-int(limit) :][::-1]
+        return {
+            "account": a["address"],
+            "unread": len(data[0].split()),
+            "messages": [_summary(u, msg) for u, msg in _fetch(m, uids)],
+        }
     finally:
         m.logout()
 
@@ -107,7 +121,7 @@ def search(query: str, account: str = "", days: int = 30, limit: int = 10) -> li
         since = (datetime.now() - timedelta(days=int(days))).strftime("%d-%b-%Y")
         crit = ["SINCE", since] + [x for w in query.split() for x in ("TEXT", f'"{w}"')]
         _, data = m.uid("SEARCH", None, *crit)
-        uids = data[0].split()[-int(limit):][::-1]
+        uids = data[0].split()[-int(limit) :][::-1]
         return [_summary(u, msg) for u, msg in _fetch(m, uids)]
     finally:
         m.logout()
@@ -123,8 +137,12 @@ def read(message_id: str, account: str = "") -> dict:
         if not got:
             raise ValueError(f"no message {message_id}")
         uid, msg = got[0]
-        return {**_summary(uid, msg), "to": _decode(msg.get("To")), "text": _body(msg)[:8000],
-                "message_id": msg.get("Message-ID")}
+        return {
+            **_summary(uid, msg),
+            "to": _decode(msg.get("To")),
+            "text": _body(msg)[:8000],
+            "message_id": msg.get("Message-ID"),
+        }
     finally:
         m.logout()
 
@@ -135,9 +153,12 @@ def summarise(account: str = "", limit: int = 15) -> dict:
     if not u["messages"]:
         return {"summary": "No unread mail."}
     listing = "\n".join(f"- {x['from']}: {x['subject']}" for x in u["messages"])
-    text = llm.chat("Summarise this list of unread emails for the owner in at most 80 words of plain speech. "
-                    "Group newsletters and notifications together; name people who wrote personally and anything "
-                    "that needs a reply or action.", listing)
+    text = llm.chat(
+        "Summarise this list of unread emails for the owner in at most 80 words of plain speech. "
+        "Group newsletters and notifications together; name people who wrote personally and anything "
+        "that needs a reply or action.",
+        listing,
+    )
     return {"unread": u["unread"], "summary": text.strip()}
 
 
@@ -158,7 +179,9 @@ def draft(to: str, subject: str, body: str, account: str = "", reply_to: str = "
     m = _connect(a)
     try:
         folder = a.get("drafts") or DRAFTS.get(a.get("imap", "imap.gmail.com"), "Drafts")
-        typ, data = m.append(folder, r"(\Draft)", imaplib.Time2Internaldate(time.time()), msg.as_bytes())
+        typ, data = m.append(
+            folder, r"(\Draft)", imaplib.Time2Internaldate(time.time()), msg.as_bytes()
+        )
         if typ != "OK":
             raise RuntimeError(f"could not save the draft: {data}")
         return {"saved_draft": subject, "to": to, "folder": folder}

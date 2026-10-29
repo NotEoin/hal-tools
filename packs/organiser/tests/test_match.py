@@ -1,4 +1,5 @@
 """Tests for finding the event someone means, and for agenda ranges, on a throwaway store at a fixed time."""
+
 import os
 import sys
 import tempfile
@@ -16,6 +17,7 @@ class Base(unittest.TestCase):
         os.environ["HAL_DATA"] = self.tmp.name
         os.environ["HAL_CONFIG"] = str(Path(self.tmp.name) / "none.toml")
         from halcal import tools
+
         self.t = tools
         self._now = tools._now
         tools._now = lambda: SATURDAY
@@ -40,7 +42,10 @@ class MatchTest(Base):
         self.add("Haircut", "saturday at 10am")
         self.assertEqual(self.t.delete("my haircut appointment")["deleted"], "Haircut")
         self.add("Dentist check-up", "wednesday at 9am")
-        self.assertEqual(self.t.delete("the dentist appointment on wednesday at 9am")["deleted"], "Dentist check-up")
+        self.assertEqual(
+            self.t.delete("the dentist appointment on wednesday at 9am")["deleted"],
+            "Dentist check-up",
+        )
 
     def test_move_with_loose_words(self):
         self.add("Haircut", "saturday at 10am")
@@ -53,7 +58,9 @@ class MatchTest(Base):
         self.add("Haircut", "saturday at 10am")
         moved = self.t.move("my haircut", "Sunday at 3pm")["moved"]
         self.assertEqual(moved["start"], "2026-10-11T15:00")
-        self.assertEqual([o["start"] for o in self.t.find("haircut")], ["2026-10-11T15:00", "2026-10-11T15:00"])
+        self.assertEqual(
+            [o["start"] for o in self.t.find("haircut")], ["2026-10-11T15:00", "2026-10-11T15:00"]
+        )
 
     def test_uid_is_exact(self):
         uid = self.add("Pottery class", "friday at 6pm")["uid"]
@@ -80,7 +87,9 @@ class MatchTest(Base):
 
     def test_find_falls_back_to_fuzzy_words(self):
         self.add("Pottery class", "friday at 6pm")
-        self.assertEqual([o["title"] for o in self.t.find("pottery class on friday")], ["Pottery class"])
+        self.assertEqual(
+            [o["title"] for o in self.t.find("pottery class on friday")], ["Pottery class"]
+        )
         self.assertEqual(self.t.find("dentist"), [])
 
     def test_repeating_event_resolves_once(self):
@@ -91,7 +100,13 @@ class MatchTest(Base):
 class AgendaTest(Base):
     def test_single_dates(self):
         self.add("Dentist", "3 March 2031 at 10am")
-        for span in ("3 March 2031", "2031-03-03", "the 3rd of March 2031", "on 3/3/2031", "March 3rd, 2031"):
+        for span in (
+            "3 March 2031",
+            "2031-03-03",
+            "the 3rd of March 2031",
+            "on 3/3/2031",
+            "March 3rd, 2031",
+        ):
             got = self.t.agenda(span)
             self.assertEqual(got["range"], "Monday 3 March 2031", span)
             self.assertEqual([o["title"] for o in got["events"]], ["Dentist"], span)
@@ -113,7 +128,10 @@ class AgendaTest(Base):
 class ManifestTest(unittest.TestCase):
     def test_agenda_is_described_for_whats_on_questions(self):
         import tomllib
-        spec = tomllib.loads((Path(__file__).resolve().parents[1] / "src" / "halcal" / "hal-module.toml").read_text())
+
+        spec = tomllib.loads(
+            (Path(__file__).resolve().parents[1] / "src" / "halcal" / "hal-module.toml").read_text()
+        )
         agenda = next(t for t in spec["tools"] if t["name"] == "calendar_agenda")
         text = (agenda["description"] + " " + agenda.get("keywords", "")).lower()
         for word in ("what's on", "anything", "free", "date"):

@@ -4,6 +4,7 @@ Amounts are in the configured currency (pounds by default) and stored in pence.
 Categories come from keywords ("lunch", "tesco", "uber") unless given. Bank
 statement CSVs are read by finding the date, description and amount columns.
 """
+
 from __future__ import annotations
 
 import csv
@@ -52,8 +53,15 @@ def spend(amount: str, note: str = "", category: str = "", day: str = "") -> dic
     cat = category.lower() or categorise(note)
     d = day or date.today().isoformat()
     con = _db()
-    con.execute("INSERT OR IGNORE INTO spend (day, pence, category, note, source) VALUES (?, ?, ?, ?, 'hal')",
-                (d, p, cat, note, ))
+    con.execute(
+        "INSERT OR IGNORE INTO spend (day, pence, category, note, source) VALUES (?, ?, ?, ?, 'hal')",
+        (
+            d,
+            p,
+            cat,
+            note,
+        ),
+    )
     con.commit()
     out = {"spent": _money(p), "category": cat}
     b = con.execute("SELECT pence FROM budgets WHERE category = ?", (cat,)).fetchone()
@@ -65,7 +73,9 @@ def spend(amount: str, note: str = "", category: str = "", day: str = "") -> dic
 
 def _month_total(con, category: str | None = None, month: str = "") -> int:
     m = month or date.today().strftime("%Y-%m")
-    sql = "SELECT COALESCE(SUM(pence), 0) FROM spend WHERE substr(day, 1, 7) = ?" + (" AND category = ?" if category else "")
+    sql = "SELECT COALESCE(SUM(pence), 0) FROM spend WHERE substr(day, 1, 7) = ?" + (
+        " AND category = ?" if category else ""
+    )
     return con.execute(sql, (m, category) if category else (m,)).fetchone()[0]
 
 
@@ -73,19 +83,47 @@ def summary(month: str = "") -> dict:
     """Spending for a month (YYYY-MM, this month by default) by category, against budgets."""
     con = _db()
     m = month or date.today().strftime("%Y-%m")
-    rows = con.execute("""SELECT category, SUM(pence) p, COUNT(*) n FROM spend WHERE substr(day, 1, 7) = ?
-                          GROUP BY category ORDER BY p DESC""", (m,)).fetchall()
+    rows = con.execute(
+        """SELECT category, SUM(pence) p, COUNT(*) n FROM spend WHERE substr(day, 1, 7) = ?
+                          GROUP BY category ORDER BY p DESC""",
+        (m,),
+    ).fetchall()
     budgets = {r["category"]: r["pence"] for r in con.execute("SELECT * FROM budgets")}
-    return {"month": m, "total": _money(sum(r["p"] for r in rows)),
-            "categories": [{"category": r["category"], "spent": _money(r["p"]), "items": r["n"],
-                            **({"budget": _money(budgets[r["category"]]),
-                                "over": r["p"] > budgets[r["category"]]} if r["category"] in budgets else {})}
-                           for r in rows]}
+    return {
+        "month": m,
+        "total": _money(sum(r["p"] for r in rows)),
+        "categories": [
+            {
+                "category": r["category"],
+                "spent": _money(r["p"]),
+                "items": r["n"],
+                **(
+                    {
+                        "budget": _money(budgets[r["category"]]),
+                        "over": r["p"] > budgets[r["category"]],
+                    }
+                    if r["category"] in budgets
+                    else {}
+                ),
+            }
+            for r in rows
+        ],
+    }
 
 
 def recent(limit: int = 15) -> list[dict]:
-    return [{"id": r["id"], "day": r["day"], "amount": _money(r["pence"]), "category": r["category"], "note": r["note"]}
-            for r in _db().execute("SELECT * FROM spend ORDER BY day DESC, id DESC LIMIT ?", (int(limit),))]
+    return [
+        {
+            "id": r["id"],
+            "day": r["day"],
+            "amount": _money(r["pence"]),
+            "category": r["category"],
+            "note": r["note"],
+        }
+        for r in _db().execute(
+            "SELECT * FROM spend ORDER BY day DESC, id DESC LIMIT ?", (int(limit),)
+        )
+    ]
 
 
 def budget(category: str, amount: str) -> dict:
@@ -102,17 +140,31 @@ def subscription(name: str, amount: str, period: str = "monthly", next_payment: 
         raise ValueError("period is weekly, monthly or yearly")
     nxt = next_payment or (date.today() + timedelta(days=30)).isoformat()
     con = _db()
-    con.execute("INSERT OR REPLACE INTO subs VALUES (?, ?, ?, ?, NULL)", (name, _pence(amount), period, nxt))
+    con.execute(
+        "INSERT OR REPLACE INTO subs VALUES (?, ?, ?, ?, NULL)", (name, _pence(amount), period, nxt)
+    )
     con.commit()
     return {"subscription": name, "amount": _money(_pence(amount)), "period": period, "next": nxt}
 
 
 def subscriptions() -> dict:
     rows = _db().execute("SELECT * FROM subs ORDER BY next").fetchall()
-    per_month = sum(r["pence"] * {"weekly": 52 / 12, "monthly": 1, "yearly": 1 / 12}[r["period"]] for r in rows)
-    return {"monthly_cost": _money(round(per_month)), "yearly_cost": _money(round(per_month * 12)),
-            "subscriptions": [{"name": r["name"], "amount": _money(r["pence"]), "period": r["period"],
-                               "next": r["next"]} for r in rows]}
+    per_month = sum(
+        r["pence"] * {"weekly": 52 / 12, "monthly": 1, "yearly": 1 / 12}[r["period"]] for r in rows
+    )
+    return {
+        "monthly_cost": _money(round(per_month)),
+        "yearly_cost": _money(round(per_month * 12)),
+        "subscriptions": [
+            {
+                "name": r["name"],
+                "amount": _money(r["pence"]),
+                "period": r["period"],
+                "next": r["next"],
+            }
+            for r in rows
+        ],
+    }
 
 
 def cancel_subscription(name: str) -> dict:
@@ -142,11 +194,13 @@ def import_csv(path: str) -> dict:
         p = _pence(raw)
         if ai is not None and outi is None:
             if p >= 0:
-                continue            # money in, not spending
+                continue  # money in, not spending
             p = -p
         d = _date(r[di])
-        cur = con.execute("INSERT OR IGNORE INTO spend (day, pence, category, note, source) VALUES (?, ?, ?, ?, ?)",
-                          (d, p, categorise(r[ni]), r[ni].strip(), Path(path).name))
+        cur = con.execute(
+            "INSERT OR IGNORE INTO spend (day, pence, category, note, source) VALUES (?, ?, ?, ?, ?)",
+            (d, p, categorise(r[ni]), r[ni].strip(), Path(path).name),
+        )
         added += cur.rowcount
     con.commit()
     return {"imported": added}
@@ -169,10 +223,21 @@ def renewals_due(days: int = 3) -> list[dict]:
     for r in con.execute("SELECT * FROM subs").fetchall():
         nxt = date.fromisoformat(r["next"])
         while nxt < today:
-            nxt = {"weekly": nxt + timedelta(weeks=1), "yearly": nxt.replace(year=nxt.year + 1)}.get(
-                r["period"], (nxt.replace(day=1) + timedelta(days=32)).replace(day=min(nxt.day, 28)))
+            nxt = {
+                "weekly": nxt + timedelta(weeks=1),
+                "yearly": nxt.replace(year=nxt.year + 1),
+            }.get(
+                r["period"], (nxt.replace(day=1) + timedelta(days=32)).replace(day=min(nxt.day, 28))
+            )
         con.execute("UPDATE subs SET next = ? WHERE name = ?", (nxt.isoformat(), r["name"]))
         if (nxt - today).days <= int(days):
-            out.append({"name": r["name"], "amount": _money(r["pence"]), "on": nxt.isoformat(), "reminded": r["reminded"]})
+            out.append(
+                {
+                    "name": r["name"],
+                    "amount": _money(r["pence"]),
+                    "on": nxt.isoformat(),
+                    "reminded": r["reminded"],
+                }
+            )
     con.commit()
     return out

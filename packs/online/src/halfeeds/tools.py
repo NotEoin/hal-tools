@@ -4,6 +4,7 @@ Saved links get their title and, when asked, a summary from the local model.
 Feeds are polled on demand; items seen are remembered so "what's new" only
 lists unread ones. Stdlib only.
 """
+
 from __future__ import annotations
 
 import html
@@ -47,25 +48,43 @@ def save(url: str, summarise: bool = False) -> dict:
     title = _strip(m.group(1)) if m else url
     summary = ""
     if summarise:
-        text = re.sub(r"\s+", " ", _strip(re.sub(r"(?is)<(script|style|nav|footer).*?</\1>", "", page)))
-        summary = llm.chat("Summarise this web page in at most 60 words. Use only the page.", text[:10000]).strip()
+        text = re.sub(
+            r"\s+", " ", _strip(re.sub(r"(?is)<(script|style|nav|footer).*?</\1>", "", page))
+        )
+        summary = llm.chat(
+            "Summarise this web page in at most 60 words. Use only the page.", text[:10000]
+        ).strip()
     con = _db()
-    con.execute("INSERT OR REPLACE INTO later VALUES (?, ?, ?, ?, NULL)", (url, title, summary, datetime.now().isoformat()))
+    con.execute(
+        "INSERT OR REPLACE INTO later VALUES (?, ?, ?, ?, NULL)",
+        (url, title, summary, datetime.now().isoformat()),
+    )
     con.commit()
     return {"saved": title, "summary": summary or None}
 
 
 def reading_list(include_read: bool = False) -> list[dict]:
-    sql = "SELECT * FROM later" + ("" if include_read else " WHERE read IS NULL") + " ORDER BY added DESC"
-    return [{"title": r["title"], "url": r["url"], "summary": r["summary"], "added": r["added"][:10]} for r in _db().execute(sql)]
+    sql = (
+        "SELECT * FROM later"
+        + ("" if include_read else " WHERE read IS NULL")
+        + " ORDER BY added DESC"
+    )
+    return [
+        {"title": r["title"], "url": r["url"], "summary": r["summary"], "added": r["added"][:10]}
+        for r in _db().execute(sql)
+    ]
 
 
 def mark_read(item: str) -> dict:
     """Marks a saved link or feed item read, by URL or words in its title."""
     con = _db()
-    n = con.execute("UPDATE later SET read = ? WHERE url = ? OR title LIKE ?",
-                    (datetime.now().isoformat(), item, f"%{item}%")).rowcount
-    n += con.execute("UPDATE items SET read = 1 WHERE link = ? OR title LIKE ?", (item, f"%{item}%")).rowcount
+    n = con.execute(
+        "UPDATE later SET read = ? WHERE url = ? OR title LIKE ?",
+        (datetime.now().isoformat(), item, f"%{item}%"),
+    ).rowcount
+    n += con.execute(
+        "UPDATE items SET read = 1 WHERE link = ? OR title LIKE ?", (item, f"%{item}%")
+    ).rowcount
     con.commit()
     return {"marked": n}
 
@@ -90,9 +109,16 @@ def unsubscribe(name: str) -> dict:
 
 def feeds() -> list[dict]:
     con = _db()
-    return [{"name": r["name"], "url": r["url"],
-             "unread": con.execute("SELECT COUNT(*) FROM items WHERE feed = ? AND read = 0", (r["url"],)).fetchone()[0]}
-            for r in con.execute("SELECT * FROM feeds ORDER BY name")]
+    return [
+        {
+            "name": r["name"],
+            "url": r["url"],
+            "unread": con.execute(
+                "SELECT COUNT(*) FROM items WHERE feed = ? AND read = 0", (r["url"],)
+            ).fetchone()[0],
+        }
+        for r in con.execute("SELECT * FROM feeds ORDER BY name")
+    ]
 
 
 def refresh() -> dict:
@@ -114,8 +140,10 @@ def refresh() -> dict:
             # An element with no children is falsy, so pick the first present one explicitly.
             body = next((kids[k] for k in ("description", "summary", "content") if k in kids), None)
             summ = _strip(body.text if body is not None else "")
-            new += con.execute("INSERT OR IGNORE INTO items (link, feed, title, summary, seen) VALUES (?, ?, ?, ?, ?)",
-                               (href or title, f["url"], title, summ[:400], datetime.now().isoformat())).rowcount
+            new += con.execute(
+                "INSERT OR IGNORE INTO items (link, feed, title, summary, seen) VALUES (?, ?, ?, ?, ?)",
+                (href or title, f["url"], title, summ[:400], datetime.now().isoformat()),
+            ).rowcount
     con.commit()
     return {"new_items": new}
 
@@ -125,7 +153,17 @@ def whats_new(limit: int = 15, feed: str = "") -> list[dict]:
     refresh()
     con = _db()
     names = {r["url"]: r["name"] for r in con.execute("SELECT * FROM feeds")}
-    rows = con.execute("SELECT * FROM items WHERE read = 0 ORDER BY seen DESC LIMIT ?", (int(limit) * 4,)).fetchall()
-    out = [{"feed": names.get(r["feed"], ""), "title": r["title"], "link": r["link"], "summary": r["summary"][:200]}
-           for r in rows if not feed or feed.lower() in names.get(r["feed"], "").lower()]
-    return out[:int(limit)]
+    rows = con.execute(
+        "SELECT * FROM items WHERE read = 0 ORDER BY seen DESC LIMIT ?", (int(limit) * 4,)
+    ).fetchall()
+    out = [
+        {
+            "feed": names.get(r["feed"], ""),
+            "title": r["title"],
+            "link": r["link"],
+            "summary": r["summary"][:200],
+        }
+        for r in rows
+        if not feed or feed.lower() in names.get(r["feed"], "").lower()
+    ]
+    return out[: int(limit)]

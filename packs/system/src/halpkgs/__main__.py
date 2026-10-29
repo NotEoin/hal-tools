@@ -1,9 +1,10 @@
 """hal-packages command line, driven by hal-module.toml.
 
-    python -m halpkgs                      list the tools
-    python -m halpkgs TOOL [key=value ...] run one (the module prefix is optional)
-    python -m halpkgs --stdin FUNCTION      run a function with JSON arguments on stdin
+python -m halpkgs                      list the tools
+python -m halpkgs TOOL [key=value ...] run one (the module prefix is optional)
+python -m halpkgs --stdin FUNCTION      run a function with JSON arguments on stdin
 """
+
 import json
 import sys
 import tomllib

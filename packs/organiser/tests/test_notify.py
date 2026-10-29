@@ -1,4 +1,5 @@
 """Tests for quiet hours, do-not-disturb and history, with every channel stubbed out."""
+
 import os
 import sys
 import tempfile
@@ -14,14 +15,19 @@ class NotifyTest(unittest.TestCase):
         self.tmp = tempfile.TemporaryDirectory()
         os.environ["HAL_DATA"] = self.tmp.name
         cfg = Path(self.tmp.name) / "c.toml"
-        cfg.write_text('[notify]\nntfy_topic = "test"\nquiet_from = 22\nquiet_until = 8\nchannels = ["desktop", "phone"]\n')
+        cfg.write_text(
+            '[notify]\nntfy_topic = "test"\nquiet_from = 22\nquiet_until = 8\nchannels = ["desktop", "phone"]\n'
+        )
         os.environ["HAL_CONFIG"] = str(cfg)
         from halnotify import tools
+
         self.t = tools
         self.calls = []
         for name in ("_desktop", "_speak", "_telegram"):
             setattr(tools, name, lambda *a, n=name: self.calls.append(n) or True)
-        tools._ntfy = lambda title, body, urgent, silent, url="": self.calls.append(("phone", silent)) or True
+        tools._ntfy = lambda title, body, urgent, silent, url="": (
+            self.calls.append(("phone", silent)) or True
+        )
 
     def tearDown(self):
         self.tmp.cleanup()
@@ -43,6 +49,7 @@ class NotifyTest(unittest.TestCase):
         self.t.dnd(0)
         with mock.patch.object(self.t, "datetime") as dt:
             from datetime import datetime
+
             dt.now.return_value = datetime(2026, 10, 9, 12, 0)
             dt.fromisoformat = datetime.fromisoformat
             self.assertFalse(self.t.quiet())

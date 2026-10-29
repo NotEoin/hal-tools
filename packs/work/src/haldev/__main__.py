@@ -1,9 +1,10 @@
 """hal-dev command line, driven by hal-module.toml.
 
-    python -m haldev                      list the tools
-    python -m haldev TOOL [key=value ...] run one (the module prefix is optional)
-    python -m haldev --stdin FUNCTION      run a function with JSON arguments on stdin
+python -m haldev                      list the tools
+python -m haldev TOOL [key=value ...] run one (the module prefix is optional)
+python -m haldev --stdin FUNCTION      run a function with JSON arguments on stdin
 """
+
 import json
 import sys
 import tomllib

@@ -5,6 +5,7 @@ relationship, last_contact) and a dated log of interactions, so hal-memory's
 links and searches reach them too. A birthday is added to the calendar as a
 yearly event through hal-hub when it is installed.
 """
+
 from __future__ import annotations
 
 import json
@@ -39,11 +40,15 @@ def _read(p: Path) -> tuple[dict, str]:
             k, _, v = line.partition(":")
             if k.strip() and v.strip():
                 meta[k.strip()] = v.strip().strip('"')
-    return meta, text[m.end():] if m else text
+    return meta, text[m.end() :] if m else text
 
 
 def _write(p: Path, meta: dict, body: str) -> None:
-    lines = [f'{k}: "{v}"' if re.search(r"[:#]", str(v)) else f"{k}: {v}" for k, v in meta.items() if v not in ("", None)]
+    lines = [
+        f'{k}: "{v}"' if re.search(r"[:#]", str(v)) else f"{k}: {v}"
+        for k, v in meta.items()
+        if v not in ("", None)
+    ]
     p.write_text("---\n" + "\n".join(lines) + "\n---\n" + body.lstrip("\n"))
 
 
@@ -61,7 +66,9 @@ def _find(name: str) -> Path:
 def _hub(tool: str, args: dict) -> None:
     exe = shutil.which("hal-hub")
     if exe:
-        subprocess.run([exe, "call", tool, "--json", json.dumps(args)], capture_output=True, timeout=60)
+        subprocess.run(
+            [exe, "call", tool, "--json", json.dumps(args)], capture_output=True, timeout=60
+        )
 
 
 def _birthday(text: str) -> str:
@@ -78,21 +85,46 @@ def _birthday(text: str) -> str:
     raise ValueError(f"cannot read the birthday {text!r}; try '3 March' or 1999-03-03")
 
 
-def add(name: str, email: str = "", phone: str = "", birthday: str = "", relationship: str = "",
-        company: str = "", notes: str = "") -> dict:
+def add(
+    name: str,
+    email: str = "",
+    phone: str = "",
+    birthday: str = "",
+    relationship: str = "",
+    company: str = "",
+    notes: str = "",
+) -> dict:
     """Adds a person (or fills in details for one who exists)."""
     p = _dir() / f"{_slug(name)}.md"
-    meta, body = _read(p) if p.exists() else ({"type": "person", "tags": "[person]"}, f"# {name}\n\n## Log\n\n")
-    for k, v in (("email", email), ("phone", phone), ("relationship", relationship), ("company", company)):
+    meta, body = (
+        _read(p)
+        if p.exists()
+        else ({"type": "person", "tags": "[person]"}, f"# {name}\n\n## Log\n\n")
+    )
+    for k, v in (
+        ("email", email),
+        ("phone", phone),
+        ("relationship", relationship),
+        ("company", company),
+    ):
         if v:
             meta[k] = v
     if birthday:
         meta["birthday"] = _birthday(birthday)
         md = meta["birthday"][-5:]
-        _hub("calendar_add", {"title": f"{name}'s birthday",
-                              "when_text": datetime.strptime(md, "%m-%d").strftime("%-d %B") + " every year"})
+        _hub(
+            "calendar_add",
+            {
+                "title": f"{name}'s birthday",
+                "when_text": datetime.strptime(md, "%m-%d").strftime("%-d %B") + " every year",
+            },
+        )
     if notes:
-        body = body.replace("## Log\n", f"{notes.strip()}\n\n## Log\n", 1) if "## Log" in body else body + notes
+        body = (
+            body.replace("## Log\n", f"{notes.strip()}\n\n## Log\n", 1)
+            if "## Log" in body
+            else body + notes
+        )
     _write(p, meta, body)
     return {"saved": p.stem, "path": str(p)}
 
@@ -100,7 +132,11 @@ def add(name: str, email: str = "", phone: str = "", birthday: str = "", relatio
 def get(name: str) -> dict:
     p = _find(name)
     meta, body = _read(p)
-    return {"name": p.stem, **{k: meta.get(k) for k in FIELDS if meta.get(k)}, "notes": body.strip()[:3000]}
+    return {
+        "name": p.stem,
+        **{k: meta.get(k) for k in FIELDS if meta.get(k)},
+        "notes": body.strip()[:3000],
+    }
 
 
 def find(query: str) -> list[dict]:
@@ -111,7 +147,12 @@ def find(query: str) -> list[dict]:
         text = p.read_text(errors="ignore").lower()
         if all(w in text or w in p.stem.lower() for w in words):
             meta, _ = _read(p)
-            out.append({"name": p.stem, **{k: meta.get(k) for k in ("email", "phone", "relationship") if meta.get(k)}})
+            out.append(
+                {
+                    "name": p.stem,
+                    **{k: meta.get(k) for k in ("email", "phone", "relationship") if meta.get(k)},
+                }
+            )
     return out[:25]
 
 
@@ -143,7 +184,9 @@ def birthdays(days: int = 30) -> list[dict]:
         gap = (nxt - today).days
         if gap <= int(days):
             age = nxt.year - int(b[:4]) if len(b) == 10 else None
-            out.append({"name": p.stem, "date": nxt.strftime("%a %-d %b"), "in_days": gap, "turning": age})
+            out.append(
+                {"name": p.stem, "date": nxt.strftime("%a %-d %b"), "in_days": gap, "turning": age}
+            )
     return sorted(out, key=lambda x: x["in_days"])
 
 
@@ -163,8 +206,14 @@ def import_vcard(path: str) -> dict:
     text = re.sub(r"\r?\n[ \t]", "", Path(path).expanduser().read_text(errors="ignore"))
     count = 0
     for card in re.findall(r"BEGIN:VCARD(.*?)END:VCARD", text, re.S):
-        get = lambda key: next((l.split(":", 1)[1].strip() for l in card.splitlines()  # noqa: E731
-                                if l.upper().startswith(key) and ":" in l), "")
+        get = lambda key: next(
+            (
+                l.split(":", 1)[1].strip()
+                for l in card.splitlines()  # noqa: E731
+                if l.upper().startswith(key) and ":" in l
+            ),
+            "",
+        )
         name = get("FN")
         if not name:
             continue
@@ -174,7 +223,13 @@ def import_vcard(path: str) -> dict:
         elif re.fullmatch(r"\d{4}", bday):
             bday = f"{bday[:2]}-{bday[2:]}"
         try:
-            add(name, email=get("EMAIL"), phone=get("TEL"), birthday=bday if bday else "", company=get("ORG"))
+            add(
+                name,
+                email=get("EMAIL"),
+                phone=get("TEL"),
+                birthday=bday if bday else "",
+                company=get("ORG"),
+            )
         except ValueError:
             add(name, email=get("EMAIL"), phone=get("TEL"), company=get("ORG"))
         count += 1

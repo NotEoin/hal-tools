@@ -6,6 +6,7 @@ The password is read with getpass, so it is never echoed, never an argument and 
 history or a conversation. The credentials are tested before anything is saved; then you choose
 the calendar new events go to, and one sync runs.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -37,11 +38,17 @@ def _choose(cals: list[dict], default: int, ask, out) -> dict:
 
 
 def main(argv: list[str] | None = None, ask=input, secret=getpass.getpass, out=print) -> int:
-    parser = argparse.ArgumentParser(prog="python3 -m halcal connect",
-                                     description="Connect Hal's calendar to a CalDAV account such as Apple iCloud.")
+    parser = argparse.ArgumentParser(
+        prog="python3 -m halcal connect",
+        description="Connect Hal's calendar to a CalDAV account such as Apple iCloud.",
+    )
     parser.add_argument("--url", default=ICLOUD, help=f"CalDAV server (default {ICLOUD})")
-    parser.add_argument("--username", default="", help="account name; for iCloud, your Apple ID email")
-    parser.add_argument("--push-to", default="", help="calendar new events go to (asked if not given)")
+    parser.add_argument(
+        "--username", default="", help="account name; for iCloud, your Apple ID email"
+    )
+    parser.add_argument(
+        "--push-to", default="", help="calendar new events go to (asked if not given)"
+    )
     args = parser.parse_args(argv)
 
     username = args.username.strip()
@@ -52,8 +59,10 @@ def main(argv: list[str] | None = None, ask=input, secret=getpass.getpass, out=p
             out("No username given; nothing was saved.")
             return 1
     if args.url == ICLOUD:
-        out("Use an app-specific password from appleid.apple.com (Sign-In and Security > App-Specific "
-            "Passwords), not your Apple ID password.")
+        out(
+            "Use an app-specific password from appleid.apple.com (Sign-In and Security > App-Specific "
+            "Passwords), not your Apple ID password."
+        )
     result = None
     for attempt in range(ATTEMPTS):
         try:
@@ -71,8 +80,10 @@ def main(argv: list[str] | None = None, ask=input, secret=getpass.getpass, out=p
             if "refused" not in str(e):
                 out("Nothing was saved.")
                 return 1
-            out("Check the email, and that you pasted an app-specific password rather than your usual one."
-                + (" Try again." if attempt < ATTEMPTS - 1 else " Nothing was saved."))
+            out(
+                "Check the email, and that you pasted an app-specific password rather than your usual one."
+                + (" Try again." if attempt < ATTEMPTS - 1 else " Nothing was saved.")
+            )
     if result is None:
         return 1
 
@@ -97,6 +108,8 @@ def main(argv: list[str] | None = None, ask=input, secret=getpass.getpass, out=p
     except CalDAVError as e:
         out(f"Saved, but the first sync failed: {e}.")
         return 1
-    out(f"Synced: {counts['pulled']} pulled, {counts['pushed']} pushed, {counts['deleted']} deleted. "
-        f"The reminder service syncs every {tools.settings().get('sync_minutes', 15)} minutes.")
+    out(
+        f"Synced: {counts['pulled']} pulled, {counts['pushed']} pushed, {counts['deleted']} deleted. "
+        f"The reminder service syncs every {tools.settings().get('sync_minutes', 15)} minutes."
+    )
     return 0

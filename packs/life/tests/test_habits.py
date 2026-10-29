@@ -1,4 +1,5 @@
 """Tests for habit logging and streaks on a throwaway store."""
+
 import os
 import sys
 import tempfile
@@ -14,6 +15,7 @@ class HabitsTest(unittest.TestCase):
         self.tmp = tempfile.TemporaryDirectory()
         os.environ["HAL_DATA"] = self.tmp.name
         from halhabits import tools
+
         self.t = tools
 
     def tearDown(self):

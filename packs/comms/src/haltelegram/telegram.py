@@ -1,4 +1,5 @@
 """A small client for the Telegram Bot API over urllib."""
+
 from __future__ import annotations
 
 import json
@@ -7,7 +8,7 @@ import urllib.request
 import uuid
 from pathlib import Path
 
-LIMIT = 4000    # Telegram's limit is 4096 characters per message
+LIMIT = 4000  # Telegram's limit is 4096 characters per message
 
 
 class Telegram:
@@ -27,13 +28,19 @@ class Telegram:
         boundary = uuid.uuid4().hex
         body = b""
         for key, value in params.items():
-            body += (f"--{boundary}\r\nContent-Disposition: form-data; name=\"{key}\"\r\n\r\n"
-                     f"{value}\r\n").encode()
-        body += (f"--{boundary}\r\nContent-Disposition: form-data; name=\"{field}\"; "
-                 f"filename=\"{path.name}\"\r\nContent-Type: application/octet-stream\r\n\r\n").encode()
+            body += (
+                f'--{boundary}\r\nContent-Disposition: form-data; name="{key}"\r\n\r\n{value}\r\n'
+            ).encode()
+        body += (
+            f'--{boundary}\r\nContent-Disposition: form-data; name="{field}"; '
+            f'filename="{path.name}"\r\nContent-Type: application/octet-stream\r\n\r\n'
+        ).encode()
         body += path.read_bytes() + f"\r\n--{boundary}--\r\n".encode()
-        req = urllib.request.Request(f"{self.base}/{method}", data=body,
-                                     headers={"Content-Type": f"multipart/form-data; boundary={boundary}"})
+        req = urllib.request.Request(
+            f"{self.base}/{method}",
+            data=body,
+            headers={"Content-Type": f"multipart/form-data; boundary={boundary}"},
+        )
         with urllib.request.urlopen(req, timeout=120) as r:
             return json.loads(r.read())
 
@@ -44,7 +51,7 @@ class Telegram:
 
     def send(self, chat: int, text: str) -> None:
         for start in range(0, len(text) or 1, LIMIT):
-            self.call("sendMessage", chat_id=chat, text=text[start:start + LIMIT] or "(nothing)")
+            self.call("sendMessage", chat_id=chat, text=text[start : start + LIMIT] or "(nothing)")
 
     def typing(self, chat: int) -> None:
         """Shows "typing..." in the chat; never raises."""

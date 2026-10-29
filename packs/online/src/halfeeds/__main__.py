@@ -1,9 +1,10 @@
 """hal-feeds command line, driven by hal-module.toml.
 
-    python -m halfeeds                      list the tools
-    python -m halfeeds TOOL [key=value ...] run one (the module prefix is optional)
-    python -m halfeeds --stdin FUNCTION      run a function with JSON arguments on stdin
+python -m halfeeds                      list the tools
+python -m halfeeds TOOL [key=value ...] run one (the module prefix is optional)
+python -m halfeeds --stdin FUNCTION      run a function with JSON arguments on stdin
 """
+
 import json
 import sys
 import tomllib

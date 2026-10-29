@@ -1,9 +1,10 @@
 """hal-devices command line, driven by hal-module.toml.
 
-    python -m haldevices                      list the tools
-    python -m haldevices TOOL [key=value ...] run one (the module prefix is optional)
-    python -m haldevices --stdin FUNCTION      run a function with JSON arguments on stdin
+python -m haldevices                      list the tools
+python -m haldevices TOOL [key=value ...] run one (the module prefix is optional)
+python -m haldevices --stdin FUNCTION      run a function with JSON arguments on stdin
 """
+
 import json
 import sys
 import tomllib

@@ -1,9 +1,10 @@
 """hal-ledger command line, driven by hal-module.toml.
 
-    python -m halledger                      list the tools
-    python -m halledger TOOL [key=value ...] run one (the module prefix is optional)
-    python -m halledger --stdin FUNCTION      run a function with JSON arguments on stdin
+python -m halledger                      list the tools
+python -m halledger TOOL [key=value ...] run one (the module prefix is optional)
+python -m halledger --stdin FUNCTION      run a function with JSON arguments on stdin
 """
+
 import json
 import sys
 import tomllib

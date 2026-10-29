@@ -3,6 +3,7 @@
 Talks to OpenRGB's SDK server (start it with `openrgb --server`, or the unit in
 systemd/). Colours are names ('warm white', 'hal red'), #rrggbb or 'r,g,b'.
 """
+
 from __future__ import annotations
 
 import re
@@ -11,12 +12,29 @@ from .config import settings
 from .sdk import Client, Device
 
 COLOURS = {
-    "red": (255, 0, 0), "hal red": (220, 20, 10), "dark red": (120, 0, 0), "orange": (255, 100, 0),
-    "amber": (255, 150, 0), "yellow": (255, 210, 0), "lime": (150, 255, 0), "green": (0, 255, 0),
-    "teal": (0, 160, 140), "cyan": (0, 255, 255), "sky blue": (80, 180, 255), "blue": (0, 0, 255),
-    "navy": (0, 0, 120), "indigo": (75, 0, 200), "purple": (140, 0, 255), "violet": (180, 80, 255),
-    "magenta": (255, 0, 255), "pink": (255, 80, 160), "white": (255, 255, 255), "warm white": (255, 170, 90),
-    "cool white": (200, 220, 255), "off": (0, 0, 0), "black": (0, 0, 0),
+    "red": (255, 0, 0),
+    "hal red": (220, 20, 10),
+    "dark red": (120, 0, 0),
+    "orange": (255, 100, 0),
+    "amber": (255, 150, 0),
+    "yellow": (255, 210, 0),
+    "lime": (150, 255, 0),
+    "green": (0, 255, 0),
+    "teal": (0, 160, 140),
+    "cyan": (0, 255, 255),
+    "sky blue": (80, 180, 255),
+    "blue": (0, 0, 255),
+    "navy": (0, 0, 120),
+    "indigo": (75, 0, 200),
+    "purple": (140, 0, 255),
+    "violet": (180, 80, 255),
+    "magenta": (255, 0, 255),
+    "pink": (255, 80, 160),
+    "white": (255, 255, 255),
+    "warm white": (255, 170, 90),
+    "cool white": (200, 220, 255),
+    "off": (0, 0, 0),
+    "black": (0, 0, 0),
 }
 
 
@@ -34,7 +52,9 @@ def parse_colour(colour: str) -> tuple[int, int, int]:
     parts = re.findall(r"\d+", c)
     if len(parts) == 3:
         return tuple(max(0, min(255, int(p))) for p in parts)
-    raise ValueError(f"unknown colour {colour!r}; try a name such as {', '.join(list(COLOURS)[:8])} or #ff8800")
+    raise ValueError(
+        f"unknown colour {colour!r}; try a name such as {', '.join(list(COLOURS)[:8])} or #ff8800"
+    )
 
 
 def _scale(rgb: tuple[int, int, int], brightness: int) -> tuple[int, int, int]:
@@ -53,7 +73,9 @@ def _targets(c: Client, device: str) -> list[Device]:
         return devs
     picked = [d for d in devs if device.lower() in d.name.lower() or str(d.index) == device]
     if not picked:
-        raise ValueError(f"no lighting device matches {device!r}; have {sorted({d.name for d in devs})}")
+        raise ValueError(
+            f"no lighting device matches {device!r}; have {sorted({d.name for d in devs})}"
+        )
     return picked
 
 
@@ -61,8 +83,16 @@ def devices() -> list[dict]:
     """Lighting devices with their LEDs, zones and effects."""
     c = _client()
     try:
-        return [{"index": d.index, "name": d.name, "leds": d.leds, "zones": d.zones,
-                 "effects": [m.name for m in d.modes]} for d in c.devices()]
+        return [
+            {
+                "index": d.index,
+                "name": d.name,
+                "leds": d.leds,
+                "zones": d.zones,
+                "effects": [m.name for m in d.modes],
+            }
+            for d in c.devices()
+        ]
     finally:
         c.close()
 
@@ -92,8 +122,14 @@ def effect(effect: str, device: str = "") -> dict:
     try:
         done, missing = [], []
         for d in _targets(c, device):
-            mode = next((m for m in d.modes if m.name.lower() == want), None) or \
-                next((m for m in d.modes if want in m.name.lower() or m.name.lower().startswith(want[:5])), None)
+            mode = next((m for m in d.modes if m.name.lower() == want), None) or next(
+                (
+                    m
+                    for m in d.modes
+                    if want in m.name.lower() or m.name.lower().startswith(want[:5])
+                ),
+                None,
+            )
             if mode:
                 c.set_mode(d, mode)
                 done.append(f"{d.name}: {mode.name}")

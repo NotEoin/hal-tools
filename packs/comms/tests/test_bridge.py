@@ -1,4 +1,5 @@
 """Tests for command parsing, pairing, job commands and the brain wiring, with fakes and no network."""
+
 import os
 import stat
 import sys
@@ -94,7 +95,9 @@ class PairingTest(Sandbox):
         code = b.pairing_code
         self.assertRegex(code, r"^\d{6}$")
         self.assertEqual(bridge.Bridge(FakeBot()).pairing_code, code, "the code survives a restart")
-        b.handle({"chat": {"id": STRANGER}, "text": "/pair 000000" if code != "000000" else "/pair 1"})
+        b.handle(
+            {"chat": {"id": STRANGER}, "text": "/pair 000000" if code != "000000" else "/pair 1"}
+        )
         self.assertIsNone(b.chat)
         self.assertIn("doesn't match", self.bot.sent[-1][1])
         b.handle({"chat": {"id": PHONE}, "text": f"/pair {code}"})
@@ -117,7 +120,9 @@ class BrainTest(Sandbox):
         b.handle({"chat": {"id": PHONE}, "text": "add dentist on thursday"})
         b.handle({"chat": {"id": PHONE}, "text": "and remind me the day before"})
         self.assertEqual(FakeBrain.made, 1)
-        self.assertEqual(b.brains[PHONE].asked, ["add dentist on thursday", "and remind me the day before"])
+        self.assertEqual(
+            b.brains[PHONE].asked, ["add dentist on thursday", "and remind me the day before"]
+        )
         self.assertEqual(self.bot.sent[-1], (PHONE, "reply to and remind me the day before"))
         self.assertIsNot(b.brain_for(STRANGER), b.brains[PHONE])
 
@@ -137,31 +142,59 @@ class BrainTest(Sandbox):
         class Down(FakeBrain):
             def reply(self, text):
                 raise OSError("connection refused")
+
         b = self.paired(make_brain=Down)
         self.assertEqual(b.respond(PHONE, "hello"), bridge.NO_MODEL)
-        self.assertIn("Core Hal isn't installed", self.paired(make_brain=None).respond(PHONE, "hello"))
+        self.assertIn(
+            "Core Hal isn't installed", self.paired(make_brain=None).respond(PHONE, "hello")
+        )
 
     def test_voice_note_without_whisper(self):
         b = self.paired()
-        with mock.patch.object(voice, "transcribe", side_effect=voice.VoiceUnavailable(voice.NEEDS_VOICE)):
+        with mock.patch.object(
+            voice, "transcribe", side_effect=voice.VoiceUnavailable(voice.NEEDS_VOICE)
+        ):
             b.handle({"chat": {"id": PHONE}, "voice": {"file_id": "f"}})
         self.assertEqual(self.bot.sent, [(PHONE, voice.NEEDS_VOICE)])
 
     def test_voice_note_is_answered_by_the_brain(self):
         b = self.paired()
-        with mock.patch.object(voice, "transcribe", return_value="what's the weather"), \
-                mock.patch.object(voice, "synthesise", return_value=None):
+        with (
+            mock.patch.object(voice, "transcribe", return_value="what's the weather"),
+            mock.patch.object(voice, "synthesise", return_value=None),
+        ):
             b.handle({"chat": {"id": PHONE}, "voice": {"file_id": "f"}})
-        self.assertEqual(self.bot.sent, [(PHONE, "Heard: what's the weather"), (PHONE, "reply to what's the weather")])
+        self.assertEqual(
+            self.bot.sent,
+            [(PHONE, "Heard: what's the weather"), (PHONE, "reply to what's the weather")],
+        )
 
 
 class JobCommandTest(Sandbox):
     def test_commands_use_hub_tools(self):
-        hub = FakeHub({"jobs_queue": {"ready": 1, "reserve": 2, "jobs": [
-                           {"company": "Arm", "title": "Graduate Engineer", "score": 71.4, "location": "London"}]},
-                       "jobs_mark": "ok", "jobs_todo": "1. reply to Arm", "briefing_build": "Good morning."})
+        hub = FakeHub(
+            {
+                "jobs_queue": {
+                    "ready": 1,
+                    "reserve": 2,
+                    "jobs": [
+                        {
+                            "company": "Arm",
+                            "title": "Graduate Engineer",
+                            "score": 71.4,
+                            "location": "London",
+                        }
+                    ],
+                },
+                "jobs_mark": "ok",
+                "jobs_todo": "1. reply to Arm",
+                "briefing_build": "Good morning.",
+            }
+        )
         b = self.paired(hub)
-        self.assertEqual(b.respond(PHONE, "/queue"), "1 ready, 2 in reserve\n71  Arm: Graduate Engineer (London)")
+        self.assertEqual(
+            b.respond(PHONE, "/queue"), "1 ready, 2 in reserve\n71  Arm: Graduate Engineer (London)"
+        )
         b.respond(PHONE, "/discard 42")
         b.respond(PHONE, "/applied 43")
         self.assertEqual(b.respond(PHONE, "/todo"), "1. reply to Arm")
@@ -171,24 +204,43 @@ class JobCommandTest(Sandbox):
         self.assertEqual(hub.calls[-1][0], "briefing_build")
 
     def test_former_jobhunt_commands_use_hub_tools(self):
-        hub = FakeHub({"jobs_status": "Job search: 2 need you", "jobs_matches": "71  Arm  arm-1",
-                       "jobs_shortlist": "Arm | Graduate Engineer -> shortlisted",
-                       "jobs_todo_add": "12  ring Arm back"})
+        hub = FakeHub(
+            {
+                "jobs_status": "Job search: 2 need you",
+                "jobs_matches": "71  Arm  arm-1",
+                "jobs_shortlist": "Arm | Graduate Engineer -> shortlisted",
+                "jobs_todo_add": "12  ring Arm back",
+            }
+        )
         b = self.paired(hub)
         self.assertEqual(b.respond(PHONE, "/status"), "Job search: 2 need you")
         self.assertEqual(b.respond(PHONE, "/jobs"), "71  Arm  arm-1")
         self.assertEqual(b.respond(PHONE, "/shortlist 7"), "Arm | Graduate Engineer -> shortlisted")
         self.assertEqual(b.respond(PHONE, "/todo ring Arm back"), "12  ring Arm back")
-        self.assertEqual(hub.calls, [("jobs_status", {}), ("jobs_matches", {}), ("jobs_shortlist", {"job": "7"}),
-                                     ("jobs_todo_add", {"text": "ring Arm back"})])
+        self.assertEqual(
+            hub.calls,
+            [
+                ("jobs_status", {}),
+                ("jobs_matches", {}),
+                ("jobs_shortlist", {"job": "7"}),
+                ("jobs_todo_add", {"text": "ring Arm back"}),
+            ],
+        )
         self.assertFalse(hasattr(jobs, "jobhunt"), "the bridge no longer runs jobhunt itself")
 
     def test_pack_sends_output_and_files(self):
         pack_md, pdf = Path(self.tmp.name) / "pack.md", Path(self.tmp.name) / "cv.pdf"
         pack_md.write_text("# pack")
         pdf.write_text("%PDF")
-        hub = FakeHub({"jobs_pack": {"pack": str(pack_md), "output": f"7: drafting...\n  {pack_md}",
-                                     "files": [str(pack_md), str(pdf), str(Path(self.tmp.name) / "gone.pdf")]}})
+        hub = FakeHub(
+            {
+                "jobs_pack": {
+                    "pack": str(pack_md),
+                    "output": f"7: drafting...\n  {pack_md}",
+                    "files": [str(pack_md), str(pdf), str(Path(self.tmp.name) / "gone.pdf")],
+                }
+            }
+        )
         b = self.paired(hub)
         b._pack(PHONE, "7")
         self.assertEqual(hub.calls, [("jobs_pack", {"job": "7"})])
@@ -200,9 +252,12 @@ class JobCommandTest(Sandbox):
             def call(self, name, args):
                 self.calls.append((name, args))
                 return {"error": "RuntimeError: 2 jobs match '7'"}
+
         b = self.paired(Failing({"jobs_pack": None}))
         b._pack(PHONE, "7")
-        self.assertEqual(self.bot.sent, [(PHONE, "That didn't work: RuntimeError: 2 jobs match '7'")])
+        self.assertEqual(
+            self.bot.sent, [(PHONE, "That didn't work: RuntimeError: 2 jobs match '7'")]
+        )
         self.assertEqual(self.bot.uploads, [])
         self.assertIn("hal ext add jobs", self.paired(FakeHub({})).respond(PHONE, "/pack 7"))
 
@@ -210,8 +265,11 @@ class JobCommandTest(Sandbox):
         class Failing(FakeHub):
             def call(self, name, args):
                 return {"error": "RuntimeError: 0 jobs match '7'"}
+
         b = self.paired(Failing({"jobs_shortlist": None}))
-        self.assertEqual(b.respond(PHONE, "/shortlist 7"), "That didn't work: RuntimeError: 0 jobs match '7'")
+        self.assertEqual(
+            b.respond(PHONE, "/shortlist 7"), "That didn't work: RuntimeError: 0 jobs match '7'"
+        )
 
     def test_missing_module_and_unknown_commands(self):
         b = self.paired(FakeHub({}))

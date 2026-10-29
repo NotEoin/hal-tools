@@ -1,4 +1,5 @@
 """Smoke tests: every read-only tool answers on this machine with the expected shape."""
+
 import sys
 import unittest
 from pathlib import Path

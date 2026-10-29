@@ -1,4 +1,5 @@
 """Tests for finding, duplicates and tidying, in a throwaway folder."""
+
 import sys
 import tempfile
 import unittest

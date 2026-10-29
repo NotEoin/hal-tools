@@ -4,6 +4,7 @@ Channels: ntfy phone push, the desktop's notification daemon, HAL's voice
 (hal-voice's hal-say) and Telegram (the token and chat that hal-telegram pairs).
 Every alert is kept in a history table. Stdlib only.
 """
+
 from __future__ import annotations
 
 import json
@@ -25,7 +26,9 @@ HAL_SAY = Path(__file__).resolve().parents[2] / "hal-voice" / "bin" / "hal-say"
 
 def _db() -> sqlite3.Connection:
     con = sqlite3.connect(data_dir() / "history.db")
-    con.execute("CREATE TABLE IF NOT EXISTS sent (at TEXT, title TEXT, body TEXT, urgent INTEGER, channels TEXT)")
+    con.execute(
+        "CREATE TABLE IF NOT EXISTS sent (at TEXT, title TEXT, body TEXT, urgent INTEGER, channels TEXT)"
+    )
     return con
 
 
@@ -51,8 +54,13 @@ def quiet() -> bool:
 
 def _desktop(title: str, body: str, urgent: bool) -> bool:
     try:
-        return subprocess.run(["notify-send", "-a", "Hal", *(["-u", "critical"] if urgent else []), title, body],
-                              timeout=5).returncode == 0
+        return (
+            subprocess.run(
+                ["notify-send", "-a", "Hal", *(["-u", "critical"] if urgent else []), title, body],
+                timeout=5,
+            ).returncode
+            == 0
+        )
     except (OSError, subprocess.TimeoutExpired):
         return False
 
@@ -67,8 +75,10 @@ def _ntfy(title: str, body: str, urgent: bool, silent: bool, url: str = "") -> b
         headers["Click"] = url
     server = settings().get("ntfy_server", "https://ntfy.sh").rstrip("/")
     try:
-        urllib.request.urlopen(urllib.request.Request(f"{server}/{topic}", data=body.encode(), headers=headers),
-                               timeout=10)
+        urllib.request.urlopen(
+            urllib.request.Request(f"{server}/{topic}", data=body.encode(), headers=headers),
+            timeout=10,
+        )
         return True
     except OSError:
         return False
@@ -79,7 +89,9 @@ def _speak(title: str, body: str) -> bool:
     if not Path(say).exists():
         return False
     try:
-        subprocess.Popen([say, f"{title}. {body}"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        subprocess.Popen(
+            [say, f"{title}. {body}"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
+        )
         return True
     except OSError:
         return False
@@ -89,17 +101,28 @@ def _telegram(title: str, body: str) -> bool:
     token_file, chat_file = TELEGRAM_DIR / "telegram-token", TELEGRAM_DIR / "telegram-chat"
     if not (token_file.exists() and chat_file.exists()):
         return False
-    data = urllib.parse.urlencode({"chat_id": chat_file.read_text().strip(), "text": f"{title}\n{body}"}).encode()
+    data = urllib.parse.urlencode(
+        {"chat_id": chat_file.read_text().strip(), "text": f"{title}\n{body}"}
+    ).encode()
     try:
-        urllib.request.urlopen(f"https://api.telegram.org/bot{token_file.read_text().strip()}/sendMessage",
-                               data=data, timeout=10)
+        urllib.request.urlopen(
+            f"https://api.telegram.org/bot{token_file.read_text().strip()}/sendMessage",
+            data=data,
+            timeout=10,
+        )
         return True
     except OSError:
         return False
 
 
-def send(title: str, body: str = "", urgent: bool = False, speak: bool = False,
-         channels: list[str] | None = None, url: str = "") -> dict:
+def send(
+    title: str,
+    body: str = "",
+    urgent: bool = False,
+    speak: bool = False,
+    channels: list[str] | None = None,
+    url: str = "",
+) -> dict:
     """Sends an alert; returns the channels it reached.
 
     Args:
@@ -122,8 +145,10 @@ def send(title: str, body: str = "", urgent: bool = False, speak: bool = False,
     if "telegram" in wanted and _telegram(title, body):
         reached.append("telegram")
     con = _db()
-    con.execute("INSERT INTO sent VALUES (?, ?, ?, ?, ?)",
-                (datetime.now().isoformat(timespec="seconds"), title, body, int(urgent), ",".join(reached)))
+    con.execute(
+        "INSERT INTO sent VALUES (?, ?, ?, ?, ?)",
+        (datetime.now().isoformat(timespec="seconds"), title, body, int(urgent), ",".join(reached)),
+    )
     con.commit()
     return {"reached": reached, "quiet": hush}
 
@@ -141,10 +166,16 @@ def dnd(minutes: int = 60) -> str:
 
 def state() -> dict:
     until = _dnd_until()
-    return {"quiet": quiet(), "dnd_until": until.isoformat(timespec="minutes") if until else None,
-            "quiet_hours": f"{settings().get('quiet_from', 22)}:00 to {settings().get('quiet_until', 8)}:00"}
+    return {
+        "quiet": quiet(),
+        "dnd_until": until.isoformat(timespec="minutes") if until else None,
+        "quiet_hours": f"{settings().get('quiet_from', 22)}:00 to {settings().get('quiet_until', 8)}:00",
+    }
 
 
 def history(limit: int = 20) -> list[dict]:
     rows = _db().execute("SELECT * FROM sent ORDER BY at DESC LIMIT ?", (int(limit),)).fetchall()
-    return [{"at": r[0], "title": r[1], "body": r[2], "urgent": bool(r[3]), "channels": r[4]} for r in rows]
+    return [
+        {"at": r[0], "title": r[1], "body": r[2], "urgent": bool(r[3]), "channels": r[4]}
+        for r in rows
+    ]

@@ -1,4 +1,5 @@
 """Tests for times of day, ranges and lengths in plain English, against a fixed Saturday noon."""
+
 import sys
 import unittest
 from datetime import datetime
@@ -10,14 +11,19 @@ SATURDAY = datetime(2026, 10, 10, 12, 0)
 
 def span(text, **kw):
     from halcal.when import parse
+
     w = parse(text, SATURDAY, **kw)
-    return (w.start.strftime("%Y-%m-%d %H:%M") if w.start else None,
-            w.end.strftime("%Y-%m-%d %H:%M") if w.end else None)
+    return (
+        w.start.strftime("%Y-%m-%d %H:%M") if w.start else None,
+        w.end.strftime("%Y-%m-%d %H:%M") if w.end else None,
+    )
 
 
 class RangeTest(unittest.TestCase):
     def test_end_am_pm_carries_back_to_the_start(self):
-        self.assertEqual(span("tomorrow from 2 till 3:30pm"), ("2026-10-11 14:00", "2026-10-11 15:30"))
+        self.assertEqual(
+            span("tomorrow from 2 till 3:30pm"), ("2026-10-11 14:00", "2026-10-11 15:30")
+        )
         self.assertEqual(span("tomorrow 11 till 1pm"), ("2026-10-11 11:00", "2026-10-11 13:00"))
         self.assertEqual(span("friday 8-10pm"), ("2026-10-16 20:00", "2026-10-16 22:00"))
 
@@ -40,6 +46,7 @@ class RangeTest(unittest.TestCase):
 
     def test_range_leaves_the_title(self):
         from halcal.when import parse
+
         w = parse("Project meeting tomorrow from 2 till 3:30pm", SATURDAY)
         self.assertEqual(w.rest, "Project meeting")
 
@@ -49,11 +56,15 @@ class RangeTest(unittest.TestCase):
     def test_calendar_add_uses_the_range(self):
         import os
         import tempfile
+
         with tempfile.TemporaryDirectory() as tmp:
             os.environ["HAL_DATA"] = tmp
             os.environ["HAL_CONFIG"] = str(Path(tmp) / "none.toml")
             from halcal import tools
-            got = tools.add("Project meeting", when_text="tomorrow from 2 till 3:30pm", location="library")["added"]
+
+            got = tools.add(
+                "Project meeting", when_text="tomorrow from 2 till 3:30pm", location="library"
+            )["added"]
         self.assertEqual((got["start"][11:], got["end"][11:]), ("14:00", "15:30"))
 
 
@@ -82,21 +93,36 @@ class TimeOfDayTest(unittest.TestCase):
 
     def test_all_day_dates(self):
         from halcal.when import parse
-        for text, day in {"the 3rd of March 2031": "2031-03-03", "3 March 2031": "2031-03-03",
-                          "2031-03-03": "2031-03-03", "next Tuesday": "2026-10-13"}.items():
+
+        for text, day in {
+            "the 3rd of March 2031": "2031-03-03",
+            "3 March 2031": "2031-03-03",
+            "2031-03-03": "2031-03-03",
+            "next Tuesday": "2026-10-13",
+        }.items():
             w = parse(text, SATURDAY)
             self.assertTrue(w.all_day, text)
             self.assertEqual(w.start.strftime("%Y-%m-%d"), day, text)
 
     def test_mornings_for_alarms(self):
-        for text, start in {"tomorrow at 7": "2026-10-11 07:00", "6:30": "2026-10-11 06:30",
-                            "7 tomorrow morning": "2026-10-11 07:00", "at 5": "2026-10-11 05:00"}.items():
+        for text, start in {
+            "tomorrow at 7": "2026-10-11 07:00",
+            "6:30": "2026-10-11 06:30",
+            "7 tomorrow morning": "2026-10-11 07:00",
+            "at 5": "2026-10-11 05:00",
+        }.items():
             self.assertEqual(span(text, prefer_pm=False)[0], start, text)
 
     def test_compound_lengths(self):
-        self.assertEqual(span("monday at 2pm for 1 hour 30 minutes"), ("2026-10-12 14:00", "2026-10-12 15:30"))
-        self.assertEqual(span("monday at 2pm for an hour and a half"), ("2026-10-12 14:00", "2026-10-12 15:30"))
-        self.assertEqual(span("monday at 2pm for 90 minutes"), ("2026-10-12 14:00", "2026-10-12 15:30"))
+        self.assertEqual(
+            span("monday at 2pm for 1 hour 30 minutes"), ("2026-10-12 14:00", "2026-10-12 15:30")
+        )
+        self.assertEqual(
+            span("monday at 2pm for an hour and a half"), ("2026-10-12 14:00", "2026-10-12 15:30")
+        )
+        self.assertEqual(
+            span("monday at 2pm for 90 minutes"), ("2026-10-12 14:00", "2026-10-12 15:30")
+        )
 
 
 if __name__ == "__main__":

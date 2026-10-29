@@ -6,6 +6,7 @@ or "appointment" is dropped unless the title has it, and the rest is scored by t
 words found in each title. The best event is chosen only when it is clearly best; otherwise
 the error lists the candidates so the assistant can ask which one. Stdlib only.
 """
+
 from __future__ import annotations
 
 import re
@@ -13,11 +14,54 @@ from datetime import datetime, timedelta
 
 from . import store, when
 
-FILLER = {"a", "an", "the", "my", "our", "his", "her", "their", "this", "that", "these", "those", "i", "me",
-          "event", "events", "appointment", "appointments", "appt", "booking", "entry", "thing", "plan",
-          "plans", "calendar", "diary", "on", "at", "in", "for", "of", "to", "with", "and", "please",
-          "cancel", "delete", "remove", "move", "reschedule", "one", "next", "this", "coming", "upcoming"}
-CLEAR_MARGIN = 0.2      # how far ahead the best must be to be chosen without asking
+FILLER = {
+    "a",
+    "an",
+    "the",
+    "my",
+    "our",
+    "his",
+    "her",
+    "their",
+    "this",
+    "that",
+    "these",
+    "those",
+    "i",
+    "me",
+    "event",
+    "events",
+    "appointment",
+    "appointments",
+    "appt",
+    "booking",
+    "entry",
+    "thing",
+    "plan",
+    "plans",
+    "calendar",
+    "diary",
+    "on",
+    "at",
+    "in",
+    "for",
+    "of",
+    "to",
+    "with",
+    "and",
+    "please",
+    "cancel",
+    "delete",
+    "remove",
+    "move",
+    "reschedule",
+    "one",
+    "next",
+    "this",
+    "coming",
+    "upcoming",
+}
+CLEAR_MARGIN = 0.2  # how far ahead the best must be to be chosen without asking
 PAST_DAYS, FUTURE_DAYS = 30, 400
 
 _WORD = re.compile(r"[a-z0-9]+(?:'[a-z]+)?")
@@ -48,7 +92,9 @@ def score(query: list[str], occ: dict) -> float:
         return 0.0
     hits = 0.0
     for w in wanted:
-        if w in title or (len(w) >= 4 and any(t.startswith(w) or w.startswith(t) for t in title if len(t) >= 4)):
+        if w in title or (
+            len(w) >= 4 and any(t.startswith(w) or w.startswith(t) for t in title if len(t) >= 4)
+        ):
             hits += 1
         elif w in other:
             hits += 0.5
@@ -58,7 +104,9 @@ def score(query: list[str], occ: dict) -> float:
     return hits / len(wanted) + 0.1 * len(title & set(wanted)) / max(len(title), 1)
 
 
-def rank(text: str, now: datetime | None = None, days: int = FUTURE_DAYS) -> list[tuple[float, dict]]:
+def rank(
+    text: str, now: datetime | None = None, days: int = FUTURE_DAYS
+) -> list[tuple[float, dict]]:
     """Scores every event occurrence near `now` against `text`; returns one (score, occurrence) per
     event, best first, leaving out events that share no words with it."""
     now = now or datetime.now().replace(second=0, microsecond=0)
@@ -78,7 +126,9 @@ def rank(text: str, now: datetime | None = None, days: int = FUTURE_DAYS) -> lis
             s -= 0.1
         start = datetime.fromisoformat(occ["start"])
         # Among one event's occurrences prefer the next one, then the most recent.
-        nearness = (start - now).total_seconds() if start >= now else 1e12 + (now - start).total_seconds()
+        nearness = (
+            (start - now).total_seconds() if start >= now else 1e12 + (now - start).total_seconds()
+        )
         kept = best.get(occ["uid"])
         if kept is None or (s, -nearness) > (kept[0], -kept[1]):
             best[occ["uid"]] = (s, nearness, occ)
@@ -104,6 +154,9 @@ def resolve(event: str, now: datetime | None = None, not_at: str = "") -> store.
         raise ValueError(f"no event matching {event!r}")
     if len(ranked) > 1 and ranked[0][0] - ranked[1][0] < CLEAR_MARGIN:
         close = [o for s, o in ranked if ranked[0][0] - s < CLEAR_MARGIN][:5]
-        raise ValueError(f"{len(close)} events could be {event!r}: " + "; ".join(describe(o) for o in close)
-                         + ". Ask which one, then call again with its id.")
+        raise ValueError(
+            f"{len(close)} events could be {event!r}: "
+            + "; ".join(describe(o) for o in close)
+            + ". Ask which one, then call again with its id."
+        )
     return store.get(ranked[0][1]["uid"])

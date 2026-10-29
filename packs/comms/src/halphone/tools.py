@@ -4,6 +4,7 @@ Needs KDE Connect on the computer (kdeconnect-cli; GSConnect works the same on
 GNOME) and the KDE Connect app on the phone, paired once. Sending an SMS needs
 confirmation through hal-hub.
 """
+
 from __future__ import annotations
 
 import re
@@ -13,14 +14,18 @@ from pathlib import Path
 
 from .config import settings
 
-SETUP = ("KDE Connect is not installed: run 'sudo apt install kdeconnect', install the KDE Connect app "
-         "on the phone, and pair them once")
+SETUP = (
+    "KDE Connect is not installed: run 'sudo apt install kdeconnect', install the KDE Connect app "
+    "on the phone, and pair them once"
+)
 
 
 def _cli(*args: str, timeout: float = 20) -> str:
     if not shutil.which("kdeconnect-cli"):
         raise RuntimeError(SETUP)
-    done = subprocess.run(["kdeconnect-cli", *args], capture_output=True, text=True, timeout=timeout)
+    done = subprocess.run(
+        ["kdeconnect-cli", *args], capture_output=True, text=True, timeout=timeout
+    )
     if done.returncode:
         raise RuntimeError(done.stderr.strip() or "KDE Connect did not respond")
     return done.stdout.strip()
@@ -32,7 +37,9 @@ def devices() -> list[dict]:
     for line in _cli("--list-devices").splitlines():
         m = re.match(r"- (.+?): (\S+) \((.+)\)", line)
         if m:
-            out.append({"name": m.group(1), "id": m.group(2), "reachable": "reachable" in m.group(3)})
+            out.append(
+                {"name": m.group(1), "id": m.group(2), "reachable": "reachable" in m.group(3)}
+            )
     return out
 
 
@@ -40,7 +47,9 @@ def _device(name: str = "") -> str:
     want = name or settings().get("phone", "")
     phones = [d for d in devices() if d["reachable"]]
     if not phones:
-        raise RuntimeError("no paired phone is reachable; check it is on the same network with KDE Connect open")
+        raise RuntimeError(
+            "no paired phone is reachable; check it is on the same network with KDE Connect open"
+        )
     pick = next((d for d in phones if want and want.lower() in d["name"].lower()), phones[0])
     return pick["id"]
 
@@ -54,8 +63,16 @@ def ring(phone: str = "") -> dict:
 def battery(phone: str = "") -> dict:
     """The phone's battery level."""
     dev = _device(phone)
-    out = subprocess.run(["qdbus", "org.kde.kdeconnect", f"/modules/kdeconnect/devices/{dev}/battery", "charge"],
-                         capture_output=True, text=True, timeout=10).stdout.strip() if shutil.which("qdbus") else ""
+    out = (
+        subprocess.run(
+            ["qdbus", "org.kde.kdeconnect", f"/modules/kdeconnect/devices/{dev}/battery", "charge"],
+            capture_output=True,
+            text=True,
+            timeout=10,
+        ).stdout.strip()
+        if shutil.which("qdbus")
+        else ""
+    )
     return {"percent": int(out) if out.isdigit() else None}
 
 

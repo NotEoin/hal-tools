@@ -4,6 +4,7 @@ Every external command runs with a short timeout: bluetoothctl in particular
 waits forever when there is no Bluetooth adapter. Printing uses CUPS (lp) and
 needs confirmation through hal-hub.
 """
+
 from __future__ import annotations
 
 import re
@@ -33,8 +34,14 @@ def bluetooth() -> dict:
         if m:
             info = _run("bluetoothctl", "info", m.group(1))
             battery = re.search(r"Battery Percentage: \S+ \((\d+)\)", info)
-            devices.append({"name": m.group(2), "address": m.group(1), "connected": "Connected: yes" in info,
-                            "battery": int(battery.group(1)) if battery else None})
+            devices.append(
+                {
+                    "name": m.group(2),
+                    "address": m.group(1),
+                    "connected": "Connected: yes" in info,
+                    "battery": int(battery.group(1)) if battery else None,
+                }
+            )
     return {"powered": powered, "devices": devices}
 
 
@@ -48,7 +55,10 @@ def _bt_device(name: str) -> str:
 def bluetooth_connect(device: str) -> dict:
     addr = _bt_device(device)
     out = _run("bluetoothctl", "connect", addr, timeout=20)
-    return {"device": device, "connected": "Connection successful" in out or "already connected" in out.lower()}
+    return {
+        "device": device,
+        "connected": "Connection successful" in out or "already connected" in out.lower(),
+    }
 
 
 def bluetooth_disconnect(device: str) -> dict:
@@ -74,8 +84,11 @@ def printers() -> dict:
     names = re.findall(r"printer (\S+) is (\w+)", out)
     default = re.search(r"system default destination: (\S+)", out)
     jobs = _run("lpstat", "-o").strip().splitlines()
-    return {"printers": [{"name": n, "state": s} for n, s in names],
-            "default": default.group(1) if default else (names[0][0] if len(names) == 1 else None), "queue": jobs}
+    return {
+        "printers": [{"name": n, "state": s} for n, s in names],
+        "default": default.group(1) if default else (names[0][0] if len(names) == 1 else None),
+        "queue": jobs,
+    }
 
 
 def print_file(path: str, printer: str = "", copies: int = 1, double_sided: bool = False) -> dict:
@@ -106,7 +119,9 @@ def monitors() -> list[dict]:
         if status != "connected":
             continue
         modes = (conn / "modes").read_text().split() if (conn / "modes").exists() else []
-        out.append({"connector": conn.name.split("-", 1)[1], "best_mode": modes[0] if modes else None})
+        out.append(
+            {"connector": conn.name.split("-", 1)[1], "best_mode": modes[0] if modes else None}
+        )
     return out
 
 

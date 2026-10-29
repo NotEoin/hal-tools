@@ -2,12 +2,13 @@
 
 The shared [hal] table supplies the vault path and the local model settings.
 """
+
 import os
 import tomllib
 from pathlib import Path
 
 SECTION = "briefing"
-DEFAULTS: dict = {"name": "Dave"}   # how the briefing addresses you
+DEFAULTS: dict = {"name": "Dave"}  # how the briefing addresses you
 SHARED = {
     "vault": "~/Documents/vaults/Hal",
     "ollama_url": "http://localhost:11434",

@@ -1,9 +1,10 @@
 """hal-web command line, driven by hal-module.toml.
 
-    python -m halweb                      list the tools
-    python -m halweb TOOL [key=value ...] run one (the module prefix is optional)
-    python -m halweb --stdin FUNCTION      run a function with JSON arguments on stdin
+python -m halweb                      list the tools
+python -m halweb TOOL [key=value ...] run one (the module prefix is optional)
+python -m halweb --stdin FUNCTION      run a function with JSON arguments on stdin
 """
+
 import json
 import sys
 import tomllib

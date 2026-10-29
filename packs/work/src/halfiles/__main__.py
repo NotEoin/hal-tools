@@ -1,9 +1,10 @@
 """hal-files command line, driven by hal-module.toml.
 
-    python -m halfiles                      list the tools
-    python -m halfiles TOOL [key=value ...] run one (the module prefix is optional)
-    python -m halfiles --stdin FUNCTION      run a function with JSON arguments on stdin
+python -m halfiles                      list the tools
+python -m halfiles TOOL [key=value ...] run one (the module prefix is optional)
+python -m halfiles --stdin FUNCTION      run a function with JSON arguments on stdin
 """
+
 import json
 import sys
 import tomllib

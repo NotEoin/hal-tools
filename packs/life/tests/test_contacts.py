@@ -1,4 +1,5 @@
 """Tests for contacts on a throwaway vault, with calendar calls switched off."""
+
 import os
 import sys
 import tempfile
@@ -16,6 +17,7 @@ class ContactsTest(unittest.TestCase):
         cfg.write_text(f'[hal]\nvault = "{self.tmp.name}"\n')
         os.environ["HAL_CONFIG"] = str(cfg)
         from halcontacts import tools
+
         tools._hub = lambda *a, **k: None
         self.t = tools
 

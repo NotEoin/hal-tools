@@ -3,6 +3,7 @@
 Every command maps to one tool, so jobhunt and Hal Employment stay behind
 hal-jobs and this bridge never runs them itself.
 """
+
 from __future__ import annotations
 
 import json
@@ -77,12 +78,18 @@ def render(result) -> str:
         return result
     if isinstance(result, dict) and isinstance(result.get("jobs"), list):
         lines = [_job_line(j) for j in result["jobs"]]
-        head = f"{result['ready']} ready, {result.get('reserve', 0)} in reserve\n" if "ready" in result else ""
+        head = (
+            f"{result['ready']} ready, {result.get('reserve', 0)} in reserve\n"
+            if "ready" in result
+            else ""
+        )
         return head + ("\n".join(lines) or "Nothing queued.")
     if isinstance(result, dict) and len(result) == 1:
         return render(next(iter(result.values())))
     if isinstance(result, list):
-        return "\n".join(_job_line(x) if isinstance(x, dict) else str(x) for x in result) or "Nothing."
+        return (
+            "\n".join(_job_line(x) if isinstance(x, dict) else str(x) for x in result) or "Nothing."
+        )
     return json.dumps(result, indent=1, default=str)
 
 

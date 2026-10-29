@@ -2,6 +2,7 @@
 
 The shared [hal] table supplies the vault path and the local model settings.
 """
+
 import os
 import tomllib
 from pathlib import Path
@@ -10,8 +11,12 @@ SECTION = "mail"
 DEFAULTS: dict = {
     "default": "jobs",
     "accounts": {
-        "jobs": {"address": "you@example.com", "imap": "imap.gmail.com", "smtp": "smtp.gmail.com",
-                 "password_file": "~/.config/hal/mail-password"},
+        "jobs": {
+            "address": "you@example.com",
+            "imap": "imap.gmail.com",
+            "smtp": "smtp.gmail.com",
+            "password_file": "~/.config/hal/mail-password",
+        },
     },
 }
 SHARED = {

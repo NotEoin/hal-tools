@@ -1,4 +1,5 @@
 """Tests for media tools that do not start or stop playback."""
+
 import sys
 import unittest
 from pathlib import Path

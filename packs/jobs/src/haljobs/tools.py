@@ -4,6 +4,7 @@ jobhunt lives in its own repository (configured as [jobs].jobhunt_root); this mo
 only calls it, so it holds no job data itself. Applications are still made in
 Hal Employment, where every submit is pressed by the owner.
 """
+
 from __future__ import annotations
 
 import json
@@ -13,7 +14,7 @@ from pathlib import Path
 
 from .config import settings
 
-PACK_TIMEOUT = 1800     # seconds; drafting a pack runs the local model and searches the web
+PACK_TIMEOUT = 1800  # seconds; drafting a pack runs the local model and searches the web
 
 
 def _jobhunt(*args: str, timeout: float = 600) -> str:
@@ -21,8 +22,13 @@ def _jobhunt(*args: str, timeout: float = 600) -> str:
     root = Path(s.get("jobhunt_root") or s["jobhunt"]).expanduser()
     if not (root / "jobhunt").is_dir():
         raise RuntimeError(f"jobhunt not found at {root}; set [jobs].jobhunt_root")
-    done = subprocess.run(["/usr/bin/python3", "-m", "jobhunt", *args], cwd=root, capture_output=True, text=True,
-                          timeout=timeout)
+    done = subprocess.run(
+        ["/usr/bin/python3", "-m", "jobhunt", *args],
+        cwd=root,
+        capture_output=True,
+        text=True,
+        timeout=timeout,
+    )
     if done.returncode:
         raise RuntimeError((done.stderr or done.stdout).strip()[-400:])
     return done.stdout.strip()
@@ -38,9 +44,19 @@ def queue() -> dict:
     """The jobs waiting to be applied for, best first."""
     try:
         data = _api("queue")
-        return {"ready": len(data["jobs"]), "reserve": data["reserve"],
-                "jobs": [{"company": j["company"], "title": j["title"], "score": j["score"], "location": j["location"]}
-                         for j in data["jobs"]]}
+        return {
+            "ready": len(data["jobs"]),
+            "reserve": data["reserve"],
+            "jobs": [
+                {
+                    "company": j["company"],
+                    "title": j["title"],
+                    "score": j["score"],
+                    "location": j["location"],
+                }
+                for j in data["jobs"]
+            ],
+        }
     except OSError:
         return {"jobs": _jobhunt("queue").splitlines()}
 
@@ -48,7 +64,10 @@ def queue() -> dict:
 def applications() -> list[dict]:
     """Applications in progress and sent, by stage."""
     try:
-        return [{"company": j["company"], "title": j["title"], "status": j["status"]} for j in _api("applications")["jobs"]]
+        return [
+            {"company": j["company"], "title": j["title"], "status": j["status"]}
+            for j in _api("applications")["jobs"]
+        ]
     except OSError:
         return [{"line": l} for l in _jobhunt("list", "-s", "all", "-n", "40").splitlines()]
 
@@ -74,14 +93,27 @@ def status_counts() -> str:
 
 def open_employment() -> dict:
     """Opens Hal Employment in the browser."""
-    subprocess.Popen(["gio", "open", settings()["employment_url"]], stdout=subprocess.DEVNULL,
-                     stderr=subprocess.DEVNULL, start_new_session=True)
+    subprocess.Popen(
+        ["gio", "open", settings()["employment_url"]],
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+        start_new_session=True,
+    )
     return {"opened": settings()["employment_url"]}
 
 
 def mark(job: str, status: str, note: str = "") -> str:
     """Records a job's progress: shortlisted, applied, assessment, interview, offer, rejected, withdrawn, skipped."""
-    allowed = {"shortlisted", "applied", "assessment", "interview", "offer", "rejected", "withdrawn", "skipped"}
+    allowed = {
+        "shortlisted",
+        "applied",
+        "assessment",
+        "interview",
+        "offer",
+        "rejected",
+        "withdrawn",
+        "skipped",
+    }
     if status not in allowed:
         raise ValueError(f"status must be one of {', '.join(sorted(allowed))}")
     return _jobhunt("set", job, status, *([note] if note else []))
@@ -113,6 +145,12 @@ def todo_add(text: str) -> str:
 def pack(job: str) -> dict:
     """Drafts the application pack for one job; returns the pack's files and jobhunt's output."""
     output = _jobhunt("pack", job, timeout=PACK_TIMEOUT)
-    pack_md = next((Path(l.strip()) for l in output.splitlines() if l.strip().endswith("pack.md")), None)
+    pack_md = next(
+        (Path(l.strip()) for l in output.splitlines() if l.strip().endswith("pack.md")), None
+    )
     files = [pack_md, *sorted(pack_md.parent.glob("*.pdf"))] if pack_md and pack_md.exists() else []
-    return {"pack": str(pack_md) if pack_md else None, "files": [str(f) for f in files], "output": output[-1500:]}
+    return {
+        "pack": str(pack_md) if pack_md else None,
+        "files": [str(f) for f in files],
+        "output": output[-1500:],
+    }

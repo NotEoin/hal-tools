@@ -1,7 +1,8 @@
 """Reminder daemon for tasks with a time: alerts when one falls due, and at 08:00 lists the day's tasks.
 
-    python -m haltasks.reminders
+python -m haltasks.reminders
 """
+
 from __future__ import annotations
 
 import time
@@ -20,7 +21,9 @@ def check(now: datetime | None = None) -> int:
     lead = timedelta(minutes=int(settings()["remind_minutes"]))
     con = tools._db()
     sent = 0
-    for r in con.execute("SELECT * FROM tasks WHERE done IS NULL AND timed = 1 AND reminded = 0 AND due IS NOT NULL"):
+    for r in con.execute(
+        "SELECT * FROM tasks WHERE done IS NULL AND timed = 1 AND reminded = 0 AND due IS NOT NULL"
+    ):
         due = datetime.fromisoformat(r["due"])
         if due - lead <= now < due + timedelta(hours=1):
             notify(f"Task due {due:%H:%M}: {r['title']}", r["notes"] or "", speak=True)
@@ -31,7 +34,10 @@ def check(now: datetime | None = None) -> int:
     if now.hour >= 8 and (not marker.exists() or marker.read_text() != date.today().isoformat()):
         today = tools.list_tasks("today")["tasks"]
         if today:
-            notify(f"{len(today)} task{'s' * (len(today) > 1)} today", "; ".join(t["title"] for t in today[:6]))
+            notify(
+                f"{len(today)} task{'s' * (len(today) > 1)} today",
+                "; ".join(t["title"] for t in today[:6]),
+            )
             sent += 1
         marker.write_text(date.today().isoformat())
     return sent

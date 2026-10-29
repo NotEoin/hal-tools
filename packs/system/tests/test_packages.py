@@ -1,4 +1,5 @@
 """Tests for the package tools that change nothing."""
+
 import sys
 import unittest
 from pathlib import Path

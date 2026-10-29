@@ -1,4 +1,5 @@
 """Smoke tests for the desktop tools that change nothing."""
+
 import sys
 import unittest
 from pathlib import Path

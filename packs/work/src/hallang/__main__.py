@@ -1,9 +1,10 @@
 """hal-lang command line, driven by hal-module.toml.
 
-    python -m hallang                      list the tools
-    python -m hallang TOOL [key=value ...] run one (the module prefix is optional)
-    python -m hallang --stdin FUNCTION      run a function with JSON arguments on stdin
+python -m hallang                      list the tools
+python -m hallang TOOL [key=value ...] run one (the module prefix is optional)
+python -m hallang --stdin FUNCTION      run a function with JSON arguments on stdin
 """
+
 import json
 import sys
 import tomllib

@@ -5,6 +5,7 @@ plus plain sockets and HTTPS for ping-free checks, the public IP and a speed
 test against Cloudflare's speed endpoints. Scanning other machines' ports is
 limited to the local network.
 """
+
 from __future__ import annotations
 
 import ipaddress
@@ -20,8 +21,10 @@ UA = {"User-Agent": "Mozilla/5.0 (X11; Linux x86_64) Hal/1.0"}
 
 
 def _open(url: str, data: bytes | None = None, timeout: float = 30):
-    return urllib.request.urlopen(urllib.request.Request(url, data=data, headers=UA,
-                                                         method="POST" if data else "GET"), timeout=timeout)
+    return urllib.request.urlopen(
+        urllib.request.Request(url, data=data, headers=UA, method="POST" if data else "GET"),
+        timeout=timeout,
+    )
 
 
 def _run(*cmd: str, timeout: float = 20) -> str:
@@ -39,15 +42,31 @@ def status() -> dict:
         if kind in ("loopback", "bridge") or dev.startswith(("veth", "docker", "br-")):
             continue
         addr = re.search(r"inet (\S+)", _run("ip", "-4", "addr", "show", dev))
-        devices.append({"device": dev, "type": kind, "state": state, "connection": conn,
-                        "address": addr.group(1) if addr else None})
+        devices.append(
+            {
+                "device": dev,
+                "type": kind,
+                "state": state,
+                "connection": conn,
+                "address": addr.group(1) if addr else None,
+            }
+        )
     gw = re.search(r"default via (\S+) dev (\S+)", _run("ip", "route"))
     dns = re.findall(r"Current DNS Server: (\S+)|DNS Servers: (.+)", _run("resolvectl", "status"))
-    vpns = [l.split(":")[0] for l in _run("nmcli", "-t", "-f", "NAME,TYPE", "connection", "show", "--active").splitlines()
-            if re.search(r":(vpn|wireguard)$", l)]
-    return {"devices": devices, "gateway": gw.group(1) if gw else None,
-            "dns": sorted({x for pair in dns for x in " ".join(pair).split() if x}), "vpn": vpns,
-            "online": _online()}
+    vpns = [
+        l.split(":")[0]
+        for l in _run(
+            "nmcli", "-t", "-f", "NAME,TYPE", "connection", "show", "--active"
+        ).splitlines()
+        if re.search(r":(vpn|wireguard)$", l)
+    ]
+    return {
+        "devices": devices,
+        "gateway": gw.group(1) if gw else None,
+        "dns": sorted({x for pair in dns for x in " ".join(pair).split() if x}),
+        "vpn": vpns,
+        "online": _online(),
+    }
 
 
 def _online() -> bool:
@@ -60,23 +79,39 @@ def _online() -> bool:
 
 def wifi() -> dict:
     """The Wi-Fi network in use with its signal, and the networks in range."""
-    rows = _run("nmcli", "-t", "-f", "IN-USE,SSID,SIGNAL,SECURITY,CHAN", "device", "wifi", "list").splitlines()
+    rows = _run(
+        "nmcli", "-t", "-f", "IN-USE,SSID,SIGNAL,SECURITY,CHAN", "device", "wifi", "list"
+    ).splitlines()
     nets = []
     for r in rows:
         parts = r.split(":")
         if len(parts) >= 5 and parts[1]:
-            nets.append({"ssid": parts[1], "signal": int(parts[2] or 0), "security": parts[3],
-                         "channel": parts[4], "in_use": parts[0] == "*"})
+            nets.append(
+                {
+                    "ssid": parts[1],
+                    "signal": int(parts[2] or 0),
+                    "security": parts[3],
+                    "channel": parts[4],
+                    "in_use": parts[0] == "*",
+                }
+            )
     if not nets:
         return {"wifi": "no Wi-Fi adapter or no networks in range"}
-    return {"connected": next((n for n in nets if n["in_use"]), None),
-            "in_range": sorted(nets, key=lambda n: -n["signal"])[:12]}
+    return {
+        "connected": next((n for n in nets if n["in_use"]), None),
+        "in_range": sorted(nets, key=lambda n: -n["signal"])[:12],
+    }
 
 
 def public_ip() -> dict:
     with _open("https://ipinfo.io/json", timeout=10) as r:
         geo = json.loads(r.read())
-    return {"ip": geo.get("ip"), "isp": geo.get("org"), "city": geo.get("city"), "country": geo.get("country")}
+    return {
+        "ip": geo.get("ip"),
+        "isp": geo.get("org"),
+        "city": geo.get("city"),
+        "country": geo.get("country"),
+    }
 
 
 def devices() -> list[dict]:
@@ -102,8 +137,12 @@ def ping(host: str = "1.1.1.1", count: int = 4) -> dict:
     rtt = re.search(r"= ([\d.]+)/([\d.]+)/([\d.]+)", out)
     if not loss:
         raise ValueError(f"cannot reach {host}")
-    return {"host": host, "loss_percent": float(loss.group(1)),
-            "avg_ms": float(rtt.group(2)) if rtt else None, "max_ms": float(rtt.group(3)) if rtt else None}
+    return {
+        "host": host,
+        "loss_percent": float(loss.group(1)),
+        "avg_ms": float(rtt.group(2)) if rtt else None,
+        "max_ms": float(rtt.group(3)) if rtt else None,
+    }
 
 
 def port(host: str, port: int) -> dict:
@@ -142,10 +181,20 @@ def speed_test(megabytes: int = 25) -> dict:
     down = got * 8 / (time.time() - t) / 1e6
     # urllib sends a body as form data, which throttles the upload; a raw connection measures the line.
     import http.client
+
     up_size = max(size // 2, 5_000_000)
     t = time.time()
     conn = http.client.HTTPSConnection("speed.cloudflare.com", timeout=120)
-    conn.request("POST", "/__up", body=b"0" * up_size, headers={**UA, "Content-Type": "application/octet-stream"})
+    conn.request(
+        "POST",
+        "/__up",
+        body=b"0" * up_size,
+        headers={**UA, "Content-Type": "application/octet-stream"},
+    )
     conn.getresponse().read()
     up = up_size * 8 / (time.time() - t) / 1e6
-    return {"download_mbps": round(down, 1), "upload_mbps": round(up, 1), "latency_ms": round(latency)}
+    return {
+        "download_mbps": round(down, 1),
+        "upload_mbps": round(up, 1),
+        "latency_ms": round(latency),
+    }

@@ -1,9 +1,10 @@
 """hal-models command line, driven by hal-module.toml.
 
-    python -m halmodels                      list the tools
-    python -m halmodels TOOL [key=value ...] run one (the module prefix is optional)
-    python -m halmodels --stdin FUNCTION      run a function with JSON arguments on stdin
+python -m halmodels                      list the tools
+python -m halmodels TOOL [key=value ...] run one (the module prefix is optional)
+python -m halmodels --stdin FUNCTION      run a function with JSON arguments on stdin
 """
+
 import json
 import sys
 import tomllib

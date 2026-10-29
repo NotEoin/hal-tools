@@ -1,4 +1,5 @@
 """Tests for spending, budgets and statement import on a throwaway store."""
+
 import os
 import sys
 import tempfile
@@ -15,6 +16,7 @@ class LedgerTest(unittest.TestCase):
         os.environ["HAL_DATA"] = self.tmp.name
         os.environ["HAL_CONFIG"] = str(Path(self.tmp.name) / "none.toml")
         from halledger import tools
+
         self.t = tools
 
     def tearDown(self):
@@ -29,7 +31,9 @@ class LedgerTest(unittest.TestCase):
     def test_csv_import_skips_income_and_repeats(self):
         csv = Path(self.tmp.name) / "s.csv"
         today = date.today().strftime("%d/%m/%Y")
-        csv.write_text(f"Date,Description,Amount\n{today},TESCO STORES,-23.10\n{today},SALARY,2000\n")
+        csv.write_text(
+            f"Date,Description,Amount\n{today},TESCO STORES,-23.10\n{today},SALARY,2000\n"
+        )
         self.assertEqual(self.t.import_csv(str(csv))["imported"], 1)
         self.assertEqual(self.t.import_csv(str(csv))["imported"], 0)
         self.assertEqual(self.t.summary()["categories"][0]["category"], "groceries")

@@ -8,6 +8,7 @@ A bare hour from 1 to 7 ("at 3") means the afternoon unless the morning is named
 morning") or the caller asks otherwise (alarms do). Ranges ("from 2 till 3:30pm", "2-4pm",
 "between 2 and 4") set the end; the end's am or pm carries back to the start. Stdlib only.
 """
+
 from __future__ import annotations
 
 import re
@@ -15,19 +16,74 @@ from dataclasses import dataclass
 from datetime import date, datetime, time, timedelta
 
 WEEKDAYS = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"]
-DAY_ABBR = {d[:3]: i for i, d in enumerate(WEEKDAYS)} | {"tues": 1, "thur": 3, "thurs": 3, "weds": 2}
-MONTHS = ["january", "february", "march", "april", "may", "june", "july", "august", "september",
-          "october", "november", "december"]
+DAY_ABBR = {d[:3]: i for i, d in enumerate(WEEKDAYS)} | {
+    "tues": 1,
+    "thur": 3,
+    "thurs": 3,
+    "weds": 2,
+}
+MONTHS = [
+    "january",
+    "february",
+    "march",
+    "april",
+    "may",
+    "june",
+    "july",
+    "august",
+    "september",
+    "october",
+    "november",
+    "december",
+]
 MONTH_ABBR = {m[:3]: i + 1 for i, m in enumerate(MONTHS)} | {"sept": 9}
-NUMBERS = {"a": 1, "an": 1, "one": 1, "two": 2, "three": 3, "four": 4, "five": 5, "six": 6, "seven": 7,
-           "eight": 8, "nine": 9, "ten": 10, "eleven": 11, "twelve": 12, "fifteen": 15, "twenty": 20,
-           "thirty": 30, "forty": 40, "forty-five": 45, "ninety": 90, "half an": 0.5, "a couple of": 2,
-           "a few": 3}
-PARTS = {"morning": time(9), "afternoon": time(14), "evening": time(18), "tonight": time(20),
-         "night": time(21), "lunchtime": time(12, 30), "noon": time(12), "midday": time(12),
-         "midnight": time(0)}
-UNITS = {"minute": 60, "min": 60, "mins": 60, "hour": 3600, "hr": 3600, "hrs": 3600, "day": 86400,
-         "week": 604800, "fortnight": 1209600}
+NUMBERS = {
+    "a": 1,
+    "an": 1,
+    "one": 1,
+    "two": 2,
+    "three": 3,
+    "four": 4,
+    "five": 5,
+    "six": 6,
+    "seven": 7,
+    "eight": 8,
+    "nine": 9,
+    "ten": 10,
+    "eleven": 11,
+    "twelve": 12,
+    "fifteen": 15,
+    "twenty": 20,
+    "thirty": 30,
+    "forty": 40,
+    "forty-five": 45,
+    "ninety": 90,
+    "half an": 0.5,
+    "a couple of": 2,
+    "a few": 3,
+}
+PARTS = {
+    "morning": time(9),
+    "afternoon": time(14),
+    "evening": time(18),
+    "tonight": time(20),
+    "night": time(21),
+    "lunchtime": time(12, 30),
+    "noon": time(12),
+    "midday": time(12),
+    "midnight": time(0),
+}
+UNITS = {
+    "minute": 60,
+    "min": 60,
+    "mins": 60,
+    "hour": 3600,
+    "hr": 3600,
+    "hrs": 3600,
+    "day": 86400,
+    "week": 604800,
+    "fortnight": 1209600,
+}
 DAY_NAME = r"(?:mon|tue|tues|wed|weds|thu|thur|thurs|fri|sat|sun)(?:day|nesday|rsday|urday|sday)?"
 MONTH_NAME = r"(?:jan|feb|mar|apr|may|jun|jul|aug|sep|sept|oct|nov|dec)[a-z]*"
 NUM = r"(\d+(?:\.\d+)?|a|an|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|fifteen|twenty|thirty|forty|forty-five|ninety|half an|a couple of|a few)"
@@ -60,7 +116,7 @@ class _Text:
     def take(self, pattern: str) -> re.Match | None:
         m = re.search(pattern, self.s, re.I)
         if m:
-            self.s = self.s[:m.start()] + " " + self.s[m.end():]
+            self.s = self.s[: m.start()] + " " + self.s[m.end() :]
         return m
 
     @property
@@ -68,25 +124,33 @@ class _Text:
         out = re.sub(r"\s+", " ", self.s).strip(" ,.-")
         if re.fullmatch(r"(?:on|at|for|from|by|in)", out, re.I):
             return ""
-        return re.sub(r"^(?:on|at|for|from|by|in)\s+|\s+(?:on|at|for|from|by|in)$", "", out, flags=re.I).strip()
+        return re.sub(
+            r"^(?:on|at|for|from|by|in)\s+|\s+(?:on|at|for|from|by|in)$", "", out, flags=re.I
+        ).strip()
 
 
 # Words for a part of the day: whether an hour said with them is am or pm, and the time they mean alone.
 HINTS = {"morning": "a", "afternoon": "p", "evening": "p", "tonight": "p", "night": "p"}
 PART = r"(?:\b(?:in\s+the|this|at)\s+)?\b(?P<part>morning|afternoon|evening|tonight|night)\b"
 NAMED = {"noon": time(12), "midday": time(12), "midnight": time(0), "lunchtime": time(12, 30)}
-NOT_A_TIME = r"(?!\s*(?:minutes?|mins?|hours?|hrs?|days?|weeks?|months?|years?|people|of|st|nd|rd|th|%|/))"
+NOT_A_TIME = (
+    r"(?!\s*(?:minutes?|mins?|hours?|hrs?|days?|weeks?|months?|years?|people|of|st|nd|rd|th|%|/))"
+)
 # One end of a range: "2", "3:30pm", "10 am", "noon".
 END = r"(?:(?P<h{n}>\d{{1,2}})(?:[:.](?P<m{n}>\d{{2}}))?\s*(?P<a{n}>[ap]\.?m\.?)?(?![\d:])|(?P<n{n}>noon|midday|midnight))"
-RANGES = (rf"\bbetween\s+{END.format(n=1)}\s+and\s+{END.format(n=2)}" + NOT_A_TIME,
-          rf"(?:\b(?:from|at|@)\s*)?(?<![\d/:.-]){END.format(n=1)}\s*(?:-|–|—|\bto\b|\btill?\b|\buntil\b)\s*"
-          rf"{END.format(n=2)}" + NOT_A_TIME)
-TIME = (r"(?:\b(?:at|@)\s*)?(?:(?P<rel>quarter past|half past|quarter to)\s+(?P<rh>\d{1,2})"
-        r"|(?P<h>\d{1,2})(?:[:.](?P<m>\d{2}))?\s*(?P<ap>a\.?m\.?|p\.?m\.?)"
-        r"|(?P<h2>\d{1,2})[:.](?P<m2>\d{2})"
-        r"|\bat\s+(?P<h3>\d{1,2})\b" + NOT_A_TIME + r"(?:\s*o'?clock)?"
-        r"|\b(?P<h4>\d{1,2})\s*o'?clock"
-        r"|\b(?P<named>noon|midday|midnight|lunchtime)\b)")
+RANGES = (
+    rf"\bbetween\s+{END.format(n=1)}\s+and\s+{END.format(n=2)}" + NOT_A_TIME,
+    rf"(?:\b(?:from|at|@)\s*)?(?<![\d/:.-]){END.format(n=1)}\s*(?:-|–|—|\bto\b|\btill?\b|\buntil\b)\s*"
+    rf"{END.format(n=2)}" + NOT_A_TIME,
+)
+TIME = (
+    r"(?:\b(?:at|@)\s*)?(?:(?P<rel>quarter past|half past|quarter to)\s+(?P<rh>\d{1,2})"
+    r"|(?P<h>\d{1,2})(?:[:.](?P<m>\d{2}))?\s*(?P<ap>a\.?m\.?|p\.?m\.?)"
+    r"|(?P<h2>\d{1,2})[:.](?P<m2>\d{2})"
+    r"|\bat\s+(?P<h3>\d{1,2})\b" + NOT_A_TIME + r"(?:\s*o'?clock)?"
+    r"|\b(?P<h4>\d{1,2})\s*o'?clock"
+    r"|\b(?P<named>noon|midday|midnight|lunchtime)\b)"
+)
 
 
 def _hour(hour: str | int, minute: str | int | None, ap: str, prefer_pm: bool) -> time:
@@ -127,7 +191,7 @@ def _find_range(t: _Text, hint: str, prefer_pm: bool) -> tuple[time, time] | Non
             return NAMED[m[f"n{n}"].lower()]
         ap = (m[f"a{n}"] or "")[:1].lower()
         if not ap and m[f"h{n}"].startswith("0"):
-            ap = "a"     # "09:00" is the 24-hour clock
+            ap = "a"  # "09:00" is the 24-hour clock
         return m[f"h{n}"], m[f"m{n}"] or "0", ap
 
     a, b = side("1"), side("2")
@@ -166,7 +230,10 @@ def _find_time(t: _Text, prefer_pm: bool = True) -> tuple[time | None, time | No
         t.take(PART)
         return rng
     # A bare hour beside the part of the day: "7 tomorrow morning" (once "tomorrow" is cut), "8 tonight".
-    m = t.take(r"(?:\b(?:at|@)\s*)?(?<!past )(?<!to )\b(?P<h4>\d{1,2})(?:[:.](?P<m4>\d{2}))?\s*(?:o'?clock\s*)?" + PART)
+    m = t.take(
+        r"(?:\b(?:at|@)\s*)?(?<!past )(?<!to )\b(?P<h4>\d{1,2})(?:[:.](?P<m4>\d{2}))?\s*(?:o'?clock\s*)?"
+        + PART
+    )
     if not m:
         t.take(PART)
         m = t.take(TIME)
@@ -177,7 +244,9 @@ def _find_time(t: _Text, prefer_pm: bool = True) -> tuple[time | None, time | No
         return NAMED[g["named"].lower()], None
     if g.get("rel"):
         mins = {"quarter past": 15, "half past": 30, "quarter to": -15}[g["rel"].lower()]
-        base = datetime.combine(date.today(), _hour(g["rh"], "0", hint, prefer_pm)) + timedelta(minutes=mins)
+        base = datetime.combine(date.today(), _hour(g["rh"], "0", hint, prefer_pm)) + timedelta(
+            minutes=mins
+        )
         return base.time(), None
     if g.get("h"):
         return _hour(g["h"], g["m"], g["ap"][:1].lower(), prefer_pm), None
@@ -203,13 +272,18 @@ def _find_date(t: _Text, now: datetime) -> tuple[date | None, bool]:
     m = t.take(r"\b(\d{4})-(\d{2})-(\d{2})\b")
     if m:
         return date(int(m[1]), int(m[2]), int(m[3])), True
-    m = t.take(rf"\b(?:on\s+)?(?:the\s+)?(\d{{1,2}})(?:st|nd|rd|th)?\s+(?:of\s+)?({MONTH_NAME})(?:\s+(\d{{4}}))?\b")
+    m = t.take(
+        rf"\b(?:on\s+)?(?:the\s+)?(\d{{1,2}})(?:st|nd|rd|th)?\s+(?:of\s+)?({MONTH_NAME})(?:\s+(\d{{4}}))?\b"
+    )
     if not m:
         m2 = t.take(rf"\b({MONTH_NAME})\s+(\d{{1,2}})(?:st|nd|rd|th)?(?:,?\s+(\d{{4}}))?\b")
         if m2:
             m = (None, m2[2], m2[1], m2[3])
     if m:
-        day, month = int(m[1]), MONTH_ABBR[m[2].lower()[:4] if m[2].lower()[:4] in MONTH_ABBR else m[2].lower()[:3]]
+        day, month = (
+            int(m[1]),
+            MONTH_ABBR[m[2].lower()[:4] if m[2].lower()[:4] in MONTH_ABBR else m[2].lower()[:3]],
+        )
         year = int(m[3]) if m[3] else today.year
         d = date(year, month, day)
         if not m[3] and d < today:
@@ -236,7 +310,12 @@ def _find_date(t: _Text, now: datetime) -> tuple[date | None, bool]:
         ahead = (target - today.weekday()) % 7
         if (m[1] or "").lower() == "next" and ahead == 0:
             ahead = 7
-        elif (m[1] or "").lower() == "next" and ahead < 7 and today.weekday() < 5 and target > today.weekday():
+        elif (
+            (m[1] or "").lower() == "next"
+            and ahead < 7
+            and today.weekday() < 5
+            and target > today.weekday()
+        ):
             # "next Thursday" said on a Monday means the Thursday after this one.
             ahead += 7
         return today + timedelta(days=ahead or 0), True
@@ -257,8 +336,10 @@ def _find_offset(t: _Text) -> timedelta | None:
 
 def _find_duration(t: _Text) -> timedelta | None:
     """Reads 'for an hour', 'for 90 minutes', 'for 1 hour 30 minutes', 'for an hour and a half'."""
-    m = t.take(rf"\bfor\s+{NUM}\s*(?P<half1>and a half\s+)?(?P<unit>minute|min|mins|hour|hr|hrs|day|week)s?"
-               r"(?P<half2>\s+and\s+a\s+half)?(?:,?\s*(?:and\s+)?(?P<extra>\d+)\s*(?:minutes?|mins?))?\b")
+    m = t.take(
+        rf"\bfor\s+{NUM}\s*(?P<half1>and a half\s+)?(?P<unit>minute|min|mins|hour|hr|hrs|day|week)s?"
+        r"(?P<half2>\s+and\s+a\s+half)?(?:,?\s*(?:and\s+)?(?P<extra>\d+)\s*(?:minutes?|mins?))?\b"
+    )
     if m:
         n = _num(m[1]) + (0.5 if m["half1"] or m["half2"] else 0)
         return timedelta(seconds=n * UNITS[m["unit"].lower()] + int(m["extra"] or 0) * 60)
@@ -278,18 +359,27 @@ def _find_repeat(t: _Text) -> str | None:
         return f"FREQ=WEEKLY;BYDAY={codes}"
     m = t.take(rf"\bevery\s+{NUM}?\s*(day|week|month|year)s?\b")
     if m:
-        freq = {"day": "DAILY", "week": "WEEKLY", "month": "MONTHLY", "year": "YEARLY"}[m[2].lower()]
+        freq = {"day": "DAILY", "week": "WEEKLY", "month": "MONTHLY", "year": "YEARLY"}[
+            m[2].lower()
+        ]
         n = int(_num(m[1])) if m[1] else 1
         return f"FREQ={freq}" + (f";INTERVAL={n}" if n > 1 else "")
     m = t.take(r"\b(daily|weekly|fortnightly|monthly|yearly|annually)\b")
     if m:
-        return {"daily": "FREQ=DAILY", "weekly": "FREQ=WEEKLY", "fortnightly": "FREQ=WEEKLY;INTERVAL=2",
-                "monthly": "FREQ=MONTHLY", "yearly": "FREQ=YEARLY", "annually": "FREQ=YEARLY"}[m[1].lower()]
+        return {
+            "daily": "FREQ=DAILY",
+            "weekly": "FREQ=WEEKLY",
+            "fortnightly": "FREQ=WEEKLY;INTERVAL=2",
+            "monthly": "FREQ=MONTHLY",
+            "yearly": "FREQ=YEARLY",
+            "annually": "FREQ=YEARLY",
+        }[m[1].lower()]
     return None
 
 
-def parse(text: str, now: datetime | None = None, default_time: time | None = None,
-          prefer_pm: bool = True) -> When:
+def parse(
+    text: str, now: datetime | None = None, default_time: time | None = None, prefer_pm: bool = True
+) -> When:
     """Parses the date, time, length and repeat in `text`; `rest` is what is left.
 
     Args:
@@ -324,7 +414,9 @@ def parse(text: str, now: datetime | None = None, default_time: time | None = No
     start = datetime.combine(d, clock)
     if rrule and "BYDAY" in rrule and not explicit:
         codes = rrule.split("BYDAY=")[1].split(",")
-        while ["MO", "TU", "WE", "TH", "FR", "SA", "SU"][start.weekday()] not in codes or start < now:
+        while ["MO", "TU", "WE", "TH", "FR", "SA", "SU"][
+            start.weekday()
+        ] not in codes or start < now:
             start += timedelta(days=1)
     end = None
     if until is not None:

@@ -1,4 +1,5 @@
 """Tests for hal-phone's checks that need no phone."""
+
 import sys
 import unittest
 from pathlib import Path

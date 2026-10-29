@@ -1,4 +1,5 @@
 """Smoke tests for the device listings."""
+
 import sys
 import unittest
 from pathlib import Path

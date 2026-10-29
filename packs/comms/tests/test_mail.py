@@ -1,4 +1,5 @@
 """Offline tests for header decoding and body extraction."""
+
 import email
 import sys
 import unittest
@@ -14,7 +15,8 @@ class MailTest(unittest.TestCase):
 
     def test_html_body_becomes_text(self):
         msg = email.message_from_string(
-            "Content-Type: text/html\n\n<html><style>p{}</style><p>Hello <b>Dave</b></p></html>")
+            "Content-Type: text/html\n\n<html><style>p{}</style><p>Hello <b>Dave</b></p></html>"
+        )
         self.assertEqual(tools._body(msg), "Hello Dave")
 
     def test_unknown_account(self):

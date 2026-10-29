@@ -1,9 +1,10 @@
 """hal-routines command line, driven by hal-module.toml.
 
-    python -m halroutines                      list the tools
-    python -m halroutines TOOL [key=value ...] run one (the module prefix is optional)
-    python -m halroutines --stdin FUNCTION      run a function with JSON arguments on stdin
+python -m halroutines                      list the tools
+python -m halroutines TOOL [key=value ...] run one (the module prefix is optional)
+python -m halroutines --stdin FUNCTION      run a function with JSON arguments on stdin
 """
+
 import json
 import sys
 import tomllib

@@ -1,9 +1,10 @@
 """hal-notify command line, driven by hal-module.toml.
 
-    python -m halnotify                      list the tools
-    python -m halnotify TOOL [key=value ...] run one (the module prefix is optional)
-    python -m halnotify --stdin FUNCTION      run a function with JSON arguments on stdin
+python -m halnotify                      list the tools
+python -m halnotify TOOL [key=value ...] run one (the module prefix is optional)
+python -m halnotify --stdin FUNCTION      run a function with JSON arguments on stdin
 """
+
 import json
 import sys
 import tomllib

@@ -6,6 +6,7 @@
 UK conventions: day before month in numeric dates, 24-hour or am/pm times.
 A bare hour from 1 to 7 ("at 3") means the afternoon. Stdlib only.
 """
+
 from __future__ import annotations
 
 import re
@@ -13,19 +14,74 @@ from dataclasses import dataclass
 from datetime import date, datetime, time, timedelta
 
 WEEKDAYS = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"]
-DAY_ABBR = {d[:3]: i for i, d in enumerate(WEEKDAYS)} | {"tues": 1, "thur": 3, "thurs": 3, "weds": 2}
-MONTHS = ["january", "february", "march", "april", "may", "june", "july", "august", "september",
-          "october", "november", "december"]
+DAY_ABBR = {d[:3]: i for i, d in enumerate(WEEKDAYS)} | {
+    "tues": 1,
+    "thur": 3,
+    "thurs": 3,
+    "weds": 2,
+}
+MONTHS = [
+    "january",
+    "february",
+    "march",
+    "april",
+    "may",
+    "june",
+    "july",
+    "august",
+    "september",
+    "october",
+    "november",
+    "december",
+]
 MONTH_ABBR = {m[:3]: i + 1 for i, m in enumerate(MONTHS)} | {"sept": 9}
-NUMBERS = {"a": 1, "an": 1, "one": 1, "two": 2, "three": 3, "four": 4, "five": 5, "six": 6, "seven": 7,
-           "eight": 8, "nine": 9, "ten": 10, "eleven": 11, "twelve": 12, "fifteen": 15, "twenty": 20,
-           "thirty": 30, "forty": 40, "forty-five": 45, "ninety": 90, "half an": 0.5, "a couple of": 2,
-           "a few": 3}
-PARTS = {"morning": time(9), "afternoon": time(14), "evening": time(18), "tonight": time(20),
-         "night": time(21), "lunchtime": time(12, 30), "noon": time(12), "midday": time(12),
-         "midnight": time(0)}
-UNITS = {"minute": 60, "min": 60, "mins": 60, "hour": 3600, "hr": 3600, "hrs": 3600, "day": 86400,
-         "week": 604800, "fortnight": 1209600}
+NUMBERS = {
+    "a": 1,
+    "an": 1,
+    "one": 1,
+    "two": 2,
+    "three": 3,
+    "four": 4,
+    "five": 5,
+    "six": 6,
+    "seven": 7,
+    "eight": 8,
+    "nine": 9,
+    "ten": 10,
+    "eleven": 11,
+    "twelve": 12,
+    "fifteen": 15,
+    "twenty": 20,
+    "thirty": 30,
+    "forty": 40,
+    "forty-five": 45,
+    "ninety": 90,
+    "half an": 0.5,
+    "a couple of": 2,
+    "a few": 3,
+}
+PARTS = {
+    "morning": time(9),
+    "afternoon": time(14),
+    "evening": time(18),
+    "tonight": time(20),
+    "night": time(21),
+    "lunchtime": time(12, 30),
+    "noon": time(12),
+    "midday": time(12),
+    "midnight": time(0),
+}
+UNITS = {
+    "minute": 60,
+    "min": 60,
+    "mins": 60,
+    "hour": 3600,
+    "hr": 3600,
+    "hrs": 3600,
+    "day": 86400,
+    "week": 604800,
+    "fortnight": 1209600,
+}
 DAY_NAME = r"(?:mon|tue|tues|wed|weds|thu|thur|thurs|fri|sat|sun)(?:day|nesday|rsday|urday|sday)?"
 MONTH_NAME = r"(?:jan|feb|mar|apr|may|jun|jul|aug|sep|sept|oct|nov|dec)[a-z]*"
 NUM = r"(\d+(?:\.\d+)?|a|an|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|fifteen|twenty|thirty|forty|forty-five|ninety|half an|a couple of|a few)"
@@ -58,13 +114,15 @@ class _Text:
     def take(self, pattern: str) -> re.Match | None:
         m = re.search(pattern, self.s, re.I)
         if m:
-            self.s = self.s[:m.start()] + " " + self.s[m.end():]
+            self.s = self.s[: m.start()] + " " + self.s[m.end() :]
         return m
 
     @property
     def rest(self) -> str:
         out = re.sub(r"\s+", " ", self.s).strip(" ,.-")
-        return re.sub(r"^(?:on|at|for|from|by|in)\s+|\s+(?:on|at|for|from|by|in)$", "", out, flags=re.I).strip()
+        return re.sub(
+            r"^(?:on|at|for|from|by|in)\s+|\s+(?:on|at|for|from|by|in)$", "", out, flags=re.I
+        ).strip()
 
 
 def _clock(m: re.Match, prefer_pm: bool = True) -> time:
@@ -90,11 +148,13 @@ def _clock(m: re.Match, prefer_pm: bool = True) -> time:
     return time(hour % 24, minute)
 
 
-TIME = (r"(?:\b(?:at|@)\s*)?(?:(?P<rel>quarter past|half past|quarter to)\s+(?P<rh>\d{1,2})"
-        r"|(?P<h>\d{1,2})(?:[:.](?P<m>\d{2}))?\s*(?P<ap>a\.?m\.?|p\.?m\.?)"
-        r"|(?P<h2>\d{1,2})[:.](?P<m2>\d{2})"
-        r"|\bat\s+(?P<h3>\d{1,2})\b"
-        r"|\b(?P<part>noon|midday|midnight|lunchtime|tonight|morning|afternoon|evening|night)\b)")
+TIME = (
+    r"(?:\b(?:at|@)\s*)?(?:(?P<rel>quarter past|half past|quarter to)\s+(?P<rh>\d{1,2})"
+    r"|(?P<h>\d{1,2})(?:[:.](?P<m>\d{2}))?\s*(?P<ap>a\.?m\.?|p\.?m\.?)"
+    r"|(?P<h2>\d{1,2})[:.](?P<m2>\d{2})"
+    r"|\bat\s+(?P<h3>\d{1,2})\b"
+    r"|\b(?P<part>noon|midday|midnight|lunchtime|tonight|morning|afternoon|evening|night)\b)"
+)
 
 
 def _find_time(t: _Text) -> time | None:
@@ -127,13 +187,18 @@ def _find_date(t: _Text, now: datetime) -> tuple[date | None, bool]:
     m = t.take(r"\b(\d{4})-(\d{2})-(\d{2})\b")
     if m:
         return date(int(m[1]), int(m[2]), int(m[3])), True
-    m = t.take(rf"\b(?:on\s+)?(?:the\s+)?(\d{{1,2}})(?:st|nd|rd|th)?\s+(?:of\s+)?({MONTH_NAME})(?:\s+(\d{{4}}))?\b")
+    m = t.take(
+        rf"\b(?:on\s+)?(?:the\s+)?(\d{{1,2}})(?:st|nd|rd|th)?\s+(?:of\s+)?({MONTH_NAME})(?:\s+(\d{{4}}))?\b"
+    )
     if not m:
         m2 = t.take(rf"\b({MONTH_NAME})\s+(\d{{1,2}})(?:st|nd|rd|th)?(?:,?\s+(\d{{4}}))?\b")
         if m2:
             m = (None, m2[2], m2[1], m2[3])
     if m:
-        day, month = int(m[1]), MONTH_ABBR[m[2].lower()[:4] if m[2].lower()[:4] in MONTH_ABBR else m[2].lower()[:3]]
+        day, month = (
+            int(m[1]),
+            MONTH_ABBR[m[2].lower()[:4] if m[2].lower()[:4] in MONTH_ABBR else m[2].lower()[:3]],
+        )
         year = int(m[3]) if m[3] else today.year
         d = date(year, month, day)
         if not m[3] and d < today:
@@ -160,7 +225,12 @@ def _find_date(t: _Text, now: datetime) -> tuple[date | None, bool]:
         ahead = (target - today.weekday()) % 7
         if (m[1] or "").lower() == "next" and ahead == 0:
             ahead = 7
-        elif (m[1] or "").lower() == "next" and ahead < 7 and today.weekday() < 5 and target > today.weekday():
+        elif (
+            (m[1] or "").lower() == "next"
+            and ahead < 7
+            and today.weekday() < 5
+            and target > today.weekday()
+        ):
             # "next Thursday" said on a Monday means the Thursday after this one.
             ahead += 7
         return today + timedelta(days=ahead or 0), True
@@ -211,13 +281,21 @@ def _find_repeat(t: _Text) -> str | None:
         return f"FREQ=WEEKLY;BYDAY={codes}"
     m = t.take(rf"\bevery\s+{NUM}?\s*(day|week|month|year)s?\b")
     if m:
-        freq = {"day": "DAILY", "week": "WEEKLY", "month": "MONTHLY", "year": "YEARLY"}[m[2].lower()]
+        freq = {"day": "DAILY", "week": "WEEKLY", "month": "MONTHLY", "year": "YEARLY"}[
+            m[2].lower()
+        ]
         n = int(_num(m[1])) if m[1] else 1
         return f"FREQ={freq}" + (f";INTERVAL={n}" if n > 1 else "")
     m = t.take(r"\b(daily|weekly|fortnightly|monthly|yearly|annually)\b")
     if m:
-        return {"daily": "FREQ=DAILY", "weekly": "FREQ=WEEKLY", "fortnightly": "FREQ=WEEKLY;INTERVAL=2",
-                "monthly": "FREQ=MONTHLY", "yearly": "FREQ=YEARLY", "annually": "FREQ=YEARLY"}[m[1].lower()]
+        return {
+            "daily": "FREQ=DAILY",
+            "weekly": "FREQ=WEEKLY",
+            "fortnightly": "FREQ=WEEKLY;INTERVAL=2",
+            "monthly": "FREQ=MONTHLY",
+            "yearly": "FREQ=YEARLY",
+            "annually": "FREQ=YEARLY",
+        }[m[1].lower()]
     return None
 
 
@@ -256,7 +334,9 @@ def parse(text: str, now: datetime | None = None, default_time: time | None = No
     start = datetime.combine(d, clock)
     if rrule and "BYDAY" in rrule and not explicit:
         codes = rrule.split("BYDAY=")[1].split(",")
-        while ["MO", "TU", "WE", "TH", "FR", "SA", "SU"][start.weekday()] not in codes or start < now:
+        while ["MO", "TU", "WE", "TH", "FR", "SA", "SU"][
+            start.weekday()
+        ] not in codes or start < now:
             start += timedelta(days=1)
     end = None
     if until is not None:

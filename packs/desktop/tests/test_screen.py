@@ -1,4 +1,5 @@
 """Tests for hal-screen that need no screen or model."""
+
 import sys
 import unittest
 from pathlib import Path

@@ -5,6 +5,7 @@ An id ("3", "#3", "task 3") is taken exactly. Otherwise dates are cut from the w
 light stem, so "bought" meets "buy" and "batteries" meets "battery". The best task is chosen
 only when it is clearly best; otherwise the error lists the candidates. Stdlib only.
 """
+
 from __future__ import annotations
 
 import re
@@ -12,18 +13,110 @@ import re
 from . import when
 
 # Past tenses and other forms people use when reporting a task done.
-IRREGULAR = {"bought": "buy", "brought": "bring", "paid": "pay", "sent": "send", "made": "make", "went": "go",
-             "gone": "go", "did": "do", "done": "do", "rang": "ring", "rung": "ring", "took": "take",
-             "taken": "take", "got": "get", "gotten": "get", "wrote": "write", "written": "write", "sold": "sell",
-             "told": "tell", "found": "find", "put": "put", "read": "read", "left": "leave", "met": "meet",
-             "kept": "keep", "spoke": "speak", "spoken": "speak", "gave": "give", "given": "give", "saw": "see",
-             "seen": "see", "drove": "drive", "driven": "drive", "ate": "eat", "eaten": "eat", "fed": "feed",
-             "hung": "hang", "swept": "sweep", "booked": "book", "children": "child", "people": "person"}
-FILLER = {"i", "ive", "i've", "im", "i'm", "i'd", "id", "have", "has", "had", "just", "already", "finally", "now",
-          "the", "a", "an", "my", "our", "some", "that", "this", "it", "its", "those", "these", "them",
-          "task", "tasks", "todo", "to", "do", "item", "list", "tick", "ticked", "ticking", "off", "mark",
-          "marked", "as", "done", "finished", "complete", "completed", "please", "can", "you", "for", "of",
-          "on", "in", "at", "and", "is", "was", "all", "been", "got"}
+IRREGULAR = {
+    "bought": "buy",
+    "brought": "bring",
+    "paid": "pay",
+    "sent": "send",
+    "made": "make",
+    "went": "go",
+    "gone": "go",
+    "did": "do",
+    "done": "do",
+    "rang": "ring",
+    "rung": "ring",
+    "took": "take",
+    "taken": "take",
+    "got": "get",
+    "gotten": "get",
+    "wrote": "write",
+    "written": "write",
+    "sold": "sell",
+    "told": "tell",
+    "found": "find",
+    "put": "put",
+    "read": "read",
+    "left": "leave",
+    "met": "meet",
+    "kept": "keep",
+    "spoke": "speak",
+    "spoken": "speak",
+    "gave": "give",
+    "given": "give",
+    "saw": "see",
+    "seen": "see",
+    "drove": "drive",
+    "driven": "drive",
+    "ate": "eat",
+    "eaten": "eat",
+    "fed": "feed",
+    "hung": "hang",
+    "swept": "sweep",
+    "booked": "book",
+    "children": "child",
+    "people": "person",
+}
+FILLER = {
+    "i",
+    "ive",
+    "i've",
+    "im",
+    "i'm",
+    "i'd",
+    "id",
+    "have",
+    "has",
+    "had",
+    "just",
+    "already",
+    "finally",
+    "now",
+    "the",
+    "a",
+    "an",
+    "my",
+    "our",
+    "some",
+    "that",
+    "this",
+    "it",
+    "its",
+    "those",
+    "these",
+    "them",
+    "task",
+    "tasks",
+    "todo",
+    "to",
+    "do",
+    "item",
+    "list",
+    "tick",
+    "ticked",
+    "ticking",
+    "off",
+    "mark",
+    "marked",
+    "as",
+    "done",
+    "finished",
+    "complete",
+    "completed",
+    "please",
+    "can",
+    "you",
+    "for",
+    "of",
+    "on",
+    "in",
+    "at",
+    "and",
+    "is",
+    "was",
+    "all",
+    "been",
+    "got",
+}
 CLEAR_MARGIN = 0.2
 _WORD = re.compile(r"[a-z0-9]+(?:'[a-z]+)?")
 _DOUBLE = re.compile(r"([bdgmnpt])\1$")
@@ -38,7 +131,7 @@ def stem(word: str) -> str:
         w = w[:-3] + "y"
     elif len(w) > 5 and w.endswith("ing") or len(w) > 3 and w.endswith("ed"):
         w = w[:-3] if w.endswith("ing") else w[:-2]
-        if len(w) > 3 and _DOUBLE.search(w):     # "running" -> "run", but "adding" -> "add"
+        if len(w) > 3 and _DOUBLE.search(w):  # "running" -> "run", but "adding" -> "add"
             w = w[:-1]
     elif len(w) > 4 and w.endswith(("sses", "shes", "ches", "xes")):
         w = w[:-2]
@@ -59,8 +152,12 @@ def score(query: list[str], title: str) -> float:
     wanted = [w for w in query if w not in {stem(f) for f in FILLER} or w in have]
     if not wanted:
         return 0.0
-    hits = sum(1 for w in wanted if w in have or (len(w) >= 4 and any(
-        h.startswith(w) or w.startswith(h) for h in have if len(h) >= 4)))
+    hits = sum(
+        1
+        for w in wanted
+        if w in have
+        or (len(w) >= 4 and any(h.startswith(w) or w.startswith(h) for h in have if len(h) >= 4))
+    )
     if not hits:
         return 0.0
     # A nudge for covering more of the title breaks ties between "milk" and "buy milk".
@@ -95,6 +192,8 @@ def best(task: str, rows: list, prefer_open: bool = True):
         # Copies of one task are interchangeable: take the newest, or the last one completed.
         return max(close, key=lambda r: (r["done"] or "", r["id"]))
     close = close[:5]
-    raise ValueError(f"{len(close)} tasks could be {task!r}: "
-                     + "; ".join(f"#{r['id']} {r['title']}" + (" (done)" if r["done"] else "") for r in close)
-                     + ". Ask which one, then call again with its id.")
+    raise ValueError(
+        f"{len(close)} tasks could be {task!r}: "
+        + "; ".join(f"#{r['id']} {r['title']}" + (" (done)" if r["done"] else "") for r in close)
+        + ". Ask which one, then call again with its id."
+    )

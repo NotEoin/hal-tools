@@ -1,9 +1,10 @@
 """hal-tasks command line, driven by hal-module.toml.
 
-    python -m haltasks                      list the tools
-    python -m haltasks TOOL [key=value ...] run one (the module prefix is optional)
-    python -m haltasks --stdin FUNCTION      run a function with JSON arguments on stdin
+python -m haltasks                      list the tools
+python -m haltasks TOOL [key=value ...] run one (the module prefix is optional)
+python -m haltasks --stdin FUNCTION      run a function with JSON arguments on stdin
 """
+
 import json
 import sys
 import tomllib

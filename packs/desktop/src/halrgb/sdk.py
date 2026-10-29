@@ -5,6 +5,7 @@ Speaks protocol version 3: device list and data, direct colour updates, mode
 'ORGB', a device index, a packet id and the payload size, all little-endian.
 Stdlib only.
 """
+
 from __future__ import annotations
 
 import socket
@@ -27,7 +28,7 @@ UPDATE_MODE = 1101
 class Mode:
     index: int
     name: str
-    raw: bytes            # the mode's bytes as received, re-sent to select it
+    raw: bytes  # the mode's bytes as received, re-sent to select it
 
 
 @dataclass
@@ -53,7 +54,7 @@ class _Reader:
 
     def string(self) -> str:
         n = self.take("H")
-        s = self.d[self.i:self.i + n].rstrip(b"\0").decode(errors="replace")
+        s = self.d[self.i : self.i + n].rstrip(b"\0").decode(errors="replace")
         self.i += n
         return s
 
@@ -66,8 +67,10 @@ class Client:
         try:
             self.sock = socket.create_connection((host, port), timeout=5)
         except OSError as e:
-            raise ConnectionError(f"OpenRGB's SDK server is not running on {host}:{port} "
-                                  "(start it with: openrgb --server)") from e
+            raise ConnectionError(
+                f"OpenRGB's SDK server is not running on {host}:{port} "
+                "(start it with: openrgb --server)"
+            ) from e
         self.version = min(PROTOCOL, self._request_version())
         self._send(0, SET_CLIENT_NAME, name.encode() + b"\0")
 
@@ -117,8 +120,11 @@ class Client:
         kind = r.take("i")
         name = r.string()
         if self.version >= 1:
-            r.string()                      # vendor
-        r.string(); r.string(); r.string(); r.string()   # description, version, serial, location
+            r.string()  # vendor
+        r.string()
+        r.string()
+        r.string()
+        r.string()  # description, version, serial, location
         n_modes = r.take("H")
         active = r.take("i")
         modes = []
@@ -130,11 +136,11 @@ class Client:
             r.skip(4 * (9 if self.version < 3 else 12))
             n_colours = r.take("H")
             r.skip(4 * n_colours)
-            modes.append(Mode(m, mode_name, r.d[start:r.i]))
+            modes.append(Mode(m, mode_name, r.d[start : r.i]))
         zones = []
         for _ in range(r.take("H")):
             zones.append(r.string())
-            r.skip(4 * 4)                   # type, leds min, max, count
+            r.skip(4 * 4)  # type, leds min, max, count
             matrix = r.take("H")
             r.skip(matrix)
         leds = r.take("H")

@@ -5,6 +5,7 @@ fetched through the hal-hub command, so a module that is not installed simply
 leaves its part out. The briefing is written as speech, can be sent through
 hal-notify and spoken, and is added to the day's note in the vault.
 """
+
 from __future__ import annotations
 
 import json
@@ -39,7 +40,11 @@ def _weather(day_index: int) -> str | None:
         return None
     d = w["days"][day_index]
     now = w["now"]
-    lead = f"It's {round(now['temperature_c'])} degrees and {now['sky']} now. " if day_index == 0 else ""
+    lead = (
+        f"It's {round(now['temperature_c'])} degrees and {now['sky']} now. "
+        if day_index == 0
+        else ""
+    )
     chance = d.get("rain_chance")
     article = "an" if str(chance).startswith("8") or chance in (11, 18) else "a"
     rain = f", with {article} {chance} percent chance of rain" if chance else ""
@@ -54,8 +59,12 @@ def _agenda(span: str) -> str | None:
     ev = a["events"]
     if not ev:
         return f"Nothing in the calendar {span}."
-    items = [f"{e['title']} at {e['time'].split('-')[0]}" if e["time"] != "all day" else f"{e['title']} all day"
-             for e in ev[:6]]
+    items = [
+        f"{e['title']} at {e['time'].split('-')[0]}"
+        if e["time"] != "all day"
+        else f"{e['title']} all day"
+        for e in ev[:6]
+    ]
     return f"{len(ev)} event{'s' * (len(ev) > 1)} {span}: " + "; ".join(items) + "."
 
 
@@ -65,9 +74,15 @@ def _tasks() -> str | None:
         return None
     if not t["tasks"]:
         return "No tasks due."
-    overdue = sum(1 for x in t["tasks"] if x["due"] and x["due"][:10] < datetime.now().strftime("%Y-%m-%d"))
+    overdue = sum(
+        1 for x in t["tasks"] if x["due"] and x["due"][:10] < datetime.now().strftime("%Y-%m-%d")
+    )
     names = "; ".join(x["title"] for x in t["tasks"][:5])
-    return f"{t['count']} task{'s' * (t['count'] > 1)} due" + (f", {overdue} overdue" if overdue else "") + f": {names}."
+    return (
+        f"{t['count']} task{'s' * (t['count'] > 1)} due"
+        + (f", {overdue} overdue" if overdue else "")
+        + f": {names}."
+    )
 
 
 def _news() -> str | None:
@@ -81,11 +96,16 @@ def _health() -> str | None:
     s = _hub("system_overview")
     if not isinstance(s, dict):
         return None
-    worries = [f"the {d['mount']} disk is {d['use']} full" for d in s.get("disks", [])
-               if d["use"].rstrip("%").isdigit() and int(d["use"].rstrip("%")) >= 90]
+    worries = [
+        f"the {d['mount']} disk is {d['use']} full"
+        for d in s.get("disks", [])
+        if d["use"].rstrip("%").isdigit() and int(d["use"].rstrip("%")) >= 90
+    ]
     failed = _hub("system_services")
     if isinstance(failed, dict) and (failed.get("system") or failed.get("user")):
-        worries.append(f"{len(failed['system']) + len(failed['user'])} background service(s) have failed")
+        worries.append(
+            f"{len(failed['system']) + len(failed['user'])} background service(s) have failed"
+        )
     return ("Computer: " + "; ".join(worries) + ".") if worries else None
 
 
@@ -96,11 +116,23 @@ def build(kind: str = "morning") -> str:
     greeting = "Good morning" if hour < 12 else "Good afternoon" if hour < 18 else "Good evening"
     parts = [f"{greeting}, {name}. It is {datetime.now():%A %-d %B}."]
     if kind == "morning":
-        steps = [lambda: _weather(0), lambda: _agenda("today"), _tasks, lambda: _hub("jobs_digest"), _news, _health]
+        steps = [
+            lambda: _weather(0),
+            lambda: _agenda("today"),
+            _tasks,
+            lambda: _hub("jobs_digest"),
+            _news,
+            _health,
+        ]
     elif kind == "jobs":
         steps = [lambda: _hub("jobs_digest")]
     else:
-        steps = [lambda: _agenda("tomorrow"), _tasks, lambda: _weather(1), lambda: _hub("jobs_digest")]
+        steps = [
+            lambda: _agenda("tomorrow"),
+            _tasks,
+            lambda: _weather(1),
+            lambda: _hub("jobs_digest"),
+        ]
     for step in steps:
         text = step()
         if isinstance(text, str) and text:
@@ -115,5 +147,9 @@ def brief(kind: str = "morning", speak: bool = True, push: bool = True, save: bo
     if speak or push:
         notify(f"{kind.title()} briefing", text, speak=speak)
     if save:
-        _hub("memory_append", note=datetime.now().strftime("%Y-%m-%d"), text=f"## {kind.title()} briefing\n\n{text}")
+        _hub(
+            "memory_append",
+            note=datetime.now().strftime("%Y-%m-%d"),
+            text=f"## {kind.title()} briefing\n\n{text}",
+        )
     return {"briefing": text}

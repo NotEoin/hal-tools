@@ -5,6 +5,7 @@ the bot token, the paired chat and the pending pairing code are files beside
 that config (~/.config/hal/telegram-*), which hal-notify also reads. HAL_CONFIG
 moves all of them, which is how the tests run in a sandbox. Stdlib only.
 """
+
 from __future__ import annotations
 
 import os
@@ -13,15 +14,15 @@ from pathlib import Path
 
 SECTION = "telegram"
 DEFAULTS: dict = {
-    "persona": "",                  # empty = [brain].persona, else core hal's built-in persona
-    "model": "",                    # empty = [brain].model, else [hal].chat_model
-    "whisper_model": "small.en",    # faster-whisper model for voice notes
-    "whisper_device": "cpu",        # cpu | cuda | auto
-    "voice_replies": True,          # answer voice notes and /brief with a voice note too (needs hal-voice)
+    "persona": "",  # empty = [brain].persona, else core hal's built-in persona
+    "model": "",  # empty = [brain].model, else [hal].chat_model
+    "whisper_model": "small.en",  # faster-whisper model for voice notes
+    "whisper_device": "cpu",  # cpu | cuda | auto
+    "voice_replies": True,  # answer voice notes and /brief with a voice note too (needs hal-voice)
 }
 
-ROOT = Path(__file__).resolve().parents[1]      # this checkout
-ECOSYSTEM = ROOT.parents[1]                     # hal-ecosystem, when this sits in extensions/
+ROOT = Path(__file__).resolve().parents[1]  # this checkout
+ECOSYSTEM = ROOT.parents[1]  # hal-ecosystem, when this sits in extensions/
 
 
 def config_path() -> Path:
@@ -67,7 +68,11 @@ def write_private(path: Path, text: str) -> None:
 
 def find_core() -> Path | None:
     """Returns core hal: HAL_CORE, else <ecosystem>/core/hal, else [hal].core; None when missing."""
-    for c in (os.environ.get("HAL_CORE"), str(ECOSYSTEM / "core" / "hal"), _file().get("hal", {}).get("core")):
+    for c in (
+        os.environ.get("HAL_CORE"),
+        str(ECOSYSTEM / "core" / "hal"),
+        _file().get("hal", {}).get("core"),
+    ):
         if c and (Path(c).expanduser() / "halcore" / "brain.py").is_file():
             return Path(c).expanduser().resolve()
     return None

@@ -3,6 +3,7 @@
 Repositories are found under the configured roots. Everything here reads,
 except running a project's tests. It never commits, pushes or changes a branch.
 """
+
 from __future__ import annotations
 
 import re
@@ -16,7 +17,9 @@ SKIP = {"node_modules", ".venv", "venv", "__pycache__", "site-packages", "GPT-So
 
 
 def _git(repo: Path, *args: str, timeout: float = 30) -> str:
-    done = subprocess.run(["git", "-C", str(repo), *args], capture_output=True, text=True, timeout=timeout)
+    done = subprocess.run(
+        ["git", "-C", str(repo), *args], capture_output=True, text=True, timeout=timeout
+    )
     return done.stdout.strip()
 
 
@@ -28,7 +31,10 @@ def _repos() -> list[Path]:
             continue
         for git in base.glob("**/.git"):
             parts = set(git.relative_to(base).parts)
-            if not parts & SKIP and len(git.relative_to(base).parts) <= int(settings()["depth"]) + 1:
+            if (
+                not parts & SKIP
+                and len(git.relative_to(base).parts) <= int(settings()["depth"]) + 1
+            ):
                 found.append(git.parent)
     return sorted(set(found))
 
@@ -37,7 +43,9 @@ def _find(repo: str) -> Path:
     p = Path(repo).expanduser()
     if (p / ".git").exists():
         return p
-    hits = [r for r in _repos() if r.name.lower() == repo.lower()] or [r for r in _repos() if repo.lower() in r.name.lower()]
+    hits = [r for r in _repos() if r.name.lower() == repo.lower()] or [
+        r for r in _repos() if repo.lower() in r.name.lower()
+    ]
     if not hits:
         raise ValueError(f"no repository called {repo!r}")
     return hits[0]
@@ -55,28 +63,43 @@ def repos(dirty_only: bool = False) -> list[dict]:
         changed = len(lines) - 1
         if dirty_only and not changed and not ahead:
             continue
-        out.append({"repo": r.name, "path": str(r), "branch": head[3:].split("...")[0],
-                    "uncommitted": changed, "ahead": int(ahead.group(1)) if ahead else 0,
-                    "behind": int(behind.group(1)) if behind else 0,
-                    "remote": bool(_git(r, "remote")),
-                    "last_commit": _git(r, "log", "-1", "--format=%ar: %s")})
+        out.append(
+            {
+                "repo": r.name,
+                "path": str(r),
+                "branch": head[3:].split("...")[0],
+                "uncommitted": changed,
+                "ahead": int(ahead.group(1)) if ahead else 0,
+                "behind": int(behind.group(1)) if behind else 0,
+                "remote": bool(_git(r, "remote")),
+                "last_commit": _git(r, "log", "-1", "--format=%ar: %s"),
+            }
+        )
     return out
 
 
 def status(repo: str) -> dict:
     r = _find(repo)
-    return {"repo": r.name, "status": _git(r, "status", "--short", "--branch").splitlines()[:40],
-            "stash": _git(r, "stash", "list").splitlines()[:5]}
+    return {
+        "repo": r.name,
+        "status": _git(r, "status", "--short", "--branch").splitlines()[:40],
+        "stash": _git(r, "stash", "list").splitlines()[:5],
+    }
 
 
 def log(repo: str, limit: int = 10) -> list[str]:
-    return _git(_find(repo), "log", f"-{int(limit)}", "--format=%h %ad %s", "--date=short").splitlines()
+    return _git(
+        _find(repo), "log", f"-{int(limit)}", "--format=%h %ad %s", "--date=short"
+    ).splitlines()
 
 
 def diff(repo: str) -> dict:
     """What has changed and not been committed, as a summary and the start of the diff."""
     r = _find(repo)
-    return {"stat": _git(r, "diff", "--stat", "HEAD").splitlines()[-20:], "diff": _git(r, "diff", "HEAD")[:6000]}
+    return {
+        "stat": _git(r, "diff", "--stat", "HEAD").splitlines()[-20:],
+        "diff": _git(r, "diff", "HEAD")[:6000],
+    }
 
 
 def todos(repo: str = "", limit: int = 40) -> list[dict]:
@@ -87,7 +110,9 @@ def todos(repo: str = "", limit: int = 40) -> list[dict]:
         for line in _git(r, "grep", "-n", "-I", "-E", r"\b(TODO|FIXME|HACK|XXX)\b").splitlines():
             path, _, rest = line.partition(":")
             num, _, text = rest.partition(":")
-            out.append({"repo": r.name, "file": path, "line": int(num or 0), "text": text.strip()[:160]})
+            out.append(
+                {"repo": r.name, "file": path, "line": int(num or 0), "text": text.strip()[:160]}
+            )
             if len(out) >= int(limit):
                 return out
     return out
@@ -96,7 +121,9 @@ def todos(repo: str = "", limit: int = 40) -> list[dict]:
 def run_tests(repo: str) -> dict:
     """Runs a project's tests (pytest, unittest, npm or cargo, whichever it uses) and reports the outcome."""
     r = _find(repo)
-    pyproject = (r / "pyproject.toml").read_text(errors="ignore") if (r / "pyproject.toml").exists() else ""
+    pyproject = (
+        (r / "pyproject.toml").read_text(errors="ignore") if (r / "pyproject.toml").exists() else ""
+    )
     if (r / "package.json").exists() and '"test"' in (r / "package.json").read_text():
         cmd = ["npm", "test", "--silent"]
     elif (r / "Cargo.toml").exists():
@@ -109,7 +136,12 @@ def run_tests(repo: str) -> dict:
         raise ValueError(f"{r.name} has no tests that hal-dev recognises")
     done = subprocess.run(cmd, cwd=r, capture_output=True, text=True, timeout=1800)
     tail = (done.stdout + done.stderr).strip().splitlines()[-15:]
-    return {"repo": r.name, "command": " ".join(cmd), "passed": done.returncode == 0, "output": tail}
+    return {
+        "repo": r.name,
+        "command": " ".join(cmd),
+        "passed": done.returncode == 0,
+        "output": tail,
+    }
 
 
 def github(kind: str = "prs", repo: str = "") -> list[str]:
@@ -118,13 +150,25 @@ def github(kind: str = "prs", repo: str = "") -> list[str]:
         raise RuntimeError("install the GitHub command line (gh) and run 'gh auth login'")
     where = ["-R", repo] if repo else []
     if kind == "notifications":
-        cmd = ["gh", "api", "notifications", "--jq", ".[] | .repository.full_name + \": \" + .subject.title"]
+        cmd = [
+            "gh",
+            "api",
+            "notifications",
+            "--jq",
+            '.[] | .repository.full_name + ": " + .subject.title',
+        ]
     elif kind == "issues":
-        cmd = ["gh", "search", "issues", "--involves=@me", "--state=open", "--limit", "20"] if not repo else \
-            ["gh", "issue", "list", *where]
+        cmd = (
+            ["gh", "search", "issues", "--involves=@me", "--state=open", "--limit", "20"]
+            if not repo
+            else ["gh", "issue", "list", *where]
+        )
     else:
-        cmd = ["gh", "search", "prs", "--involves=@me", "--state=open", "--limit", "20"] if not repo else \
-            ["gh", "pr", "list", *where]
+        cmd = (
+            ["gh", "search", "prs", "--involves=@me", "--state=open", "--limit", "20"]
+            if not repo
+            else ["gh", "pr", "list", *where]
+        )
     done = subprocess.run(cmd, capture_output=True, text=True, timeout=60)
     if done.returncode:
         raise RuntimeError(done.stderr.strip()[-300:])

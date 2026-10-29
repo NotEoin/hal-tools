@@ -1,9 +1,10 @@
 """hal-contacts command line, driven by hal-module.toml.
 
-    python -m halcontacts                      list the tools
-    python -m halcontacts TOOL [key=value ...] run one (the module prefix is optional)
-    python -m halcontacts --stdin FUNCTION      run a function with JSON arguments on stdin
+python -m halcontacts                      list the tools
+python -m halcontacts TOOL [key=value ...] run one (the module prefix is optional)
+python -m halcontacts --stdin FUNCTION      run a function with JSON arguments on stdin
 """
+
 import json
 import sys
 import tomllib

@@ -6,6 +6,7 @@ chosen calendars, pushes local events that are not on the server yet into the
 `push_to` calendar, and sends deletions. iCloud needs an app-specific password
 from appleid.apple.com, kept in a file, never in config.toml. Stdlib only.
 """
+
 from __future__ import annotations
 
 import base64
@@ -32,9 +33,11 @@ def account() -> dict:
     """Returns the [calendar.caldav] settings with the password read from its file."""
     cfg = settings().get("caldav", {})
     if not cfg.get("url") or not cfg.get("username"):
-        raise CalDAVError("CalDAV is not set up; the user connects it by running `python3 -m halcal connect` in a "
-                          "terminal in the hal-calendar folder (for iCloud: their Apple ID and an app-specific "
-                          "password from appleid.apple.com)")
+        raise CalDAVError(
+            "CalDAV is not set up; the user connects it by running `python3 -m halcal connect` in a "
+            "terminal in the hal-calendar folder (for iCloud: their Apple ID and an app-specific "
+            "password from appleid.apple.com)"
+        )
     pw_file = Path(cfg.get("password_file", "~/.config/hal/caldav-password")).expanduser()
     if not pw_file.exists():
         raise CalDAVError(f"no CalDAV password at {pw_file}")
@@ -47,13 +50,20 @@ class Client:
         token = base64.b64encode(f"{username}:{password}".encode()).decode()
         self.auth = {"Authorization": f"Basic {token}"}
 
-    def request(self, method: str, url: str, body: str = "", depth: str | None = None,
-                headers: dict | None = None) -> tuple[int, dict, bytes]:
+    def request(
+        self,
+        method: str,
+        url: str,
+        body: str = "",
+        depth: str | None = None,
+        headers: dict | None = None,
+    ) -> tuple[int, dict, bytes]:
         h = {**self.auth, "Content-Type": "application/xml; charset=utf-8", **(headers or {})}
         if depth is not None:
             h["Depth"] = depth
-        req = urllib.request.Request(urljoin(self.base, url), data=body.encode() if body else None,
-                                     headers=h, method=method)
+        req = urllib.request.Request(
+            urljoin(self.base, url), data=body.encode() if body else None, headers=h, method=method
+        )
         try:
             with urllib.request.urlopen(req, timeout=30) as r:
                 return r.status, dict(r.headers), r.read()
@@ -84,31 +94,51 @@ class Client:
         home = home_el.text
         if home.startswith("http"):
             self.base = home.split("/", 3)[0] + "//" + home.split("/", 3)[2] + "/"
-        root = self._propfind(home, "<d:displayname/><d:resourcetype/><c:supported-calendar-component-set/>"
-                                    "<d:current-user-privilege-set/>", "1")
+        root = self._propfind(
+            home,
+            "<d:displayname/><d:resourcetype/><c:supported-calendar-component-set/>"
+            "<d:current-user-privilege-set/>",
+            "1",
+        )
         out = []
         for resp in root.findall("d:response", NS):
             if resp.find(".//d:resourcetype/c:calendar", NS) is None:
                 continue
-            comps = [c.get("name") for c in resp.findall(".//c:supported-calendar-component-set/c:comp", NS)]
+            comps = [
+                c.get("name")
+                for c in resp.findall(".//c:supported-calendar-component-set/c:comp", NS)
+            ]
             if comps and "VEVENT" not in comps:
                 continue
             name = resp.find(".//d:displayname", NS)
             href = resp.find("d:href", NS).text
             # Servers that do not list privileges are taken to allow writing.
-            privs = {p.tag.rsplit("}", 1)[-1] for p in resp.findall(".//d:current-user-privilege-set/d:privilege/*", NS)}
+            privs = {
+                p.tag.rsplit("}", 1)[-1]
+                for p in resp.findall(".//d:current-user-privilege-set/d:privilege/*", NS)
+            }
             # Servers without display names (Radicale) are named by the last part of the path.
-            out.append({"name": name.text if name is not None and name.text else href.rstrip("/").rsplit("/", 1)[-1],
-                        "href": href, "writable": not privs or bool(privs & {"all", "write", "write-content", "bind"})})
+            out.append(
+                {
+                    "name": name.text
+                    if name is not None and name.text
+                    else href.rstrip("/").rsplit("/", 1)[-1],
+                    "href": href,
+                    "writable": not privs
+                    or bool(privs & {"all", "write", "write-content", "bind"}),
+                }
+            )
         return out
 
     def events(self, href: str, start: datetime, end: datetime) -> list[tuple[str, str, str]]:
         """Returns (href, etag, ics) for events overlapping the window."""
         fmt = lambda d: d.astimezone(timezone.utc).strftime("%Y%m%dT%H%M%SZ")  # noqa: E731
-        body = (f'<c:calendar-query xmlns:d="DAV:" xmlns:c="urn:ietf:params:xml:ns:caldav"><d:prop><d:getetag/>'
-                f'<c:calendar-data/></d:prop><c:filter><c:comp-filter name="VCALENDAR"><c:comp-filter name="VEVENT">'
-                f'<c:time-range start="{fmt(start)}" end="{fmt(end)}"/></c:comp-filter></c:comp-filter></c:filter>'
-                f'</c:calendar-query>')
+        body = (
+            f'<c:calendar-query xmlns:d="DAV:" xmlns:c="urn:ietf:params:xml:ns:caldav"><d:prop><d:getetag/>'
+            f'<c:calendar-data/></d:prop><c:filter><c:comp-filter name="VCALENDAR"><c:comp-filter name="VEVENT">'
+            f'<c:time-range start="{fmt(start)}" end="{fmt(end)}"/></c:comp-filter></c:comp-filter></c:filter>'
+            f"</c:calendar-query>"
+        )
         status, _, data = self.request("REPORT", href, body, "1")
         if status >= 400:
             raise CalDAVError(f"REPORT {href}: HTTP {status}")
@@ -117,7 +147,9 @@ class Client:
             cal = resp.find(".//c:calendar-data", NS)
             if cal is not None and cal.text:
                 etag = resp.find(".//d:getetag", NS)
-                out.append((resp.find("d:href", NS).text, etag.text if etag is not None else "", cal.text))
+                out.append(
+                    (resp.find("d:href", NS).text, etag.text if etag is not None else "", cal.text)
+                )
         return out
 
     def put(self, cal_href: str, event: store.Event) -> tuple[str, str]:
@@ -161,7 +193,9 @@ def sync() -> dict:
         if cal["name"].lower() not in wanted:
             continue
         seen = set()
-        for href, etag, text in c.events(cal["href"], now - timedelta(days=PAST_DAYS), now + timedelta(days=FUTURE_DAYS)):
+        for href, etag, text in c.events(
+            cal["href"], now - timedelta(days=PAST_DAYS), now + timedelta(days=FUTURE_DAYS)
+        ):
             for ev in ics.parse(text, calendar=f"caldav:{cal['name']}"):
                 ev.href, ev.etag = href, etag
                 existing = store.get(ev.uid)
@@ -171,14 +205,23 @@ def sync() -> dict:
                 seen.add(ev.uid)
         # Events gone from the server are gone here too, unless they lie outside the window.
         lo = (now - timedelta(days=PAST_DAYS)).replace(tzinfo=None).isoformat()
-        for (uid,) in con.execute("SELECT uid FROM events WHERE calendar = ? AND deleted = 0 AND rrule IS NULL "
-                                  "AND start >= ?", (f"caldav:{cal['name']}", lo)).fetchall():
+        for (uid,) in con.execute(
+            "SELECT uid FROM events WHERE calendar = ? AND deleted = 0 AND rrule IS NULL "
+            "AND start >= ?",
+            (f"caldav:{cal['name']}", lo),
+        ).fetchall():
             if uid not in seen:
                 con.execute("DELETE FROM events WHERE uid = ?", (uid,))
     con.commit()
     want = (push_to or "").lower()
-    target = next((x for x in cals if want in (x["name"].lower(), x["href"].rstrip("/").rsplit("/", 1)[-1].lower())),
-                  None)
+    target = next(
+        (
+            x
+            for x in cals
+            if want in (x["name"].lower(), x["href"].rstrip("/").rsplit("/", 1)[-1].lower())
+        ),
+        None,
+    )
     for e in store.dirty():
         if e.href:
             cal_href = e.href.rsplit("/", 1)[0]
@@ -190,4 +233,9 @@ def sync() -> dict:
         e.href, e.etag = c.put(cal_href, e)
         store.save(e, dirty=False)
         pushed += 1
-    return {"calendars": [x["name"] for x in cals], "pulled": pulled, "pushed": pushed, "deleted": deleted}
+    return {
+        "calendars": [x["name"] for x in cals],
+        "pulled": pulled,
+        "pushed": pushed,
+        "deleted": deleted,
+    }

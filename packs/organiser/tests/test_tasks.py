@@ -1,4 +1,5 @@
 """Tests for adding, completing, repeats and the vault mirror, on a throwaway store and vault."""
+
 import os
 import sys
 import tempfile
@@ -17,6 +18,7 @@ class TasksTest(unittest.TestCase):
         os.environ["HAL_CONFIG"] = str(base / "c.toml")
         os.environ["HAL_DATA"] = str(base / "data")
         from haltasks import tools
+
         self.t = tools
         self.note = base / "vault" / "Tasks.md"
 
@@ -45,15 +47,23 @@ class TasksTest(unittest.TestCase):
         with self.assertRaises(ValueError):
             self.t.done("nothing like this")
 
-
     def test_due_time_with_a_part_of_the_day(self):
-        self.assertEqual(self.t.add("Call mum", due="7 tomorrow morning")["added"]["due"][11:], "07:00")
-        self.assertEqual(self.t.add("Put the bins out", due="tonight at 8")["added"]["due"][11:], "20:00")
+        self.assertEqual(
+            self.t.add("Call mum", due="7 tomorrow morning")["added"]["due"][11:], "07:00"
+        )
+        self.assertEqual(
+            self.t.add("Put the bins out", due="tonight at 8")["added"]["due"][11:], "20:00"
+        )
 
     def test_done_from_the_users_own_words(self):
         self.t.add("Buy batteries")
         self.t.add("Email the landlord")
-        for said in ("bought the batteries", "I've bought the batteries, tick that off", "batteries", "buy battery"):
+        for said in (
+            "bought the batteries",
+            "I've bought the batteries, tick that off",
+            "batteries",
+            "buy battery",
+        ):
             self.assertEqual(self.t.done(said)["done"], "Buy batteries", said)
             self.t.undo("Buy batteries")
         self.assertEqual(self.t.done("emailed my landlord")["done"], "Email the landlord")
@@ -85,7 +95,9 @@ class TasksTest(unittest.TestCase):
     def test_edit_delete_and_undo_use_the_same_matching(self):
         self.t.add("Renew passport")
         self.t.add("Book dentist")
-        self.assertEqual(self.t.edit("renewing my passport", priority="high")["edited"]["priority"], "high")
+        self.assertEqual(
+            self.t.edit("renewing my passport", priority="high")["edited"]["priority"], "high"
+        )
         self.t.done("renewed the passport")
         self.t.add("Renew car insurance")
         self.assertEqual(self.t.undo("the passport")["reopened"], "Renew passport")
@@ -97,8 +109,17 @@ class TasksTest(unittest.TestCase):
 
     def test_stems(self):
         from haltasks.match import stem
-        for a, b in [("bought", "buy"), ("batteries", "battery"), ("ticking", "tick"), ("shopping", "shop"),
-                     ("called", "call"), ("made", "make"), ("running", "run"), ("adding", "add")]:
+
+        for a, b in [
+            ("bought", "buy"),
+            ("batteries", "battery"),
+            ("ticking", "tick"),
+            ("shopping", "shop"),
+            ("called", "call"),
+            ("made", "make"),
+            ("running", "run"),
+            ("adding", "add"),
+        ]:
             self.assertEqual(stem(a), stem(b), (a, b))
 
 

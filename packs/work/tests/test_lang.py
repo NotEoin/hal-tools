@@ -1,4 +1,5 @@
 """Tests for hal-lang that need no model."""
+
 import sys
 import unittest
 from pathlib import Path

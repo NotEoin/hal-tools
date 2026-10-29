@@ -1,9 +1,10 @@
 """hal-rgb command line, driven by hal-module.toml.
 
-    python -m halrgb                      list the tools
-    python -m halrgb TOOL [key=value ...] run one (the module prefix is optional)
-    python -m halrgb --stdin FUNCTION      run a function with JSON arguments on stdin
+python -m halrgb                      list the tools
+python -m halrgb TOOL [key=value ...] run one (the module prefix is optional)
+python -m halrgb --stdin FUNCTION      run a function with JSON arguments on stdin
 """
+
 import json
 import sys
 import tomllib

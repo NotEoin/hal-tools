@@ -1,4 +1,5 @@
 """Tests for the network tools that need no internet."""
+
 import sys
 import unittest
 from pathlib import Path

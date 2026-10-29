@@ -1,9 +1,10 @@
 """hal-system command line, driven by hal-module.toml.
 
-    python -m halsys                      list the tools
-    python -m halsys TOOL [key=value ...] run one (the module prefix is optional)
-    python -m halsys --stdin FUNCTION      run a function with JSON arguments on stdin
+python -m halsys                      list the tools
+python -m halsys TOOL [key=value ...] run one (the module prefix is optional)
+python -m halsys --stdin FUNCTION      run a function with JSON arguments on stdin
 """
+
 import json
 import sys
 import tomllib

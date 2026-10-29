@@ -1,9 +1,10 @@
 """hal-screen command line, driven by hal-module.toml.
 
-    python -m halscreen                      list the tools
-    python -m halscreen TOOL [key=value ...] run one (the module prefix is optional)
-    python -m halscreen --stdin FUNCTION      run a function with JSON arguments on stdin
+python -m halscreen                      list the tools
+python -m halscreen TOOL [key=value ...] run one (the module prefix is optional)
+python -m halscreen --stdin FUNCTION      run a function with JSON arguments on stdin
 """
+
 import json
 import sys
 import tomllib

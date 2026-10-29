@@ -1,7 +1,8 @@
 """Evening nudge: once a day, after [habits].nudge_hour, lists habits not done yet.
 
-    python -m halhabits.nudge      (run by the systemd timer)
+python -m halhabits.nudge      (run by the systemd timer)
 """
+
 from . import tools
 from .notify import notify
 

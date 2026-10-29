@@ -2,12 +2,16 @@
 
 The shared [hal] table supplies the vault path and the local model settings.
 """
+
 import os
 import tomllib
 from pathlib import Path
 
 SECTION = "jobs"
-DEFAULTS: dict = {"jobhunt": "~/src/employment-helper", "employment_url": "http://127.0.0.1:8737/"}
+DEFAULTS: dict = {
+    "jobhunt": "~/src/employment-helper",
+    "employment_url": "http://127.0.0.1:8737/",
+}
 SHARED = {
     "vault": "~/Documents/vaults/Hal",
     "ollama_url": "http://localhost:11434",

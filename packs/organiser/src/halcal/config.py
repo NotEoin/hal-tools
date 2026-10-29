@@ -2,12 +2,18 @@
 
 The shared [hal] table supplies the vault path and the local model settings.
 """
+
 import os
 import tomllib
 from pathlib import Path
 
 SECTION = "calendar"
-DEFAULTS: dict = {"timezone": "Europe/London", "default_reminders": [15], "all_day_reminder_hour": 8, "sync_minutes": 15}
+DEFAULTS: dict = {
+    "timezone": "Europe/London",
+    "default_reminders": [15],
+    "all_day_reminder_hour": 8,
+    "sync_minutes": 15,
+}
 SHARED = {
     "vault": "~/Documents/vaults/Hal",
     "ollama_url": "http://localhost:11434",

@@ -1,10 +1,11 @@
 """hal-telegram command line.
 
-    python3 -m haltelegram                run the bridge
-    python3 -m haltelegram token TOKEN    save the bot token from @BotFather (owner-only file)
-    python3 -m haltelegram status         whether a token is saved and a chat paired
-    python3 -m haltelegram unpair         forget the paired chat; the next start shows a new code
+python3 -m haltelegram                run the bridge
+python3 -m haltelegram token TOKEN    save the bot token from @BotFather (owner-only file)
+python3 -m haltelegram status         whether a token is saved and a chat paired
+python3 -m haltelegram unpair         forget the paired chat; the next start shows a new code
 """
+
 import json
 import re
 import sys
@@ -18,7 +19,9 @@ def save_token(token: str) -> str:
     """Saves the bot token; raises ValueError if it does not look like one."""
     token = token.strip()
     if not TOKEN.match(token):
-        raise ValueError("that doesn't look like a bot token (digits, a colon, then about 35 characters)")
+        raise ValueError(
+            "that doesn't look like a bot token (digits, a colon, then about 35 characters)"
+        )
     config.write_private(config.token_file(), token)
     return f"saved to {config.token_file()}"
 
@@ -31,6 +34,7 @@ def main(argv=None) -> int:
         return 0
     if command == "run":
         from .bridge import run
+
         return run()
     if command == "token" and len(argv) == 2:
         try:

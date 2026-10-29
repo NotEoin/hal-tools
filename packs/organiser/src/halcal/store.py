@@ -4,6 +4,7 @@ Times are stored as local wall-clock ISO strings in the configured time zone,
 so a weekly 9:00 meeting stays at 9:00 across clock changes. Repeats use a
 subset of RFC 5545 RRULE: FREQ, INTERVAL, BYDAY (weekly), COUNT and UNTIL.
 """
+
 from __future__ import annotations
 
 import sqlite3
@@ -25,7 +26,7 @@ class Event:
     rrule: str | None = None
     location: str = ""
     notes: str = ""
-    reminders: list[int] = field(default_factory=lambda: [15])   # minutes before
+    reminders: list[int] = field(default_factory=lambda: [15])  # minutes before
     uid: str = field(default_factory=lambda: f"{uuid.uuid4()}@hal")
     calendar: str = "local"
     href: str = ""
@@ -39,10 +40,18 @@ class Event:
     def as_dict(self, occurrence: datetime | None = None) -> dict:
         start = occurrence or self.start
         end = start + (self.finish() - self.start)
-        return {"uid": self.uid, "title": self.title, "start": start.isoformat(timespec="minutes"),
-                "end": end.isoformat(timespec="minutes"), "all_day": self.all_day, "repeat": self.rrule,
-                "location": self.location, "notes": self.notes, "reminders": self.reminders,
-                "calendar": self.calendar}
+        return {
+            "uid": self.uid,
+            "title": self.title,
+            "start": start.isoformat(timespec="minutes"),
+            "end": end.isoformat(timespec="minutes"),
+            "all_day": self.all_day,
+            "repeat": self.rrule,
+            "location": self.location,
+            "notes": self.notes,
+            "reminders": self.reminders,
+            "calendar": self.calendar,
+        }
 
 
 def db() -> sqlite3.Connection:
@@ -59,21 +68,45 @@ def db() -> sqlite3.Connection:
 
 
 def _row(r: sqlite3.Row) -> Event:
-    return Event(title=r["title"], start=datetime.fromisoformat(r["start"]),
-                 end=datetime.fromisoformat(r["end"]) if r["end"] else None, all_day=bool(r["all_day"]),
-                 rrule=r["rrule"], location=r["location"] or "", notes=r["notes"] or "",
-                 reminders=[int(x) for x in (r["reminders"] or "").split(",") if x != ""],
-                 uid=r["uid"], calendar=r["calendar"], href=r["href"] or "", etag=r["etag"] or "")
+    return Event(
+        title=r["title"],
+        start=datetime.fromisoformat(r["start"]),
+        end=datetime.fromisoformat(r["end"]) if r["end"] else None,
+        all_day=bool(r["all_day"]),
+        rrule=r["rrule"],
+        location=r["location"] or "",
+        notes=r["notes"] or "",
+        reminders=[int(x) for x in (r["reminders"] or "").split(",") if x != ""],
+        uid=r["uid"],
+        calendar=r["calendar"],
+        href=r["href"] or "",
+        etag=r["etag"] or "",
+    )
 
 
 def save(e: Event, dirty: bool = True) -> Event:
     """Stores an event; `dirty` marks it for the next CalDAV push (pulled events are clean)."""
     con = db()
-    con.execute("""INSERT OR REPLACE INTO events (uid, title, start, end, all_day, rrule, location, notes, reminders,
+    con.execute(
+        """INSERT OR REPLACE INTO events (uid, title, start, end, all_day, rrule, location, notes, reminders,
                    calendar, href, etag, updated, deleted, dirty) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,0,?)""",
-                (e.uid, e.title, e.start.isoformat(), e.end.isoformat() if e.end else None, int(e.all_day), e.rrule,
-                 e.location, e.notes, ",".join(map(str, e.reminders)), e.calendar, e.href, e.etag,
-                 datetime.now().isoformat(timespec="seconds"), int(dirty)))
+        (
+            e.uid,
+            e.title,
+            e.start.isoformat(),
+            e.end.isoformat() if e.end else None,
+            int(e.all_day),
+            e.rrule,
+            e.location,
+            e.notes,
+            ",".join(map(str, e.reminders)),
+            e.calendar,
+            e.href,
+            e.etag,
+            datetime.now().isoformat(timespec="seconds"),
+            int(dirty),
+        ),
+    )
     con.commit()
     return e
 
@@ -81,8 +114,10 @@ def save(e: Event, dirty: bool = True) -> Event:
 def delete(uid: str) -> None:
     con = db()
     # Synced events are kept as tombstones until the deletion reaches the server.
-    con.execute("UPDATE events SET deleted = 1, updated = ? WHERE uid = ? AND href != ''",
-                (datetime.now().isoformat(), uid))
+    con.execute(
+        "UPDATE events SET deleted = 1, updated = ? WHERE uid = ? AND href != ''",
+        (datetime.now().isoformat(), uid),
+    )
     con.execute("DELETE FROM events WHERE uid = ? AND (href IS NULL OR href = '')", (uid,))
     con.commit()
 
@@ -111,7 +146,7 @@ def _add_months(d: datetime, n: int) -> datetime | None:
     year, month = d.year + month // 12, month % 12 + 1
     try:
         return d.replace(year=year, month=month)
-    except ValueError:      # the 31st in a 30-day month has no occurrence
+    except ValueError:  # the 31st in a 30-day month has no occurrence
         return None
 
 
@@ -126,8 +161,11 @@ def occurrences(e: Event, start: datetime, end: datetime) -> list[datetime]:
     until = None
     if "UNTIL" in rule:
         u = rule["UNTIL"].rstrip("Z")
-        until = datetime.strptime(u[:15], "%Y%m%dT%H%M%S") if "T" in u else datetime.combine(
-            datetime.strptime(u[:8], "%Y%m%d").date(), time(23, 59))
+        until = (
+            datetime.strptime(u[:15], "%Y%m%dT%H%M%S")
+            if "T" in u
+            else datetime.combine(datetime.strptime(u[:8], "%Y%m%d").date(), time(23, 59))
+        )
     days = [CODES.index(c[-2:]) for c in rule.get("BYDAY", "").split(",") if c[-2:] in CODES]
     out, n, i = [], 0, 0
     while i < 5000:

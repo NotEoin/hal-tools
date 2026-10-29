@@ -1,4 +1,5 @@
 """Tests for time parsing, repeats, ICS round trips and reminders, on a throwaway store."""
+
 import os
 import sys
 import tempfile
@@ -21,6 +22,7 @@ class CalendarTest(unittest.TestCase):
 
     def test_parses_common_phrases(self):
         from halcal.when import parse
+
         cases = {
             "dentist thursday at 10": ("2026-10-15 10:00", "dentist"),
             "call mum tomorrow at 3": ("2026-10-10 15:00", "call mum"),
@@ -35,6 +37,7 @@ class CalendarTest(unittest.TestCase):
 
     def test_repeats_and_durations(self):
         from halcal.when import parse
+
         w = parse("gym every monday and wednesday at 7am for an hour", FRIDAY)
         self.assertEqual(w.rrule, "FREQ=WEEKLY;BYDAY=MO,WE")
         self.assertEqual((w.end - w.start).seconds, 3600)
@@ -42,29 +45,45 @@ class CalendarTest(unittest.TestCase):
 
     def test_weekly_occurrences(self):
         from halcal import store
-        e = store.Event("standup", datetime(2026, 10, 12, 9, 30), rrule="FREQ=WEEKLY;BYDAY=MO,WE;COUNT=3")
+
+        e = store.Event(
+            "standup", datetime(2026, 10, 12, 9, 30), rrule="FREQ=WEEKLY;BYDAY=MO,WE;COUNT=3"
+        )
         occ = store.occurrences(e, datetime(2026, 10, 1), datetime(2026, 12, 1))
         self.assertEqual([o.day for o in occ], [12, 14, 19])
 
     def test_ics_round_trip(self):
         from halcal import ics, store
-        e = store.Event("Dentist, check-up", datetime(2026, 10, 15, 10), location="Shoreditch", reminders=[10, 60])
+
+        e = store.Event(
+            "Dentist, check-up",
+            datetime(2026, 10, 15, 10),
+            location="Shoreditch",
+            reminders=[10, 60],
+        )
         back = ics.parse(ics.calendar([e]))[0]
-        self.assertEqual((back.title, back.start, back.location, sorted(back.reminders)),
-                         ("Dentist, check-up", e.start, "Shoreditch", [10, 60]))
+        self.assertEqual(
+            (back.title, back.start, back.location, sorted(back.reminders)),
+            ("Dentist, check-up", e.start, "Shoreditch", [10, 60]),
+        )
 
     def test_utc_times_become_local(self):
         from halcal import ics
+
         text = "BEGIN:VEVENT\nUID:x\nDTSTART:20260701T120000Z\nSUMMARY:Summer\nEND:VEVENT\n"
         self.assertEqual(ics.parse(text)[0].start.hour, 13)
 
     def test_reminder_fires_once(self):
         from halcal import reminders, store
+
         store.save(store.Event("Dentist", datetime(2026, 10, 15, 10), reminders=[15]))
         at = datetime(2026, 10, 15, 9, 46)
         self.assertEqual(len(reminders.due(at)), 1)
         con = store.db()
-        con.execute("INSERT INTO reminded VALUES (?, ?, ?)", (store.all_events()[0].uid, "2026-10-15T10:00", 15))
+        con.execute(
+            "INSERT INTO reminded VALUES (?, ?, ?)",
+            (store.all_events()[0].uid, "2026-10-15T10:00", 15),
+        )
         con.commit()
         self.assertEqual(reminders.due(at), [])
 

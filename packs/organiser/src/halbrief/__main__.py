@@ -1,9 +1,10 @@
 """hal-briefing command line, driven by hal-module.toml.
 
-    python -m halbrief                      list the tools
-    python -m halbrief TOOL [key=value ...] run one (the module prefix is optional)
-    python -m halbrief --stdin FUNCTION      run a function with JSON arguments on stdin
+python -m halbrief                      list the tools
+python -m halbrief TOOL [key=value ...] run one (the module prefix is optional)
+python -m halbrief --stdin FUNCTION      run a function with JSON arguments on stdin
 """
+
 import json
 import sys
 import tomllib

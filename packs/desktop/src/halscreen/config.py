@@ -2,12 +2,13 @@
 
 The shared [hal] table supplies the vault path and the local model settings.
 """
+
 import os
 import tomllib
 from pathlib import Path
 
 SECTION = "screen"
-DEFAULTS: dict = {"keep": 20}   # screenshots kept
+DEFAULTS: dict = {"keep": 20}  # screenshots kept
 SHARED = {
     "vault": "~/Documents/vaults/Hal",
     "ollama_url": "http://localhost:11434",

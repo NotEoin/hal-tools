@@ -1,9 +1,10 @@
 """hal-power command line, driven by hal-module.toml.
 
-    python -m halpower                      list the tools
-    python -m halpower TOOL [key=value ...] run one (the module prefix is optional)
-    python -m halpower --stdin FUNCTION      run a function with JSON arguments on stdin
+python -m halpower                      list the tools
+python -m halpower TOOL [key=value ...] run one (the module prefix is optional)
+python -m halpower --stdin FUNCTION      run a function with JSON arguments on stdin
 """
+
 import json
 import sys
 import tomllib

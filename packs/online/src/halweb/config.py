@@ -2,6 +2,7 @@
 
 The shared [hal] table supplies the vault path and the local model settings.
 """
+
 import os
 import tomllib
 from pathlib import Path
@@ -9,7 +10,7 @@ from pathlib import Path
 SECTION = "web"
 DEFAULTS: dict = {
     "home": "London",
-    "country": "GB",           # place names prefer this country (ISO code)
+    "country": "GB",  # place names prefer this country (ISO code)
     "feeds": {
         "BBC News": "https://feeds.bbci.co.uk/news/rss.xml",
         "BBC Technology": "https://feeds.bbci.co.uk/news/technology/rss.xml",

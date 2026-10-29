@@ -1,4 +1,5 @@
 """Tests for durations and the daemon's firing, with notifications captured instead of sent."""
+
 import os
 import sys
 import tempfile
@@ -16,6 +17,7 @@ class ClockTest(unittest.TestCase):
         os.environ["HAL_DATA"] = self.tmp.name
         os.environ["HAL_CONFIG"] = str(Path(self.tmp.name) / "none.toml")
         from halclock import daemon, tools
+
         self.tools, self.daemon = tools, daemon
         self.sent = []
         daemon.notify = lambda title, body="", **kw: self.sent.append(title)
@@ -39,13 +41,14 @@ class ClockTest(unittest.TestCase):
     def test_weekday_alarm_skips_the_weekend(self):
         friday_7am = datetime(2026, 10, 9, 7).timestamp()
         con = self.tools._db()
-        con.execute("INSERT INTO alarms (kind, label, at, rrule, created) VALUES ('alarm', 'Up', ?, ?, 0)",
-                    (friday_7am, "FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR"))
+        con.execute(
+            "INSERT INTO alarms (kind, label, at, rrule, created) VALUES ('alarm', 'Up', ?, ?, 0)",
+            (friday_7am, "FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR"),
+        )
         con.commit()
         self.daemon.tick(friday_7am + 1)
         nxt = self.tools._db().execute("SELECT at FROM alarms").fetchone()[0]
         self.assertEqual(datetime.fromtimestamp(nxt).strftime("%a %H:%M"), "Mon 07:00")
-
 
     def test_alarm_phrases(self):
         saturday = datetime(2026, 10, 10, 12, 0)

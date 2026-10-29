@@ -1,4 +1,5 @@
 """Offline tests for the safe calculator and unit conversion."""
+
 import sys
 import unittest
 from pathlib import Path

@@ -1,7 +1,8 @@
 """Runs schedules when they come due and triggers when their event happens.
 
-    python -m halroutines.daemon
+python -m halroutines.daemon
 """
+
 from __future__ import annotations
 
 import json
@@ -33,9 +34,22 @@ def _next(at: float, rrule: str) -> float:
 
 
 def _idle_seconds() -> float:
-    out = subprocess.run(["gdbus", "call", "--session", "--dest", "org.gnome.Mutter.IdleMonitor", "--object-path",
-                          "/org/gnome/Mutter/IdleMonitor/Core", "--method",
-                          "org.gnome.Mutter.IdleMonitor.GetIdletime"], capture_output=True, text=True, timeout=5).stdout
+    out = subprocess.run(
+        [
+            "gdbus",
+            "call",
+            "--session",
+            "--dest",
+            "org.gnome.Mutter.IdleMonitor",
+            "--object-path",
+            "/org/gnome/Mutter/IdleMonitor/Core",
+            "--method",
+            "org.gnome.Mutter.IdleMonitor.GetIdletime",
+        ],
+        capture_output=True,
+        text=True,
+        timeout=5,
+    ).stdout
     digits = "".join(c for c in out if c.isdigit())
     return int(digits) / 1000 if digits else 0
 
@@ -49,7 +63,11 @@ def _online() -> bool:
 
 
 def _usb_devices() -> set[str]:
-    return {p.name for p in Path("/sys/bus/usb/devices").iterdir()} if Path("/sys/bus/usb/devices").exists() else set()
+    return (
+        {p.name for p in Path("/sys/bus/usb/devices").iterdir()}
+        if Path("/sys/bus/usb/devices").exists()
+        else set()
+    )
 
 
 def _disk_full() -> bool:
@@ -97,7 +115,9 @@ def tick(watcher: Watcher, now: float | None = None) -> list[str]:
         tools.run_target(r["target"], json.loads(r["args"]))
         ran.append(r["label"])
         if r["rrule"]:
-            con.execute("UPDATE schedules SET at = ? WHERE id = ?", (_next(r["at"], r["rrule"]), r["id"]))
+            con.execute(
+                "UPDATE schedules SET at = ? WHERE id = ?", (_next(r["at"], r["rrule"]), r["id"])
+            )
         else:
             con.execute("DELETE FROM schedules WHERE id = ?", (r["id"],))
     con.commit()

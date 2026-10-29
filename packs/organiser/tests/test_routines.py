@@ -1,4 +1,5 @@
 """Tests for scenes, schedules and the daemon, with tool calls captured instead of run."""
+
 import os
 import sys
 import tempfile
@@ -16,6 +17,7 @@ class RoutinesTest(unittest.TestCase):
         os.environ["HAL_DATA"] = self.tmp.name
         os.environ["HAL_CONFIG"] = str(Path(self.tmp.name) / "none.toml")
         from halroutines import daemon, tools
+
         self.tools, self.daemon = tools, daemon
         self.calls = []
         tools.call_tool = lambda tool, args=None: self.calls.append(tool) or {"result": "ok"}
@@ -42,6 +44,7 @@ class RoutinesTest(unittest.TestCase):
         class Quiet:
             def events(self):
                 return []
+
         self.daemon.tick(Quiet(), at + 1)
         self.assertEqual(self.calls, ["rgb_off"])
         nxt = self.tools._db().execute("SELECT at FROM schedules").fetchone()[0]

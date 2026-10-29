@@ -4,6 +4,7 @@ Reads VEVENTs with local, UTC, zoned and all-day times, durations, repeats and
 alarms. Writes events in the configured time zone with its VTIMEZONE, which
 CalDAV servers such as iCloud expect. Stdlib only (zoneinfo for time zones).
 """
+
 from __future__ import annotations
 
 import re
@@ -44,7 +45,13 @@ def _unfold(text: str) -> list[str]:
 
 
 def _unescape(v: str) -> str:
-    return v.replace("\\n", "\n").replace("\\N", "\n").replace("\\,", ",").replace("\\;", ";").replace("\\\\", "\\")
+    return (
+        v.replace("\\n", "\n")
+        .replace("\\N", "\n")
+        .replace("\\,", ",")
+        .replace("\\;", ";")
+        .replace("\\\\", "\\")
+    )
 
 
 def _escape(v: str) -> str:
@@ -88,12 +95,23 @@ def parse(text: str, calendar: str = "local") -> list[Event]:
             cur = {"reminders": []}
         elif line == "END:VEVENT" and cur is not None:
             if "start" in cur:
-                end = cur.get("end") or (cur["start"] + cur["duration"] if "duration" in cur else None)
-                events.append(Event(title=cur.get("title", "(untitled)"), start=cur["start"], end=end,
-                                    all_day=cur.get("all_day", False), rrule=cur.get("rrule"),
-                                    location=cur.get("location", ""), notes=cur.get("notes", ""),
-                                    reminders=cur["reminders"] or [15], uid=cur.get("uid") or Event("", cur["start"]).uid,
-                                    calendar=calendar))
+                end = cur.get("end") or (
+                    cur["start"] + cur["duration"] if "duration" in cur else None
+                )
+                events.append(
+                    Event(
+                        title=cur.get("title", "(untitled)"),
+                        start=cur["start"],
+                        end=end,
+                        all_day=cur.get("all_day", False),
+                        rrule=cur.get("rrule"),
+                        location=cur.get("location", ""),
+                        notes=cur.get("notes", ""),
+                        reminders=cur["reminders"] or [15],
+                        uid=cur.get("uid") or Event("", cur["start"]).uid,
+                        calendar=calendar,
+                    )
+                )
             cur = None
         elif cur is None:
             continue
@@ -145,9 +163,18 @@ def vevent(e: Event) -> str:
         start = f"DTSTART;TZID={tzid}:{_fmt(e.start, False)}"
         end = f"DTEND;TZID={tzid}:{_fmt(e.finish(), False)}"
     else:
-        utc = lambda d: d.replace(tzinfo=local_zone()).astimezone(timezone.utc).strftime("%Y%m%dT%H%M%SZ")  # noqa: E731
+        utc = lambda d: (
+            d.replace(tzinfo=local_zone()).astimezone(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+        )  # noqa: E731
         start, end = f"DTSTART:{utc(e.start)}", f"DTEND:{utc(e.finish())}"
-    lines = ["BEGIN:VEVENT", f"UID:{e.uid}", f"DTSTAMP:{stamp}", start, end, f"SUMMARY:{_escape(e.title)}"]
+    lines = [
+        "BEGIN:VEVENT",
+        f"UID:{e.uid}",
+        f"DTSTAMP:{stamp}",
+        start,
+        end,
+        f"SUMMARY:{_escape(e.title)}",
+    ]
     if e.rrule:
         lines.append(f"RRULE:{e.rrule}")
     if e.location:
@@ -155,7 +182,13 @@ def vevent(e: Event) -> str:
     if e.notes:
         lines.append(f"DESCRIPTION:{_escape(e.notes)}")
     for m in e.reminders:
-        lines += ["BEGIN:VALARM", "ACTION:DISPLAY", f"DESCRIPTION:{_escape(e.title)}", f"TRIGGER:-PT{m}M", "END:VALARM"]
+        lines += [
+            "BEGIN:VALARM",
+            "ACTION:DISPLAY",
+            f"DESCRIPTION:{_escape(e.title)}",
+            f"TRIGGER:-PT{m}M",
+            "END:VALARM",
+        ]
     lines.append("END:VEVENT")
     return "\r\n".join(lines)
 
@@ -163,7 +196,12 @@ def vevent(e: Event) -> str:
 def calendar(events: list[Event]) -> str:
     """Returns a complete VCALENDAR document holding the events."""
     tzid = settings().get("timezone", "Europe/London")
-    parts = ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//Hal//hal-calendar//EN", "CALSCALE:GREGORIAN"]
+    parts = [
+        "BEGIN:VCALENDAR",
+        "VERSION:2.0",
+        "PRODID:-//Hal//hal-calendar//EN",
+        "CALSCALE:GREGORIAN",
+    ]
     if tzid in VTIMEZONES and any(not e.all_day for e in events):
         parts.append(VTIMEZONES[tzid].replace("\n", "\r\n"))
     parts += [vevent(e) for e in events]

@@ -1,9 +1,10 @@
 """hal-network command line, driven by hal-module.toml.
 
-    python -m halnet                      list the tools
-    python -m halnet TOOL [key=value ...] run one (the module prefix is optional)
-    python -m halnet --stdin FUNCTION      run a function with JSON arguments on stdin
+python -m halnet                      list the tools
+python -m halnet TOOL [key=value ...] run one (the module prefix is optional)
+python -m halnet --stdin FUNCTION      run a function with JSON arguments on stdin
 """
+
 import json
 import sys
 import tomllib

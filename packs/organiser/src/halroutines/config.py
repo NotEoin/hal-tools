@@ -2,6 +2,7 @@
 
 The shared [hal] table supplies the vault path and the local model settings.
 """
+
 import os
 import tomllib
 from pathlib import Path
@@ -11,25 +12,35 @@ DEFAULTS: dict = {
     "idle_minutes": 15,
     # Built-in scenes; scenes saved by asking Hal live in the module's database.
     "scenes": {
-        "focus": [{"tool": "notify_dnd", "args": {"minutes": 90}},
-                  {"tool": "desktop_banners", "args": {"on": "off"}},
-                  {"tool": "media_control", "args": {"action": "pause"}},
-                  {"tool": "rgb_colour", "args": {"colour": "warm white", "brightness": 40}},
-                  {"tool": "clock_pomodoro", "args": {"action": "start"}}],
-        "relax": [{"tool": "notify_dnd", "args": {"minutes": 0}},
-                  {"tool": "desktop_banners", "args": {"on": "on"}},
-                  {"tool": "rgb_effect", "args": {"effect": "breathing"}},
-                  {"tool": "desktop_night_light", "args": {"on": "on"}}],
-        "goodnight": [{"tool": "media_control", "args": {"action": "pause"}},
-                      {"tool": "rgb_off", "args": {}},
-                      {"tool": "briefing_deliver", "args": {"kind": "evening", "speak": False}},
-                      {"tool": "desktop_lock", "args": {}}],
-        "away": [{"tool": "media_control", "args": {"action": "pause"}},
-                 {"tool": "rgb_colour", "args": {"colour": "hal red", "brightness": 10}},
-                 {"tool": "desktop_lock", "args": {}}],
-        "movie": [{"tool": "notify_dnd", "args": {"minutes": 150}},
-                  {"tool": "rgb_colour", "args": {"colour": "navy", "brightness": 15}},
-                  {"tool": "desktop_night_light", "args": {"on": "on"}}],
+        "focus": [
+            {"tool": "notify_dnd", "args": {"minutes": 90}},
+            {"tool": "desktop_banners", "args": {"on": "off"}},
+            {"tool": "media_control", "args": {"action": "pause"}},
+            {"tool": "rgb_colour", "args": {"colour": "warm white", "brightness": 40}},
+            {"tool": "clock_pomodoro", "args": {"action": "start"}},
+        ],
+        "relax": [
+            {"tool": "notify_dnd", "args": {"minutes": 0}},
+            {"tool": "desktop_banners", "args": {"on": "on"}},
+            {"tool": "rgb_effect", "args": {"effect": "breathing"}},
+            {"tool": "desktop_night_light", "args": {"on": "on"}},
+        ],
+        "goodnight": [
+            {"tool": "media_control", "args": {"action": "pause"}},
+            {"tool": "rgb_off", "args": {}},
+            {"tool": "briefing_deliver", "args": {"kind": "evening", "speak": False}},
+            {"tool": "desktop_lock", "args": {}},
+        ],
+        "away": [
+            {"tool": "media_control", "args": {"action": "pause"}},
+            {"tool": "rgb_colour", "args": {"colour": "hal red", "brightness": 10}},
+            {"tool": "desktop_lock", "args": {}},
+        ],
+        "movie": [
+            {"tool": "notify_dnd", "args": {"minutes": 150}},
+            {"tool": "rgb_colour", "args": {"colour": "navy", "brightness": 15}},
+            {"tool": "desktop_night_light", "args": {"on": "on"}},
+        ],
     },
 }
 SHARED = {

@@ -1,4 +1,5 @@
 """Tests for hal-dev against a throwaway repository."""
+
 import os
 import subprocess
 import sys
@@ -20,6 +21,7 @@ class DevTest(unittest.TestCase):
         cfg.write_text(f'[dev]\nroots = ["{Path(self.tmp.name) / "proj"}"]\n')
         os.environ["HAL_CONFIG"] = str(cfg)
         from haldev import tools
+
         self.tools = tools
 
     def tearDown(self):

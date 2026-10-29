@@ -1,4 +1,5 @@
 """Tests for the power tools that change nothing."""
+
 import sys
 import unittest
 from pathlib import Path
@@ -17,7 +18,12 @@ class PowerTest(unittest.TestCase):
 
     def test_manifest_guards_every_session_ending_tool(self):
         import tomllib
-        spec = tomllib.loads((Path(__file__).resolve().parents[1] / "src" / "halpower" / "hal-module.toml").read_text())
+
+        spec = tomllib.loads(
+            (
+                Path(__file__).resolve().parents[1] / "src" / "halpower" / "hal-module.toml"
+            ).read_text()
+        )
         guarded = {t["name"] for t in spec["tools"] if t.get("confirm")}
         self.assertEqual(guarded, {"power_suspend", "power_restart", "power_shutdown"})
 

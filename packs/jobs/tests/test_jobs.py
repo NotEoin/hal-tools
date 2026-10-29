@@ -1,4 +1,5 @@
 """Tests for hal-jobs' tools, with jobhunt's command line faked: no job data is read or changed."""
+
 import inspect
 import os
 import subprocess
@@ -50,7 +51,10 @@ class MarkTest(Sandbox):
 
     def test_shortlisted_is_accepted(self):
         fake = FakeJobhunt("Arm | Graduate Engineer -> shortlisted")
-        self.assertEqual(self.run_with(fake, tools.mark, "arm-1", "shortlisted"), "Arm | Graduate Engineer -> shortlisted")
+        self.assertEqual(
+            self.run_with(fake, tools.mark, "arm-1", "shortlisted"),
+            "Arm | Graduate Engineer -> shortlisted",
+        )
         self.assertEqual(fake.calls[0][0], ["set", "arm-1", "shortlisted"])
 
     def test_shortlist_with_note(self):
@@ -76,7 +80,9 @@ class ReadToolsTest(Sandbox):
         self.assertEqual(fake.calls[0][0], ["digest", "--dry-run"])
 
     def test_matches(self):
-        fake = FakeJobhunt("  71  new  Arm  Graduate Engineer  London\n      arm-1  | fits\n(1 shown)")
+        fake = FakeJobhunt(
+            "  71  new  Arm  Graduate Engineer  London\n      arm-1  | fits\n(1 shown)"
+        )
         self.assertIn("arm-1", self.run_with(fake, tools.matches))
         self.assertEqual(fake.calls[0][0], ["list", "-m", "60", "-n", "8"])
         self.run_with(fake, tools.matches, min_score=72.5, limit=3)
@@ -86,7 +92,9 @@ class ReadToolsTest(Sandbox):
 class TodoAddTest(Sandbox):
     def test_adds_and_returns_the_list(self):
         fake = FakeJobhunt("  12  ring Arm back")
-        self.assertEqual(self.run_with(fake, tools.todo_add, "  ring Arm back "), "12  ring Arm back")
+        self.assertEqual(
+            self.run_with(fake, tools.todo_add, "  ring Arm back "), "12  ring Arm back"
+        )
         self.assertEqual(fake.calls[0][0], ["todo", "add", "--", "ring Arm back"])
 
     def test_empty_text_is_refused(self):
@@ -106,7 +114,9 @@ class PackTest(Sandbox):
         result = self.run_with(fake, tools.pack, "arm-1")
         self.assertEqual(fake.calls[0], (["pack", "arm-1"], tools.PACK_TIMEOUT))
         self.assertEqual(result["pack"], str(out / "pack.md"))
-        self.assertEqual(result["files"], [str(out / n) for n in ("pack.md", "cover-letter.pdf", "cv.pdf")])
+        self.assertEqual(
+            result["files"], [str(out / n) for n in ("pack.md", "cover-letter.pdf", "cv.pdf")]
+        )
         self.assertIn("drafting", result["output"])
 
     def test_no_pack_path_gives_no_files(self):
@@ -123,7 +133,9 @@ class ManifestTest(unittest.TestCase):
             self.assertLessEqual(set(t.get("params", {})), accepted, t["name"])
             for name, p in t.get("params", {}).items():
                 if p.get("required"):
-                    self.assertIs(inspect.signature(fn).parameters[name].default, inspect.Parameter.empty)
+                    self.assertIs(
+                        inspect.signature(fn).parameters[name].default, inspect.Parameter.empty
+                    )
 
     def test_new_tools_are_declared(self):
         spec = {t["name"]: t for t in tomllib.loads(MANIFEST.read_text())["tools"]}

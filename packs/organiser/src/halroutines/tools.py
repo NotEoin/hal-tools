@@ -5,6 +5,7 @@ do-not-disturb for an hour, warm lights, music paused. Schedules run a scene or
 a single tool at a time, once or repeating; triggers run one when something
 happens. The daemon (python -m halroutines.daemon) runs schedules and triggers.
 """
+
 from __future__ import annotations
 
 import json
@@ -37,9 +38,15 @@ def call_tool(tool: str, args: dict | None = None) -> dict:
     if not exe:
         return {"error": "hal-hub is not installed"}
     payload = json.dumps({**(args or {}), "_confirmed": True})
-    done = subprocess.run([exe, "call", tool, "--json", payload], capture_output=True, text=True, timeout=600)
+    done = subprocess.run(
+        [exe, "call", tool, "--json", payload], capture_output=True, text=True, timeout=600
+    )
     try:
-        return json.loads(done.stdout) if done.stdout.strip() else {"error": done.stderr.strip()[-300:]}
+        return (
+            json.loads(done.stdout)
+            if done.stdout.strip()
+            else {"error": done.stderr.strip()[-300:]}
+        )
     except json.JSONDecodeError:
         return {"result": done.stdout.strip()}
 
@@ -69,7 +76,9 @@ def save_scene(name: str, steps: list | str) -> dict:
     """Saves a scene: a list of {"tool": ..., "args": {...}} steps."""
     parsed = json.loads(steps) if isinstance(steps, str) else steps
     if not isinstance(parsed, list) or not all(isinstance(s, dict) and "tool" in s for s in parsed):
-        raise ValueError('steps must be a list like [{"tool": "rgb_colour", "args": {"colour": "blue"}}]')
+        raise ValueError(
+            'steps must be a list like [{"tool": "rgb_colour", "args": {"colour": "blue"}}]'
+        )
     con = _db()
     con.execute("INSERT OR REPLACE INTO scenes VALUES (?, ?)", (name, json.dumps(parsed)))
     con.commit()
@@ -90,22 +99,39 @@ def schedule(target: str, when_text: str, args: dict | str | None = None, label:
         raise ValueError(f"say a time, for example 'every day at 23:00'; got {when_text!r}")
     parsed = json.loads(args) if isinstance(args, str) and args else (args or {})
     con = _db()
-    cur = con.execute("INSERT INTO schedules (target, args, at, rrule, label) VALUES (?, ?, ?, ?, ?)",
-                      (target, json.dumps(parsed), w.start.timestamp(), w.rrule, label or target))
+    cur = con.execute(
+        "INSERT INTO schedules (target, args, at, rrule, label) VALUES (?, ?, ?, ?, ?)",
+        (target, json.dumps(parsed), w.start.timestamp(), w.rrule, label or target),
+    )
     con.commit()
-    return {"id": cur.lastrowid, "runs": target, "at": w.start.strftime("%a %-d %b %H:%M"), "repeat": w.rrule}
+    return {
+        "id": cur.lastrowid,
+        "runs": target,
+        "at": w.start.strftime("%a %-d %b %H:%M"),
+        "repeat": w.rrule,
+    }
 
 
 def schedules() -> list[dict]:
-    return [{"id": r["id"], "label": r["label"], "runs": r["target"],
-             "next": datetime.fromtimestamp(r["at"]).strftime("%a %-d %b %H:%M"), "repeat": r["rrule"]}
-            for r in _db().execute("SELECT * FROM schedules ORDER BY at")]
+    return [
+        {
+            "id": r["id"],
+            "label": r["label"],
+            "runs": r["target"],
+            "next": datetime.fromtimestamp(r["at"]).strftime("%a %-d %b %H:%M"),
+            "repeat": r["rrule"],
+        }
+        for r in _db().execute("SELECT * FROM schedules ORDER BY at")
+    ]
 
 
 def unschedule(which: str) -> dict:
     con = _db()
-    rows = [r for r in con.execute("SELECT * FROM schedules")
-            if str(r["id"]) == str(which) or str(which).lower() in r["label"].lower()]
+    rows = [
+        r
+        for r in con.execute("SELECT * FROM schedules")
+        if str(r["id"]) == str(which) or str(which).lower() in r["label"].lower()
+    ]
     if not rows:
         raise ValueError(f"no schedule matches {which!r}")
     for r in rows:
@@ -123,14 +149,19 @@ def add_trigger(event: str, target: str, args: dict | str | None = None) -> dict
         raise ValueError(f"event must be one of {', '.join(EVENTS)}")
     parsed = json.loads(args) if isinstance(args, str) and args else (args or {})
     con = _db()
-    cur = con.execute("INSERT INTO triggers (event, target, args) VALUES (?, ?, ?)", (event, target, json.dumps(parsed)))
+    cur = con.execute(
+        "INSERT INTO triggers (event, target, args) VALUES (?, ?, ?)",
+        (event, target, json.dumps(parsed)),
+    )
     con.commit()
     return {"id": cur.lastrowid, "when": event, "runs": target}
 
 
 def triggers() -> list[dict]:
-    return [{"id": r["id"], "when": r["event"], "runs": r["target"], "args": json.loads(r["args"])}
-            for r in _db().execute("SELECT * FROM triggers")]
+    return [
+        {"id": r["id"], "when": r["event"], "runs": r["target"], "args": json.loads(r["args"])}
+        for r in _db().execute("SELECT * FROM triggers")
+    ]
 
 
 def remove_trigger(trigger_id: int) -> dict:

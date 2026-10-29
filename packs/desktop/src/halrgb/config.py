@@ -2,6 +2,7 @@
 
 The shared [hal] table supplies the vault path and the local model settings.
 """
+
 import os
 import tomllib
 from pathlib import Path
@@ -10,7 +11,7 @@ SECTION = "rgb"
 DEFAULTS: dict = {
     "host": "127.0.0.1",
     "port": 6742,
-    "follow_device": "",        # lights that show Hal's state; empty means all
+    "follow_device": "",  # lights that show Hal's state; empty means all
     # Colours for Hal's states, used by rgb_state and by hal-voice when lights follow Hal.
     "states": {
         "idle": {"colour": "hal red", "brightness": 25},

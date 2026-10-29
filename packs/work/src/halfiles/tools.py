@@ -5,6 +5,7 @@ version-control folders and the trash. Reading handles text, Markdown, code,
 PDF (pdftotext), Word and OpenDocument files. Tidying Downloads moves files
 into folders by type and needs confirmation through hal-hub.
 """
+
 from __future__ import annotations
 
 import hashlib
@@ -20,19 +21,71 @@ from pathlib import Path
 from . import llm
 from .config import settings
 
-SKIP = {".cache", ".git", "node_modules", ".venv", "venv", "__pycache__", ".local", ".npm", ".npm-global",
-        ".cargo", ".rustup", "snap", ".mozilla", ".config", "site-packages", ".trash", ".Trash-1000",
-        "miniconda3", "anaconda3", ".obsidian", ".ollama", ".gradle", ".m2"}
+SKIP = {
+    ".cache",
+    ".git",
+    "node_modules",
+    ".venv",
+    "venv",
+    "__pycache__",
+    ".local",
+    ".npm",
+    ".npm-global",
+    ".cargo",
+    ".rustup",
+    "snap",
+    ".mozilla",
+    ".config",
+    "site-packages",
+    ".trash",
+    ".Trash-1000",
+    "miniconda3",
+    "anaconda3",
+    ".obsidian",
+    ".ollama",
+    ".gradle",
+    ".m2",
+}
 KINDS = {
-    "documents": {".pdf", ".doc", ".docx", ".odt", ".txt", ".md", ".rtf", ".tex", ".pages", ".epub"},
+    "documents": {
+        ".pdf",
+        ".doc",
+        ".docx",
+        ".odt",
+        ".txt",
+        ".md",
+        ".rtf",
+        ".tex",
+        ".pages",
+        ".epub",
+    },
     "spreadsheets": {".xls", ".xlsx", ".ods", ".csv"},
     "presentations": {".ppt", ".pptx", ".odp", ".key"},
     "images": {".png", ".jpg", ".jpeg", ".gif", ".webp", ".svg", ".heic", ".bmp", ".tiff"},
     "videos": {".mp4", ".mkv", ".mov", ".avi", ".webm"},
     "audio": {".mp3", ".flac", ".wav", ".m4a", ".ogg", ".opus"},
     "archives": {".zip", ".tar", ".gz", ".xz", ".7z", ".rar", ".bz2", ".zst"},
-    "code": {".py", ".js", ".ts", ".java", ".c", ".cpp", ".h", ".rs", ".go", ".rb", ".sh", ".html", ".css", ".json",
-             ".yaml", ".yml", ".toml", ".ipynb", ".sql"},
+    "code": {
+        ".py",
+        ".js",
+        ".ts",
+        ".java",
+        ".c",
+        ".cpp",
+        ".h",
+        ".rs",
+        ".go",
+        ".rb",
+        ".sh",
+        ".html",
+        ".css",
+        ".json",
+        ".yaml",
+        ".yml",
+        ".toml",
+        ".ipynb",
+        ".sql",
+    },
     "installers": {".deb", ".AppImage", ".rpm", ".snap", ".flatpakref", ".run"},
 }
 SIZE = re.compile(r"(\d+(?:\.\d+)?)\s*(b|kb|mb|gb|tb)?", re.I)
@@ -51,7 +104,11 @@ def _walk(roots: list[Path], max_files: int = 300_000):
     seen = 0
     for root in roots:
         for dirpath, dirnames, filenames in os.walk(root):
-            dirnames[:] = [d for d in dirnames if d not in SKIP and not (d.startswith(".") and d not in (".config",))]
+            dirnames[:] = [
+                d
+                for d in dirnames
+                if d not in SKIP and not (d.startswith(".") and d not in (".config",))
+            ]
             for f in filenames:
                 seen += 1
                 if seen > max_files:
@@ -63,17 +120,29 @@ def _bytes(text: str) -> int:
     m = SIZE.fullmatch(text.strip().replace(" ", ""))
     if not m:
         raise ValueError(f"cannot read the size {text!r}")
-    return int(float(m.group(1)) * {"b": 1, "kb": 1e3, "mb": 1e6, "gb": 1e9, "tb": 1e12}[(m.group(2) or "b").lower()])
+    return int(
+        float(m.group(1))
+        * {"b": 1, "kb": 1e3, "mb": 1e6, "gb": 1e9, "tb": 1e12}[(m.group(2) or "b").lower()]
+    )
 
 
 def _info(p: Path) -> dict:
     st = p.stat()
-    return {"path": str(p), "size_mb": round(st.st_size / 1e6, 2),
-            "modified": datetime.fromtimestamp(st.st_mtime).strftime("%Y-%m-%d %H:%M")}
+    return {
+        "path": str(p),
+        "size_mb": round(st.st_size / 1e6, 2),
+        "modified": datetime.fromtimestamp(st.st_mtime).strftime("%Y-%m-%d %H:%M"),
+    }
 
 
-def find(name: str = "", kind: str = "", larger_than: str = "", modified_days: int = 0, root: str = "",
-         limit: int = 25) -> list[dict]:
+def find(
+    name: str = "",
+    kind: str = "",
+    larger_than: str = "",
+    modified_days: int = 0,
+    root: str = "",
+    limit: int = 25,
+) -> list[dict]:
     """Files whose name contains all the words, of a kind, above a size, changed in the last N days."""
     words = name.lower().split()
     exts = KINDS.get(kind.lower()) if kind else None
@@ -96,7 +165,7 @@ def find(name: str = "", kind: str = "", larger_than: str = "", modified_days: i
             continue
         hits.append((st.st_mtime, p))
     hits.sort(reverse=True)
-    return [_info(p) for _, p in hits[:int(limit)]]
+    return [_info(p) for _, p in hits[: int(limit)]]
 
 
 def recent(limit: int = 15, folder: str = "") -> list[dict]:
@@ -108,7 +177,7 @@ def recent(limit: int = 15, folder: str = "") -> list[dict]:
         except OSError:
             continue
     hits.sort(reverse=True)
-    return [_info(p) for _, p in hits[:int(limit)]]
+    return [_info(p) for _, p in hits[: int(limit)]]
 
 
 def read(path: str, summarise: bool = False, limit: int = 8000) -> dict:
@@ -118,20 +187,30 @@ def read(path: str, summarise: bool = False, limit: int = 8000) -> dict:
         raise ValueError(f"{path} is not a file")
     ext = p.suffix.lower()
     if ext == ".pdf":
-        text = subprocess.run(["pdftotext", "-layout", str(p), "-"], capture_output=True, text=True, timeout=60).stdout
+        text = subprocess.run(
+            ["pdftotext", "-layout", str(p), "-"], capture_output=True, text=True, timeout=60
+        ).stdout
     elif ext in (".docx", ".odt", ".pptx", ".odp"):
         with zipfile.ZipFile(p) as z:
-            names = [n for n in z.namelist() if n in ("word/document.xml", "content.xml") or n.startswith("ppt/slides/slide")]
+            names = [
+                n
+                for n in z.namelist()
+                if n in ("word/document.xml", "content.xml") or n.startswith("ppt/slides/slide")
+            ]
             xml = " ".join(z.read(n).decode(errors="ignore") for n in sorted(names))
-        text = re.sub(r"\s+", " ", re.sub(r"<[^>]+>", " ", re.sub(r"</w:p>|</text:p>|</a:p>", "\n", xml)))
+        text = re.sub(
+            r"\s+", " ", re.sub(r"<[^>]+>", " ", re.sub(r"</w:p>|</text:p>|</a:p>", "\n", xml))
+        )
     else:
         text = p.read_text(errors="ignore")
     out = {"path": str(p), "characters": len(text)}
     if summarise:
-        out["summary"] = llm.chat("Summarise this document in at most 150 words of plain prose. Use only the document.",
-                                  text[:14000]).strip()
+        out["summary"] = llm.chat(
+            "Summarise this document in at most 150 words of plain prose. Use only the document.",
+            text[:14000],
+        ).strip()
     else:
-        out["text"] = text[:int(limit)]
+        out["text"] = text[: int(limit)]
     return out
 
 
@@ -144,7 +223,9 @@ def largest(folder: str = "~", limit: int = 12) -> dict:
         if child.is_symlink():
             continue
         if child.is_dir():
-            out = subprocess.run(["du", "-sb", str(child)], capture_output=True, text=True, timeout=300).stdout
+            out = subprocess.run(
+                ["du", "-sb", str(child)], capture_output=True, text=True, timeout=300
+            ).stdout
             sizes[child.name] = int(out.split()[0]) if out else 0
         elif child.is_file():
             sizes[child.name] = child.stat().st_size
@@ -154,8 +235,13 @@ def largest(folder: str = "~", limit: int = 12) -> dict:
         except OSError:
             continue
     files.sort(reverse=True)
-    return {"folders": [{"name": n, "size_gb": round(s / 1e9, 2)} for n, s in sorted(sizes.items(), key=lambda x: -x[1])[:int(limit)]],
-            "files": [{"path": str(p), "size_gb": round(s / 1e9, 2)} for s, p in files[:int(limit)]]}
+    return {
+        "folders": [
+            {"name": n, "size_gb": round(s / 1e9, 2)}
+            for n, s in sorted(sizes.items(), key=lambda x: -x[1])[: int(limit)]
+        ],
+        "files": [{"path": str(p), "size_gb": round(s / 1e9, 2)} for s, p in files[: int(limit)]],
+    }
 
 
 def duplicates(folder: str = "~/Downloads", min_size: str = "1mb", limit: int = 20) -> list[dict]:
@@ -180,8 +266,10 @@ def duplicates(folder: str = "~/Downloads", min_size: str = "1mb", limit: int = 
                 for chunk in iter(lambda: f.read(1 << 20), b""):
                     h.update(chunk)
             by_hash.setdefault(h.hexdigest(), []).append(str(p))
-        groups += [{"size_mb": round(size / 1e6, 1), "files": g} for g in by_hash.values() if len(g) > 1]
-    return sorted(groups, key=lambda g: -g["size_mb"] * len(g["files"]))[:int(limit)]
+        groups += [
+            {"size_mb": round(size / 1e6, 1), "files": g} for g in by_hash.values() if len(g) > 1
+        ]
+    return sorted(groups, key=lambda g: -g["size_mb"] * len(g["files"]))[: int(limit)]
 
 
 def tidy_downloads(folder: str = "~/Downloads", older_than_days: int = 0) -> dict:
@@ -194,7 +282,10 @@ def tidy_downloads(folder: str = "~/Downloads", older_than_days: int = 0) -> dic
             continue
         if older_than_days and p.stat().st_mtime > cutoff:
             continue
-        kind = next((k for k, exts in KINDS.items() if p.suffix.lower() in {e.lower() for e in exts}), "other")
+        kind = next(
+            (k for k, exts in KINDS.items() if p.suffix.lower() in {e.lower() for e in exts}),
+            "other",
+        )
         dest_dir = base / kind.capitalize()
         dest_dir.mkdir(exist_ok=True)
         dest = dest_dir / p.name

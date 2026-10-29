@@ -1,9 +1,10 @@
 """hal-habits command line, driven by hal-module.toml.
 
-    python -m halhabits                      list the tools
-    python -m halhabits TOOL [key=value ...] run one (the module prefix is optional)
-    python -m halhabits --stdin FUNCTION      run a function with JSON arguments on stdin
+python -m halhabits                      list the tools
+python -m halhabits TOOL [key=value ...] run one (the module prefix is optional)
+python -m halhabits --stdin FUNCTION      run a function with JSON arguments on stdin
 """
+
 import json
 import sys
 import tomllib
