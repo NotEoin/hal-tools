@@ -1,0 +1,64 @@
+[module]
+name = "packages"
+summary = "Software updates (apt, snap, flatpak), installing packages, and disk clean-up"
+python = "halpkgs.tools"
+
+[[tools]]
+name = "packages_updates"
+function = "updates"
+description = "Which software updates are waiting (apt, snap, flatpak), security updates, and whether a restart is needed."
+keywords = "updates upgrades outdated security patches software"
+timeout = 180
+
+[[tools]]
+name = "packages_upgrade"
+function = "upgrade"
+description = "Install all waiting apt updates; asks for the password on screen."
+confirm = true
+keywords = "upgrade update install updates"
+timeout = 3600
+
+[[tools]]
+name = "packages_install"
+function = "install"
+description = "Install an apt package by its exact name; asks for the password on screen."
+confirm = true
+keywords = "install program package apt"
+timeout = 1800
+[tools.params.package]
+required = true
+
+[[tools]]
+name = "packages_search"
+function = "search"
+description = "Search the available apt packages by name."
+[tools.params.query]
+required = true
+[tools.params.limit]
+type = "integer"
+
+[[tools]]
+name = "packages_installed"
+function = "is_installed"
+description = "Whether a program or package is installed, and its version."
+keywords = "installed do i have version"
+[tools.params.name]
+required = true
+
+[[tools]]
+name = "packages_cleanup_report"
+function = "cleanup_report"
+description = "How much space caches, the trash, logs, Docker and old snaps take."
+keywords = "free space clean up junk cache disk"
+timeout = 600
+
+[[tools]]
+name = "packages_cleanup"
+function = "cleanup"
+description = "Empty the trash and the thumbnail cache."
+confirm = true
+keywords = "empty trash clear cache"
+[tools.params.trash]
+type = "boolean"
+[tools.params.thumbnails]
+type = "boolean"
