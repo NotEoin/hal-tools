@@ -1,0 +1,63 @@
+[module]
+name = "network"
+summary = "Connection status, Wi-Fi, devices on the network, public IP, ping, ports and speed test"
+python = "halnet.tools"
+
+[[tools]]
+name = "network_status"
+function = "status"
+description = "How the computer is connected: devices, addresses, gateway, DNS, VPN and whether the internet is reachable."
+keywords = "internet connection online network ip address vpn dns ethernet"
+
+[[tools]]
+name = "network_wifi"
+function = "wifi"
+description = "The Wi-Fi network in use, its signal, and the networks in range."
+keywords = "wifi wireless signal network"
+
+[[tools]]
+name = "network_public_ip"
+function = "public_ip"
+description = "The public IP address, internet provider and approximate location."
+keywords = "public ip isp external address"
+
+[[tools]]
+name = "network_devices"
+function = "devices"
+description = "Other devices on the local network (phones, printers, TVs) seen recently."
+keywords = "devices on network who is connected lan"
+
+[[tools]]
+name = "network_ping"
+function = "ping"
+description = "Check whether a host answers, with latency and packet loss."
+keywords = "ping latency lag reachable down"
+timeout = 70
+[tools.params.host]
+[tools.params.count]
+type = "integer"
+
+[[tools]]
+name = "network_port"
+function = "port"
+description = "Whether a TCP port is open on this machine or another local device."
+[tools.params.host]
+required = true
+[tools.params.port]
+type = "integer"
+required = true
+
+[[tools]]
+name = "network_listening"
+function = "listening"
+description = "Programs on this computer listening for connections, and their ports."
+keywords = "ports listening servers open"
+
+[[tools]]
+name = "network_speed_test"
+function = "speed_test"
+description = "Measure internet download and upload speed and latency."
+keywords = "speed test internet fast slow bandwidth broadband"
+timeout = 300
+[tools.params.megabytes]
+type = "integer"
