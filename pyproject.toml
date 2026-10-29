@@ -1,0 +1,45 @@
+[project]
+name = "hal-tools"
+version = "0.1.0"
+description = "Hal tool packs: workspace root"
+requires-python = ">=3.11"
+
+[tool.uv]
+package = false
+
+[tool.uv.workspace]
+members = ["packs/*"]
+
+[tool.uv.sources]
+# Development: sibling Hal worktree. Release step H-50 replaces these with git tag sources.
+hal-kit = { path = "../Hal.next/packages/hal-kit", editable = true }
+hal-hub = { path = "../Hal.next/packages/hal-hub", editable = true }
+
+[dependency-groups]
+dev = ["pytest>=8.3,<10", "ruff>=0.15,<1"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP", "BLE", "S", "T20", "RUF", "PLC2401"]
+# S603 and S607 flag every subprocess call; argv-only calls are the design.
+ignore = ["S603", "S607"]
+
+[tool.ruff.lint.per-file-ignores]
+# Scripts are entry points, so they print.
+"scripts/*.py" = ["T201"]
+
+[tool.pytest.ini_options]
+addopts = "-m 'not host and not network and not gpu and not docker and not slow and not bwrap and not systemd and not live' --import-mode=importlib"
+markers = [
+  "host: needs a desktop session or real host services (hal-tools only)",
+  "network: needs internet access",
+  "gpu: needs a GPU",
+  "docker: needs a Docker daemon",
+  "slow: takes more than 10 s",
+  "bwrap: needs bubblewrap",
+  "systemd: needs a systemd user session",
+  "live: needs a real model server",
+]
