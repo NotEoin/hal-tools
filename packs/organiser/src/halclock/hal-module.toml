@@ -1,0 +1,66 @@
+[module]
+name = "clock"
+summary = "Timers, alarms, snooze, stopwatch and Pomodoro sessions, announced aloud"
+python = "halclock.tools"
+
+[[tools]]
+name = "clock_timer"
+function = "timer"
+description = "Start a countdown timer, such as '9 minutes' for pasta or '1h30'. Hal announces it when it ends."
+keywords = "timer countdown minutes remind me in"
+[tools.params.duration]
+required = true
+[tools.params.label]
+
+[[tools]]
+name = "clock_alarm"
+function = "alarm"
+description = "Set an alarm at a time: '7am', '7 tomorrow morning', 'tomorrow at 6:30', 'in 20 minutes', 'every weekday at 7'. A bare hour means the morning."
+keywords = "alarm wake me up morning"
+[tools.params.when_text]
+required = true
+description = "when, word for word"
+[tools.params.label]
+
+[[tools]]
+name = "clock_list"
+function = "list_all"
+description = "List running timers and set alarms with the time left."
+keywords = "how long left timers alarms"
+
+[[tools]]
+name = "clock_cancel"
+function = "cancel"
+description = "Cancel a timer or alarm by its name or id, or 'all'."
+keywords = "stop cancel timer alarm"
+[tools.params.which]
+
+[[tools]]
+name = "clock_snooze"
+function = "snooze"
+description = "Snooze the alarm that just went off."
+keywords = "snooze five more minutes"
+[tools.params.minutes]
+type = "integer"
+
+[[tools]]
+name = "clock_stopwatch"
+function = "stopwatch"
+description = "Start, stop, lap, reset or read the stopwatch."
+keywords = "stopwatch time how long lap"
+[tools.params.action]
+enum = ["start", "stop", "lap", "reset", "status"]
+
+[[tools]]
+name = "clock_pomodoro"
+function = "pomodoro"
+description = "Start, stop or check a Pomodoro session of work and break periods."
+keywords = "pomodoro focus work session study"
+[tools.params.action]
+enum = ["start", "stop", "status"]
+[tools.params.work]
+type = "integer"
+[tools.params.rest]
+type = "integer"
+[tools.params.rounds]
+type = "integer"
