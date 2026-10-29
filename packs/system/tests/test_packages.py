@@ -3,11 +3,14 @@ import sys
 import unittest
 from pathlib import Path
 
+import pytest
+
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from halpkgs import tools  # noqa: E402
 
 
 class PackagesTest(unittest.TestCase):
+    @pytest.mark.host  # queries the real package manager
     def test_installed_check(self):
         self.assertTrue(tools.is_installed("bash")["apt"])
 

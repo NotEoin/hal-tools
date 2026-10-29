@@ -3,11 +3,14 @@ import sys
 import unittest
 from pathlib import Path
 
+import pytest
+
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from halshell import tools  # noqa: E402
 
 
 class ShellTest(unittest.TestCase):
+    @pytest.mark.host  # runs real programs
     def test_reads_are_allowed(self):
         self.assertEqual(tools.look("echo hi | tr a-z A-Z")["output"].strip(), "HI")
         tools.look("git -C . log -1 --oneline")

@@ -3,11 +3,14 @@ import sys
 import unittest
 from pathlib import Path
 
+import pytest
+
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from haldevices import tools  # noqa: E402
 
 
 class DevicesTest(unittest.TestCase):
+    @pytest.mark.host  # lists the real USB and monitor devices
     def test_listings(self):
         self.assertIsInstance(tools.usb(), list)
         self.assertIsInstance(tools.monitors(), list)

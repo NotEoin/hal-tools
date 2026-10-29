@@ -1,0 +1,3 @@
+# Gitleaks configuration: the default rules, plus nothing else. Findings are fixed, not allowed.
+[extend]
+useDefault = true

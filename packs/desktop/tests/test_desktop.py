@@ -3,11 +3,14 @@ import sys
 import unittest
 from pathlib import Path
 
+import pytest
+
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from haldesk import tools  # noqa: E402
 
 
 class DesktopTest(unittest.TestCase):
+    @pytest.mark.host  # needs a desktop session
     def test_apps_are_listed(self):
         self.assertTrue(tools.apps())
 
@@ -17,6 +20,7 @@ class DesktopTest(unittest.TestCase):
         with self.assertRaises(ValueError):
             tools.open_item("/no/such/file.txt")
 
+    @pytest.mark.host  # needs a desktop session
     def test_reading_state_changes_nothing(self):
         self.assertIn(tools.theme()["mode"], ("dark", "light"))
         self.assertIsInstance(tools.volume()["muted"], bool)

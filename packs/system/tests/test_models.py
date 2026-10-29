@@ -3,11 +3,14 @@ import sys
 import unittest
 from pathlib import Path
 
+import pytest
+
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from halmodels import tools  # noqa: E402
 
 
 class ModelsTest(unittest.TestCase):
+    @pytest.mark.host  # needs a running Ollama
     def test_installed_is_a_list(self):
         try:
             self.assertIsInstance(tools.installed(), list)

@@ -3,11 +3,14 @@ import sys
 import unittest
 from pathlib import Path
 
+import pytest
+
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from halpower import tools  # noqa: E402
 
 
 class PowerTest(unittest.TestCase):
+    @pytest.mark.host  # reads the real systemd state
     def test_reading_state(self):
         self.assertIn("uptime", tools.uptime())
         self.assertIn("scheduled", tools.scheduled())

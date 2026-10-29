@@ -1,0 +1,7 @@
+# Tracked files that may hold non-ASCII characters. One path per line.
+# Header-decoding fixture: it feeds a UTF-8 encoded word to the mail decoder.
+packs/comms/tests/test_mail.py
+# Removed in step H-06, which replaces these characters with escapes.
+packs/organiser/src/halcal/when.py
+packs/organiser/src/halclock/when.py
+packs/organiser/src/haltasks/when.py
