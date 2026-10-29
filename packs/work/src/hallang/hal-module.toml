@@ -1,0 +1,62 @@
+[module]
+name = "lang"
+summary = "Translate, proofread, rewrite in a tone, summarise, explain and draft replies, with the local model"
+python = "hallang.tools"
+
+[[tools]]
+name = "lang_translate"
+function = "translate"
+description = "Translate text (or the clipboard) into a language."
+keywords = "translate language french spanish german japanese in english"
+timeout = 300
+[tools.params.text]
+[tools.params.to]
+
+[[tools]]
+name = "lang_proofread"
+function = "proofread"
+description = "Fix spelling, grammar and punctuation in text (or the clipboard) and list the changes."
+keywords = "proofread spelling grammar check correct"
+timeout = 300
+[tools.params.text]
+[tools.params.british]
+type = "boolean"
+
+[[tools]]
+name = "lang_rewrite"
+function = "rewrite"
+description = "Rewrite text (or the clipboard) in a tone: professional, friendly, formal, casual, concise or persuasive; shorter or longer."
+keywords = "rewrite rephrase reword tone more professional shorter"
+timeout = 300
+[tools.params.text]
+[tools.params.tone]
+[tools.params.length]
+
+[[tools]]
+name = "lang_summarise"
+function = "summarise"
+description = "Summarise text (or the clipboard) in a few words."
+keywords = "summarise summary tldr shorten"
+timeout = 300
+[tools.params.text]
+[tools.params.words]
+type = "integer"
+
+[[tools]]
+name = "lang_explain"
+function = "explain"
+description = "Explain text simply: a letter, a contract clause, jargon or code."
+keywords = "explain what does this mean simply"
+timeout = 300
+[tools.params.text]
+[tools.params.audience]
+
+[[tools]]
+name = "lang_reply"
+function = "reply"
+description = "Draft a reply to a message, given what the user wants to say."
+keywords = "reply respond answer message draft"
+timeout = 300
+[tools.params.message]
+[tools.params.intent]
+[tools.params.tone]
