@@ -1,0 +1,70 @@
+[module]
+name = "phone"
+summary = "The phone through KDE Connect: find it, battery, send files and links, SMS and its notifications"
+python = "halphone.tools"
+
+[[tools]]
+name = "phone_devices"
+function = "devices"
+description = "Paired phones and whether they are reachable."
+keywords = "phone paired connected android"
+
+[[tools]]
+name = "phone_ring"
+function = "ring"
+description = "Make the phone ring loudly to find it."
+keywords = "find my phone ring lost where is my phone"
+[tools.params.phone]
+
+[[tools]]
+name = "phone_battery"
+function = "battery"
+description = "The phone's battery level."
+keywords = "phone battery charge"
+[tools.params.phone]
+
+[[tools]]
+name = "phone_send_file"
+function = "send_file"
+description = "Send a file from the computer to the phone."
+keywords = "send file to phone transfer"
+timeout = 150
+[tools.params.path]
+required = true
+[tools.params.phone]
+
+[[tools]]
+name = "phone_send_link"
+function = "send_link"
+description = "Open a link on the phone."
+keywords = "open on phone send link"
+[tools.params.url]
+required = true
+[tools.params.phone]
+
+[[tools]]
+name = "phone_send_text"
+function = "send_text"
+description = "Put some text on the phone's clipboard."
+[tools.params.text]
+required = true
+[tools.params.phone]
+
+[[tools]]
+name = "phone_sms"
+function = "sms"
+description = "Send a text message from the phone."
+confirm = true
+keywords = "text message sms send"
+[tools.params.number]
+required = true
+[tools.params.message]
+required = true
+[tools.params.phone]
+
+[[tools]]
+name = "phone_notifications"
+function = "notifications"
+description = "Notifications showing on the phone."
+keywords = "phone notifications messages"
+[tools.params.phone]
