@@ -1,0 +1,44 @@
+[module]
+name = "notify"
+summary = "Alerts to phone (ntfy), desktop, HAL's voice and Telegram, with quiet hours"
+python = "halnotify.tools"
+
+[[tools]]
+name = "notify_send"
+function = "send"
+description = "Send the user a notification: phone push, desktop and optionally spoken or Telegram. Urgent ones break through quiet hours."
+keywords = "alert push message phone tell me ping"
+[tools.params.title]
+required = true
+[tools.params.body]
+[tools.params.urgent]
+type = "boolean"
+[tools.params.speak]
+type = "boolean"
+description = "also say it aloud"
+[tools.params.channels]
+type = "array"
+description = "any of desktop, phone, voice, telegram"
+[tools.params.url]
+description = "link opened when the phone notification is tapped"
+
+[[tools]]
+name = "notify_dnd"
+function = "dnd"
+description = "Turn do-not-disturb on for a number of minutes (0 turns it off). Only urgent alerts get through."
+keywords = "quiet silence focus do not disturb"
+[tools.params.minutes]
+type = "integer"
+required = true
+
+[[tools]]
+name = "notify_state"
+function = "state"
+description = "Whether notifications are currently quiet, and until when."
+
+[[tools]]
+name = "notify_history"
+function = "history"
+description = "Recent notifications Hal has sent."
+[tools.params.limit]
+type = "integer"
