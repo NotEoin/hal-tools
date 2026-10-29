@@ -113,7 +113,7 @@ class AgendaTest(Base):
 class ManifestTest(unittest.TestCase):
     def test_agenda_is_described_for_whats_on_questions(self):
         import tomllib
-        spec = tomllib.loads((Path(__file__).resolve().parents[1] / "hal-module.toml").read_text())
+        spec = tomllib.loads((Path(__file__).resolve().parents[1] / "src" / "halcal" / "hal-module.toml").read_text())
         agenda = next(t for t in spec["tools"] if t["name"] == "calendar_agenda")
         text = (agenda["description"] + " " + agenda.get("keywords", "")).lower()
         for word in ("what's on", "anything", "free", "date"):

@@ -1,0 +1,23 @@
+[project]
+name = "hal-online"
+version = "0.1.0"
+description = "Hal tools: web and feeds"
+requires-python = ">=3.11"
+license = "MIT"
+dependencies = ["hal-kit>=0.1,<0.2", "hal-hub>=0.1,<0.2"]
+
+[project.scripts]
+hal-online = "hal_online:main"
+
+[project.entry-points."hal.packs"]
+web = "halweb"
+feeds = "halfeeds"
+
+[build-system]
+requires = ["hatchling>=1.25,<2"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/hal_online",
+            "src/halweb",
+            "src/halfeeds"]

@@ -3,11 +3,14 @@ import sys
 import unittest
 from pathlib import Path
 
+import pytest
+
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from halmedia import tools  # noqa: E402
 
 
 class MediaTest(unittest.TestCase):
+    @pytest.mark.host  # needs PyGObject and a session bus
     def test_status_lists_players(self):
         self.assertIsInstance(tools.status(), list)
 

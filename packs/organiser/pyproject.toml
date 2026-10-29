@@ -1,0 +1,31 @@
+[project]
+name = "hal-organiser"
+version = "0.1.0"
+description = "Hal tools: calendar, tasks, clock, notifications, briefings and routines"
+requires-python = ">=3.11"
+license = "MIT"
+dependencies = ["hal-kit>=0.1,<0.2", "hal-hub>=0.1,<0.2"]
+
+[project.scripts]
+hal-organiser = "hal_organiser:main"
+
+[project.entry-points."hal.packs"]
+calendar = "halcal"
+tasks = "haltasks"
+clock = "halclock"
+notify = "halnotify"
+briefing = "halbrief"
+routines = "halroutines"
+
+[build-system]
+requires = ["hatchling>=1.25,<2"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/hal_organiser",
+            "src/halcal",
+            "src/haltasks",
+            "src/halclock",
+            "src/halnotify",
+            "src/halbrief",
+            "src/halroutines"]

@@ -116,7 +116,7 @@ class ConnectTest(unittest.TestCase):
         self.assertEqual(data["hal"]["vault"], "~/v")
 
     def test_setup_is_not_a_tool(self):
-        spec = tomllib.loads((Path(__file__).resolve().parents[1] / "hal-module.toml").read_text())
+        spec = tomllib.loads((Path(__file__).resolve().parents[1] / "src" / "halcal" / "hal-module.toml").read_text())
         self.assertNotIn("setup_caldav", [t["function"] for t in spec["tools"]])
         params = {p for t in spec["tools"] for p in t.get("params", {})}
         self.assertNotIn("password", params)

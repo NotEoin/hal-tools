@@ -1,0 +1,25 @@
+[project]
+name = "hal-work"
+version = "0.1.0"
+description = "Hal tools: files, development and language tools"
+requires-python = ">=3.11"
+license = "MIT"
+dependencies = ["hal-kit>=0.1,<0.2", "hal-hub>=0.1,<0.2"]
+
+[project.scripts]
+hal-work = "hal_work:main"
+
+[project.entry-points."hal.packs"]
+files = "halfiles"
+dev = "haldev"
+lang = "hallang"
+
+[build-system]
+requires = ["hatchling>=1.25,<2"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/hal_work",
+            "src/halfiles",
+            "src/haldev",
+            "src/hallang"]

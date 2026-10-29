@@ -28,8 +28,13 @@ select = ["E", "F", "W", "I", "B", "UP", "BLE", "S", "T20", "RUF", "PLC2401"]
 ignore = ["S603", "S607"]
 
 [tool.ruff.lint.per-file-ignores]
-# Scripts are entry points, so they print.
+# Entry points print: scripts, `python -m` modules and the pack CLI shims.
 "scripts/*.py" = ["T201"]
+"packs/*/src/*/__main__.py" = ["T201"]
+"packs/*/src/hal_*/__init__.py" = ["T201"]
+# pytest tests use plain `assert`.
+"tests/**" = ["S101"]
+"packs/*/tests/**" = ["S101"]
 
 [tool.pytest.ini_options]
 addopts = "-m 'not host and not network and not gpu and not docker and not slow and not bwrap and not systemd and not live' --import-mode=importlib"

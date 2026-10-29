@@ -12,7 +12,7 @@ from unittest import mock
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from haljobs import tools  # noqa: E402
 
-MANIFEST = Path(__file__).resolve().parents[1] / "hal-module.toml"
+MANIFEST = Path(__file__).resolve().parents[1] / "src" / "haljobs" / "hal-module.toml"
 
 
 class FakeJobhunt:

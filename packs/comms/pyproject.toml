@@ -1,0 +1,25 @@
+[project]
+name = "hal-comms"
+version = "0.1.0"
+description = "Hal tools: mail, phone and Telegram"
+requires-python = ">=3.11"
+license = "MIT"
+dependencies = ["hal-kit>=0.1,<0.2", "hal-hub>=0.1,<0.2"]
+
+[project.scripts]
+hal-comms = "hal_comms:main"
+
+[project.entry-points."hal.packs"]
+mail = "halmail"
+phone = "halphone"
+telegram = "haltelegram"
+
+[build-system]
+requires = ["hatchling>=1.25,<2"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/hal_comms",
+            "src/halmail",
+            "src/halphone",
+            "src/haltelegram"]

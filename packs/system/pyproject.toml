@@ -1,0 +1,33 @@
+[project]
+name = "hal-system"
+version = "0.1.0"
+description = "Hal tools: system, power, packages, devices, network, models and shell"
+requires-python = ">=3.11"
+license = "MIT"
+dependencies = ["hal-kit>=0.1,<0.2", "hal-hub>=0.1,<0.2"]
+
+[project.scripts]
+hal-system = "hal_system:main"
+
+[project.entry-points."hal.packs"]
+system = "halsys"
+power = "halpower"
+packages = "halpkgs"
+devices = "haldevices"
+network = "halnet"
+models = "halmodels"
+shell = "halshell"
+
+[build-system]
+requires = ["hatchling>=1.25,<2"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/hal_system",
+            "src/halsys",
+            "src/halpower",
+            "src/halpkgs",
+            "src/haldevices",
+            "src/halnet",
+            "src/halmodels",
+            "src/halshell"]
