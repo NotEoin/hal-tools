@@ -1,0 +1,10 @@
+[Unit]
+Description=Hal ledger daily renewal check
+PartOf=hal.target
+
+[Timer]
+OnCalendar=*-*-* 10:00
+Persistent=true
+
+[Install]
+WantedBy=hal.target
