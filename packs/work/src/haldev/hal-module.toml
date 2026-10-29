@@ -1,0 +1,67 @@
+[module]
+name = "dev"
+summary = "Git repositories (state, history, changes), TODO scans, running tests, GitHub pull requests and issues"
+python = "haldev.tools"
+
+[[tools]]
+name = "dev_repos"
+function = "repos"
+description = "Every git repository with its branch, uncommitted changes, commits not pushed and last commit."
+keywords = "git repos repositories projects code uncommitted unpushed status"
+timeout = 120
+[tools.params.dirty_only]
+type = "boolean"
+
+[[tools]]
+name = "dev_status"
+function = "status"
+description = "Git status of one repository."
+[tools.params.repo]
+required = true
+
+[[tools]]
+name = "dev_log"
+function = "log"
+description = "Recent commits of one repository."
+keywords = "commits history git log recent"
+[tools.params.repo]
+required = true
+[tools.params.limit]
+type = "integer"
+
+[[tools]]
+name = "dev_diff"
+function = "diff"
+description = "What has changed in a repository and is not committed."
+[tools.params.repo]
+required = true
+
+[[tools]]
+name = "dev_todos"
+function = "todos"
+description = "TODO and FIXME comments in one repository or all of them."
+keywords = "todo fixme hack unfinished code"
+timeout = 120
+[tools.params.repo]
+[tools.params.limit]
+type = "integer"
+
+[[tools]]
+name = "dev_run_tests"
+function = "run_tests"
+description = "Run a project's tests and report whether they pass."
+keywords = "run tests test suite pass fail"
+timeout = 1800
+[tools.params.repo]
+required = true
+
+[[tools]]
+name = "dev_github"
+function = "github"
+description = "Open GitHub pull requests or issues involving the user, or GitHub notifications."
+keywords = "github pull requests issues notifications"
+timeout = 90
+[tools.params.kind]
+enum = ["prs", "issues", "notifications"]
+[tools.params.repo]
+description = "owner/name; all involving the user if empty"
