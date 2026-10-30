@@ -4,6 +4,9 @@
 
 ### Changed
 
+- `routines`: scene steps no longer carry `_confirmed`. Each step is its own hub call, so policy
+  decides it; a step that needs approval is reported as `skipped`. `routines_run` is tier `write`
+  and allowed; it adds no authority.
 - `notify` and every pack that alerts now use `halkit.notify`; the `telegram` alert channel is gone and
   voice alerts use `[notify].say_command`. Model calls go through `halkit.llm` (the Hal gateway),
   so the `ollama_url`, `chat_model`, `vision_model` and `gpu_ignore` settings no longer apply to

@@ -1,7 +1,8 @@
 """hal-routines' tools: scenes, schedules and triggers built from other modules' tools.
 
-A scene is a named list of tool calls run through hal-hub, such as "focus":
-do-not-disturb for an hour, warm lights, music paused. Schedules run a scene or
+A scene is a named list of tool calls such as "focus": do-not-disturb for an hour, warm lights,
+music paused. Each step is its own `halhub.client.call`, so policy decides every step and nothing
+here confirms a call. Schedules run a scene or
 a single tool at a time, once or repeating; triggers run one when something
 happens. The daemon (python -m halroutines.daemon) runs schedules and triggers.
 """
@@ -11,17 +12,19 @@ from __future__ import annotations
 import json
 import logging
 import re
-import shutil
 import sqlite3
 from datetime import datetime
 
-from hal_organiser import proc
+from halhub import client as hub_client
+from halhub.client import RoutineRun, ToolDenied, ToolFailed
 from halkit import when
 
 from .settings import data_dir, settings
 
 log = logging.getLogger(__name__)
 
+CALLER = "routines"  # the module name the hub checks against `calls` inside a worker
+STEP_TIMEOUT_S = 600.0  # the longest `routines_run` may take (its manifest timeout)
 URL_RE = re.compile(r"^[a-z][a-z0-9+.-]*://", re.I)
 
 
@@ -86,21 +89,25 @@ def migrate(con: sqlite3.Connection) -> int:
     return changed
 
 
-def call_tool(tool: str, args: dict | None = None) -> dict:
-    """Runs one tool through the hal-hub command; returns its JSON result or error."""
-    exe = shutil.which("hal-hub")
-    if not exe:
-        return {"error": "hal-hub is not installed"}
-    payload = json.dumps({**(args or {}), "_confirmed": True})
-    done = proc.completed([exe, "call", tool, "--json", payload], timeout=600)
+def call_tool(tool: str, args: dict | None = None, *, routine: RoutineRun | None = None) -> dict:
+    """Runs one tool through `halhub.client.call`; policy decides it, nothing here confirms it.
+
+    Returns `{"result": ...}` or, for a refused or failed call, `{"error": ..., "denied": bool}`.
+    """
     try:
-        return (
-            json.loads(done.stdout)
-            if done.stdout.strip()
-            else {"error": done.stderr.strip()[-300:]}
+        result = hub_client.call(
+            tool,
+            args or {},
+            CALLER,
+            unattended=routine is not None,
+            routine=routine,
+            timeout=STEP_TIMEOUT_S,
         )
-    except json.JSONDecodeError:
-        return {"result": done.stdout.strip()}
+    except ToolDenied as exc:
+        return {"error": str(exc), "denied": True}
+    except ToolFailed as exc:
+        return {"error": str(exc), "denied": False}
+    return {"result": result}
 
 
 def scenes() -> dict:
@@ -112,16 +119,28 @@ def scenes() -> dict:
 
 
 def run_scene(name: str) -> dict:
-    """Runs every step of a scene in order; a failing step does not stop the rest."""
+    """Runs every step of a scene through the hub; a refused or failing step does not stop the rest.
+
+    Returns `{"scene": name, "steps": [{"tool", "status": "ok" | "error" | "skipped", "reason"}]}`.
+    """
     all_scenes = scenes()
     key = next((k for k in all_scenes if k.lower() == name.lower()), None)
     if key is None:
         raise ValueError(f"no scene {name!r}; have {', '.join(all_scenes)}")
-    results = []
-    for step in all_scenes[key]:
-        out = call_tool(step["tool"], step.get("args"))
-        results.append({"tool": step["tool"], "ok": "error" not in out})
-    return {"scene": key, "steps": results}
+    return {"scene": key, "steps": run_steps(all_scenes[key])}
+
+
+def run_steps(steps: list[dict], *, routine: RoutineRun | None = None) -> list[dict]:
+    """Calls each step as its own hub call and returns one outcome per step."""
+    outcomes = []
+    for step in steps:
+        out = call_tool(step["tool"], step.get("args"), routine=routine)
+        if "error" not in out:
+            outcomes.append({"tool": step["tool"], "status": "ok", "reason": ""})
+        else:
+            status = "skipped" if out["denied"] else "error"
+            outcomes.append({"tool": step["tool"], "status": status, "reason": out["error"]})
+    return outcomes
 
 
 def save_scene(name: str, steps: list | str) -> dict:

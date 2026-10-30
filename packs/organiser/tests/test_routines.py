@@ -5,6 +5,7 @@ import sys
 import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
@@ -18,7 +19,15 @@ class RoutinesTest(unittest.TestCase):
 
         self.tools, self.daemon = tools, daemon
         self.calls = []
-        tools.call_tool = lambda tool, args=None: self.calls.append(tool) or {"result": "ok"}
+        self.args = []
+        patcher = mock.patch.object(tools.hub_client, "call", side_effect=self._fake_call)
+        patcher.start()
+        self.addCleanup(patcher.stop)
+
+    def _fake_call(self, tool, args, caller, **kw):
+        self.calls.append(tool)
+        self.args.append((args, caller, kw))
+        return "ok"
 
     def tearDown(self):
         self.tmp.cleanup()
@@ -27,6 +36,36 @@ class RoutinesTest(unittest.TestCase):
         out = self.tools.run_scene("Focus")
         self.assertEqual(len(out["steps"]), len(self.calls))
         self.assertIn("notify_dnd", self.calls)
+
+    def test_routine_steps_go_through_policy(self):
+        self.tools.run_scene("away")
+        for args, caller, kw in self.args:
+            self.assertEqual(caller, "routines")
+            self.assertNotIn("_confirmed", args)
+            self.assertIsNone(kw["routine"])
+
+    def test_denied_step_is_skipped_and_the_rest_run(self):
+        from halhub.client import ToolDenied
+
+        def fake(tool, args, caller, **kw):
+            self.calls.append(tool)
+            if tool == "desktop_lock":
+                raise ToolDenied("ask", "needs approval")
+            return "ok"
+
+        with mock.patch.object(self.tools.hub_client, "call", side_effect=fake):
+            out = self.tools.run_scene("away")
+        self.assertEqual([s["status"] for s in out["steps"]], ["ok", "ok", "skipped"])
+        self.assertEqual(len(self.calls), 3)
+
+    def test_failing_step_is_reported_as_an_error(self):
+        from halhub.client import ToolFailed
+
+        with mock.patch.object(
+            self.tools.hub_client, "call", side_effect=ToolFailed("tool_error", "boom")
+        ):
+            out = self.tools.run_scene("away")
+        self.assertEqual({s["status"] for s in out["steps"]}, {"error"})
 
     def test_saved_scene_validated(self):
         with self.assertRaises(ValueError):

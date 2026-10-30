@@ -5,12 +5,13 @@ pack = "organiser"
 name = "routines"
 summary = "Scenes (focus, relax, goodnight, away, movie), scheduled actions and event triggers"
 python = "halroutines.tools"
+calls = ["briefing_deliver", "clock_pomodoro", "desktop_banners", "desktop_lock", "desktop_night_light", "media_control", "notify_dnd", "rgb_colour", "rgb_effect", "rgb_off"]
 
 [[tools]]
 name = "routines_run"
 function = "run_scene"
 description = "Run a scene: focus, relax, goodnight, away, movie, or one saved earlier. Each sets several things at once (notifications, lights, music, lock)."
-tier = "act"
+tier = "write"
 keywords = "scene mode focus relax goodnight bedtime away movie routine"
 timeout = 600
 [tools.params.name]

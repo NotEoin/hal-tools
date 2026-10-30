@@ -170,7 +170,7 @@ rgb_state,desktop,act,false,false,true,true,false,allow
 routines_add_trigger,organiser,act,false,false,true,true,false,allow
 routines_delete_scene,organiser,write,false,false,true,false,false,allow
 routines_remove_trigger,organiser,write,false,false,true,true,false,allow
-routines_run,organiser,act,false,false,false,false,false,ask
+routines_run,organiser,write,false,false,false,false,false,allow
 routines_save_scene,organiser,act,false,false,true,false,false,ask
 routines_scenes,organiser,read,false,false,true,true,false,allow
 routines_schedule,organiser,act,false,false,true,true,false,allow
