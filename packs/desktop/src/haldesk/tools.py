@@ -137,7 +137,7 @@ def open_item(target: str) -> dict:
 
 
 def volume(level: int | None = None, change: int = 0, mute: str = "") -> dict:
-    """Reads or sets the output volume (0 to 100), nudges it up or down, or mutes it (on, off, toggle)."""
+    """Reads or sets the output volume (0 to 100), nudges it, or mutes it (on, off, toggle)."""
     sink = "@DEFAULT_AUDIO_SINK@"
     if mute:
         _run("wpctl", "set-mute", sink, {"on": "1", "off": "0"}.get(mute, "toggle"))
@@ -320,7 +320,7 @@ def _portal_shot(interactive: bool) -> str | None:
 
 
 def _shoot() -> str:
-    """Returns a fresh screenshot's path, asking GNOME's permission dialog if a silent one is refused."""
+    """Returns a fresh screenshot's path, asking GNOME's dialog if a silent one is refused."""
     path = _portal_shot(False) or _portal_shot(True)
     if not path:
         raise RuntimeError("the screenshot was refused; press Share when GNOME asks")

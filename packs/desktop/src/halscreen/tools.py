@@ -24,7 +24,8 @@ READ = (
     "Output only the text."
 )
 ERROR = (
-    "This screenshot shows a problem on the user's computer. Find the error message, quote it, explain in "
+    "This screenshot shows a problem on the user's computer. Find the error message, "
+    "quote it, explain in "
     "plain words what it means, and give the most likely fix in two or three steps."
 )
 
@@ -89,7 +90,7 @@ def _portal_shot(interactive: bool) -> str | None:
 
 
 def _shoot() -> str:
-    """Returns a fresh screenshot's path, asking GNOME's permission dialog if a silent one is refused."""
+    """Returns a fresh screenshot's path, asking GNOME's dialog if a silent one is refused."""
     path = _portal_shot(False) or _portal_shot(True)
     if not path:
         raise RuntimeError("the screenshot was refused; press Share when GNOME asks")

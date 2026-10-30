@@ -1,4 +1,7 @@
+schema = 2
+
 [module]
+pack = "desktop"
 name = "rgb"
 summary = "RGB lighting through OpenRGB: colours, brightness, effects, profiles, and lights that show Hal's state"
 python = "halrgb.tools"
@@ -7,6 +10,9 @@ python = "halrgb.tools"
 name = "rgb_colour"
 function = "colour"
 description = "Set the RGB lights (RAM, graphics card, motherboard, or all) to a colour such as red, warm white or #ff8800, at a brightness."
+tier = "act"
+reviewable = true
+reversible = true
 keywords = "lights light lighting colour color rgb leds glow set make"
 [tools.params.colour]
 required = true
@@ -14,12 +20,17 @@ required = true
 description = "part of a device name such as ram, gpu or motherboard; all by default"
 [tools.params.brightness]
 type = "integer"
+minimum = 0
+maximum = 255
 description = "0 to 100"
 
 [[tools]]
 name = "rgb_off"
 function = "off"
 description = "Turn the RGB lights off."
+tier = "act"
+reviewable = true
+reversible = true
 keywords = "lights off dark rgb"
 [tools.params.device]
 
@@ -27,6 +38,9 @@ keywords = "lights off dark rgb"
 name = "rgb_effect"
 function = "effect"
 description = "Switch the lights to a built-in effect such as rainbow, breathing or spectrum cycle."
+tier = "act"
+reviewable = true
+reversible = true
 keywords = "rainbow breathing effect animation pattern lights"
 [tools.params.effect]
 required = true
@@ -36,11 +50,17 @@ required = true
 name = "rgb_profiles"
 function = "profiles"
 description = "List the lighting profiles saved in OpenRGB."
+tier = "read"
+reviewable = true
+reversible = true
 
 [[tools]]
 name = "rgb_profile"
 function = "profile"
 description = "Load a lighting profile saved in OpenRGB."
+tier = "act"
+reviewable = true
+reversible = true
 keywords = "lighting profile scene preset"
 [tools.params.name]
 required = true
@@ -49,11 +69,17 @@ required = true
 name = "rgb_devices"
 function = "devices"
 description = "List the RGB devices with their LEDs and effects."
+tier = "read"
+reviewable = true
+reversible = true
 
 [[tools]]
 name = "rgb_state"
 function = "state"
 description = "Show one of Hal's states on the lights: idle, listening, thinking, speaking or alert."
+tier = "act"
+reviewable = true
+reversible = true
 [tools.params.state]
 required = true
 enum = ["idle", "listening", "thinking", "speaking", "alert"]

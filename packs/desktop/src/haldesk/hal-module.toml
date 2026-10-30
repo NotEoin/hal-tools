@@ -1,4 +1,7 @@
+schema = 2
+
 [module]
+pack = "desktop"
 name = "desktop"
 summary = "Launch apps, open files and links, sound, theme, night light, wallpaper, clipboard, screenshots and the session"
 # PyGObject (screenshots) lives in the system Python, so the hub runs this module there.
@@ -8,6 +11,9 @@ exec = ["/usr/bin/python3", "-m", "haldesk", "--stdin"]
 name = "desktop_launch"
 function = "launch"
 description = "Start an application by name, such as firefox, files, terminal, spotify, code or settings."
+tier = "act"
+reviewable = true
+reversible = true
 keywords = "open app application program start run launch"
 [tools.params.app]
 required = true
@@ -16,6 +22,9 @@ required = true
 name = "desktop_apps"
 function = "apps"
 description = "List installed applications, optionally matching a word."
+tier = "read"
+reviewable = true
+reversible = true
 keywords = "installed programs which apps"
 [tools.params.query]
 
@@ -23,6 +32,9 @@ keywords = "installed programs which apps"
 name = "desktop_open"
 function = "open_item"
 description = "Open a web address, file or folder with its default application."
+tier = "act"
+network = true
+reviewable = true
 keywords = "open url link website file folder show browse"
 [tools.params.target]
 description = "a URL, or a file or folder path"
@@ -32,12 +44,19 @@ required = true
 name = "desktop_volume"
 function = "volume"
 description = "Read or set the speaker volume (0 to 100), turn it up or down by an amount, or mute and unmute."
+tier = "act"
+reviewable = true
+reversible = true
 keywords = "volume louder quieter mute unmute sound loud"
 [tools.params.level]
 type = "integer"
+minimum = 0
+maximum = 100
 description = "set to this percentage"
 [tools.params.change]
 type = "integer"
+minimum = -100
+maximum = 100
 description = "raise (positive) or lower (negative) by this many percent"
 [tools.params.mute]
 enum = ["on", "off", "toggle"]
@@ -46,12 +65,18 @@ enum = ["on", "off", "toggle"]
 name = "desktop_audio_devices"
 function = "audio_devices"
 description = "List speakers, headsets and microphones, with the defaults."
+tier = "read"
+reviewable = true
+reversible = true
 keywords = "audio output input speaker headphones microphone"
 
 [[tools]]
 name = "desktop_audio_output"
 function = "set_audio_output"
 description = "Switch sound to another speaker or headset."
+tier = "act"
+reviewable = true
+reversible = true
 keywords = "switch audio headphones speakers output"
 [tools.params.device]
 required = true
@@ -60,6 +85,9 @@ required = true
 name = "desktop_theme"
 function = "theme"
 description = "Read or switch between light and dark mode."
+tier = "act"
+reviewable = true
+reversible = true
 keywords = "dark mode light mode theme appearance"
 [tools.params.mode]
 enum = ["dark", "light"]
@@ -68,6 +96,9 @@ enum = ["dark", "light"]
 name = "desktop_night_light"
 function = "night_light"
 description = "Read or switch the warm night light on or off."
+tier = "act"
+reviewable = true
+reversible = true
 keywords = "night light warm blue light eyes"
 [tools.params.on]
 enum = ["on", "off"]
@@ -76,13 +107,21 @@ enum = ["on", "off"]
 name = "desktop_wallpaper"
 function = "wallpaper"
 description = "Read or set the desktop wallpaper from an image file."
+tier = "act"
+reviewable = true
+reversible = true
 keywords = "background wallpaper picture"
 [tools.params.path]
+format = "path"
+access = "read"
 
 [[tools]]
 name = "desktop_banners"
 function = "banners"
 description = "Show or hide desktop notification banners."
+tier = "act"
+reviewable = true
+reversible = true
 keywords = "notifications banners popups quiet"
 [tools.params.on]
 enum = ["on", "off"]
@@ -91,6 +130,9 @@ enum = ["on", "off"]
 name = "desktop_clipboard"
 function = "clipboard"
 description = "Read the clipboard, or copy text to it."
+tier = "read"
+untrusted_output = true
+reversible = true
 keywords = "copy paste clipboard"
 [tools.params.text]
 description = "text to copy; leave out to read the clipboard"
@@ -99,18 +141,28 @@ description = "text to copy; leave out to read the clipboard"
 name = "desktop_screenshot"
 function = "screenshot"
 description = "Take a screenshot of the screen and save it; returns the file path."
+tier = "act"
+reviewable = true
 keywords = "screenshot capture screen picture"
 timeout = 40
 [tools.params.path]
+format = "path"
+access = "write"
 
 [[tools]]
 name = "desktop_lock"
 function = "lock"
 description = "Lock the screen."
+tier = "act"
+reviewable = true
+reversible = true
 keywords = "lock screen away"
 
 [[tools]]
 name = "desktop_session"
 function = "session"
 description = "Desktop and display type, whether the screen is locked, and how long since the last input."
+tier = "read"
+reviewable = true
+reversible = true
 keywords = "idle away locked session"

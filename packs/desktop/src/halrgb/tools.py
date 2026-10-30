@@ -1,4 +1,5 @@
-"""hal-rgb's tools: colours, effects, brightness and profiles through OpenRGB, and lights that follow Hal.
+"""hal-rgb's tools: colours, effects, brightness and profiles through OpenRGB, and lights that
+follow Hal.
 
 Talks to OpenRGB's SDK server (start it with `openrgb --server`, or the unit in
 systemd/). Colours are names ('warm white', 'hal red'), #rrggbb or 'r,g,b'.
@@ -98,7 +99,7 @@ def devices() -> list[dict]:
 
 
 def colour(colour: str, device: str = "", brightness: int = 100) -> dict:
-    """Sets lights to one colour, all of them or those matching a device name (ram, gpu, motherboard)."""
+    """Sets lights to one colour: all of them, or those matching a device name."""
     rgb = _scale(parse_colour(colour), brightness)
     c = _client()
     try:
@@ -116,7 +117,7 @@ def off(device: str = "") -> dict:
 
 
 def effect(effect: str, device: str = "") -> dict:
-    """Switches to a built-in effect, such as rainbow, breathing or spectrum cycle, where devices have it."""
+    """Switches to a built-in effect, such as rainbow or breathing, where devices have it."""
     want = effect.lower()
     c = _client()
     try:
@@ -163,7 +164,7 @@ def profile(name: str) -> dict:
 
 
 def state(state: str) -> dict:
-    """Shows one of Hal's states (idle, listening, thinking, speaking, alert) in the configured colour."""
+    """Shows one of Hal's states (idle, listening, ...) in the configured colour."""
     states = settings()["states"]
     if state not in states:
         raise ValueError(f"state must be one of {', '.join(states)}")
