@@ -1,4 +1,4 @@
-"""Tests for `python3 -m halcal connect` and setup_caldav, with a fake CalDAV client (no network)."""
+"""Tests for `hal-organiser calendar-connect` and setup_caldav, with a fake CalDAV client."""
 
 import os
 import sys
@@ -142,13 +142,13 @@ class ConnectTest(unittest.TestCase):
         params = {p for t in spec["tools"] for p in t.get("params", {})}
         self.assertNotIn("password", params)
 
-    def test_cli_dispatches_connect(self):
-        from halcal import __main__ as cli
+    def test_pack_cli_dispatches_calendar_connect(self):
+        import hal_organiser
 
         called, real = [], self.connect.main
         self.connect.main = lambda argv: called.append(argv) or 0
         try:
-            self.assertEqual(cli.main(["connect", "--username", "x"]), 0)
+            self.assertEqual(hal_organiser.main(["calendar-connect", "--username", "x"]), 0)
         finally:
             self.connect.main = real
         self.assertEqual(called, [["--username", "x"]])

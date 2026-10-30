@@ -1,11 +1,20 @@
-"""Tests for the interim `hal-desktop` command line (`hal_desktop.main`)."""
+"""Tests for the `hal-desktop` pack command line (`hal_desktop.main`, a `halhub.pack` wrapper)."""
 
 import tomllib
 from pathlib import Path
 
 import hal_desktop
+import pytest
 
 PYPROJECT = Path(__file__).resolve().parents[1] / "pyproject.toml"
+
+
+@pytest.fixture(autouse=True)
+def _empty_home(tmp_path, monkeypatch):
+    """Keeps the run away from the real Hal config, policy and data."""
+    monkeypatch.setenv("HOME", str(tmp_path))
+    monkeypatch.setenv("HAL_CONFIG", str(tmp_path / "config.toml"))
+    monkeypatch.setenv("HAL_DATA", str(tmp_path / "data"))
 
 
 def test_modules_match_the_hal_packs_entry_points():
@@ -13,18 +22,15 @@ def test_modules_match_the_hal_packs_entry_points():
     assert hal_desktop.MODULES == declared
 
 
-def test_no_arguments_lists_the_modules_and_fails(capsys):
-    assert hal_desktop.main([]) == 2
+def test_tools_lists_the_packs_tools(capsys):
+    assert hal_desktop.main(["tools", "--json"]) == 0
     out = capsys.readouterr().out
-    assert all(module in out for module in hal_desktop.MODULES)
+    assert "desktop_" in out
 
 
-def test_unknown_module_is_refused(capsys):
-    assert hal_desktop.main(["no-such-module"]) == 2
-    assert "no module" in capsys.readouterr().err
-
-
-def test_a_module_without_a_tool_lists_its_tools(capsys):
-    module = next(iter(hal_desktop.MODULES))
-    assert hal_desktop.main([module]) == 0
-    assert "list the tools" in capsys.readouterr().out
+def test_cli_refuses_private_function_names(capsys):
+    """REQ-PACK-24: the old `--stdin FUNCTION` path called any function by name."""
+    assert hal_desktop.main(["call", "_run"]) != 0
+    assert hal_desktop.main(["call", "desktop__run"]) != 0
+    assert hal_desktop.main(["call", "--stdin", "_run"]) != 0
+    assert "unknown_tool" in capsys.readouterr().err
