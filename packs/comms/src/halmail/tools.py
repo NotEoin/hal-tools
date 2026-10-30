@@ -158,7 +158,8 @@ def summarise(account: str = "", limit: int = 15) -> dict:
     listing = "\n".join(f"- {x['from']}: {x['subject']}" for x in u["messages"])
     text = llm.chat(
         "Summarise this list of unread emails for the owner in at most 80 words of plain speech. "
-        "Group newsletters and notifications together; name people who wrote personally and anything "
+        "Group newsletters and notifications together; name people who wrote personally "
+        "and anything "
         "that needs a reply or action.",
         listing,
     )

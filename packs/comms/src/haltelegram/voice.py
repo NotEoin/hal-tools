@@ -42,7 +42,7 @@ def transcribe(audio: Path) -> str:
 
 
 def synthesise(text: str, workdir: Path) -> Path | None:
-    """Returns an Opus voice note in HAL's voice, or None if hal-voice or its server is unavailable."""
+    """Returns an Opus voice note in HAL's voice, or None if hal-voice is unavailable."""
     if not config.settings()["voice_replies"]:
         return None
     root = config.find_voice()

@@ -52,7 +52,7 @@ def parse(text: str) -> tuple[str | None, str]:
 
 
 def load_core():
-    """Puts core hal on sys.path; returns (Brain, halhub or None), or (None, None) without core hal."""
+    """Puts core hal on sys.path; returns (Brain, halhub or None), or (None, None) without it."""
     core = config.find_core()
     if core is None:
         return None, None

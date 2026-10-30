@@ -1,4 +1,7 @@
+schema = 2
+
 [module]
+pack = "comms"
 name = "phone"
 summary = "The phone through KDE Connect: find it, battery, send files and links, SMS and its notifications"
 python = "halphone.tools"
@@ -7,12 +10,18 @@ python = "halphone.tools"
 name = "phone_devices"
 function = "devices"
 description = "Paired phones and whether they are reachable."
+tier = "read"
+reviewable = true
+reversible = true
 keywords = "phone paired connected android"
 
 [[tools]]
 name = "phone_ring"
 function = "ring"
 description = "Make the phone ring loudly to find it."
+tier = "act"
+reviewable = true
+reversible = true
 keywords = "find my phone ring lost where is my phone"
 [tools.params.phone]
 
@@ -20,6 +29,9 @@ keywords = "find my phone ring lost where is my phone"
 name = "phone_battery"
 function = "battery"
 description = "The phone's battery level."
+tier = "read"
+reviewable = true
+reversible = true
 keywords = "phone battery charge"
 [tools.params.phone]
 
@@ -27,9 +39,12 @@ keywords = "phone battery charge"
 name = "phone_send_file"
 function = "send_file"
 description = "Send a file from the computer to the phone."
+tier = "send"
 keywords = "send file to phone transfer"
 timeout = 150
 [tools.params.path]
+format = "path"
+access = "read"
 required = true
 [tools.params.phone]
 
@@ -37,8 +52,12 @@ required = true
 name = "phone_send_link"
 function = "send_link"
 description = "Open a link on the phone."
+tier = "send"
+reviewable = true
+reversible = true
 keywords = "open on phone send link"
 [tools.params.url]
+format = "url"
 required = true
 [tools.params.phone]
 
@@ -46,7 +65,11 @@ required = true
 name = "phone_send_text"
 function = "send_text"
 description = "Put some text on the phone's clipboard."
+tier = "send"
+reviewable = true
+reversible = true
 [tools.params.text]
+content = true
 required = true
 [tools.params.phone]
 
@@ -54,11 +77,13 @@ required = true
 name = "phone_sms"
 function = "sms"
 description = "Send a text message from the phone."
-confirm = true
+tier = "send"
 keywords = "text message sms send"
 [tools.params.number]
+format = "phone"
 required = true
 [tools.params.message]
+content = true
 required = true
 [tools.params.phone]
 
@@ -66,5 +91,9 @@ required = true
 name = "phone_notifications"
 function = "notifications"
 description = "Notifications showing on the phone."
+tier = "read"
+untrusted_output = true
+reviewable = true
+reversible = true
 keywords = "phone notifications messages"
 [tools.params.phone]

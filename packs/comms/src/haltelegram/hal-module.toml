@@ -1,4 +1,7 @@
+schema = 2
+
 [module]
+pack = "comms"
 name = "telegram"
 summary = "Talk to Hal from your phone through a Telegram bot: chat with tools, voice notes and job-search commands"
 python = "haltelegram.tools"
@@ -7,4 +10,7 @@ python = "haltelegram.tools"
 name = "telegram_status"
 function = "status"
 description = "Whether the Telegram bridge has a bot token saved and a phone chat paired."
+tier = "read"
+reviewable = true
+reversible = true
 keywords = "telegram phone bot paired chat"

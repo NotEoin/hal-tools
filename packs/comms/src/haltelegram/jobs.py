@@ -60,7 +60,7 @@ class Jobs:
         return self.tool("jobs_shortlist", job=job)
 
     def pack(self, job: str) -> tuple[str, list[Path]]:
-        """Drafts an application pack; returns jobhunt's output (or why it failed) and the files to send."""
+        """Drafts an application pack; returns jobhunt's output (or the failure) and the files."""
         result, problem = self.call("jobs_pack", job=job)
         if problem:
             return problem, []
