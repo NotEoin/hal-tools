@@ -112,15 +112,14 @@ cover the job search and the daily briefing.
 2. Save the token (it goes in `~/.config/hal/telegram-token`, readable only by you):
 
    ```bash
-   cd ~/src/hal-ecosystem/extensions/hal-telegram
-   python3 -m haltelegram token 123456789:AA...
+   hal-comms telegram token 123456789:AA...
    ```
 
 3. Start the service. A desktop notification shows a pairing code; send `/pair <code>` to your bot.
    The chat is saved in `~/.config/hal/telegram-chat`, which hal-notify also uses for alerts.
 
-`python3 -m haltelegram status` shows whether a token is saved and a chat paired, and
-`python3 -m haltelegram unpair` forgets the chat so the next start shows a new code.
+`hal-comms telegram status` shows whether a token is saved and a chat paired, and
+`hal-comms telegram unpair` forgets the chat so the next start shows a new code.
 
 ### Use
 
