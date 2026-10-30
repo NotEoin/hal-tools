@@ -47,6 +47,17 @@ country = "GB"           # place names prefer this country
 "Hacker News" = "https://hnrss.org/frontpage"
 ```
 
+Every URL is fetched through `halkit.netguard`: https only, public addresses only, every
+redirect re-checked. Those rules come from `policy.toml` `[egress]` and a pack cannot widen
+them. The shared `[net]` table (web and feeds) only narrows reads:
+
+```toml
+[net]
+max_bytes = 2000000      # a page or feed above this is cut
+timeout_s = 20           # seconds before a fetch fails
+user_agent = "Hal/0.1 (+https://github.com/NotEoin/hal-tools)"
+```
+
 ## Licence
 
 MIT. See [LICENSE](LICENSE).

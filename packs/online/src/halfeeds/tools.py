@@ -10,14 +10,13 @@ from __future__ import annotations
 import html
 import re
 import sqlite3
-import urllib.request
 import xml.etree.ElementTree as ET
 from datetime import datetime
 
+from hal_online import net
+
 from . import llm
 from .settings import data_dir
-
-UA = {"User-Agent": "Mozilla/5.0 (X11; Linux x86_64) Hal/1.0"}
 
 
 def _db() -> sqlite3.Connection:
@@ -34,9 +33,7 @@ def _db() -> sqlite3.Connection:
     return con
 
 
-def _get(url: str) -> bytes:
-    with urllib.request.urlopen(urllib.request.Request(url, headers=UA), timeout=20) as r:
-        return r.read()
+_get = net.get
 
 
 def _strip(text: str) -> str:
@@ -93,7 +90,7 @@ def mark_read(item: str) -> dict:
 
 def subscribe(url: str, name: str = "") -> dict:
     """Subscribes to an RSS or Atom feed."""
-    root = ET.fromstring(_get(url))
+    root = net.parse_xml(_get(url))
     title = next((c.text for c in root.iter() if c.tag.split("}")[-1] == "title" and c.text), url)
     con = _db()
     con.execute("INSERT OR REPLACE INTO feeds VALUES (?, ?)", (url, name or title.strip()))
@@ -129,8 +126,8 @@ def refresh() -> dict:
     new = 0
     for f in con.execute("SELECT * FROM feeds").fetchall():
         try:
-            root = ET.fromstring(_get(f["url"]))
-        except (OSError, ET.ParseError):
+            root = net.parse_xml(_get(f["url"]))
+        except (OSError, ValueError, ET.ParseError):  # ValueError: BlockedURL
             continue
         for it in root.iter():
             if it.tag.split("}")[-1] not in ("item", "entry"):

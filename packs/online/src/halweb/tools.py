@@ -15,22 +15,17 @@ import math
 import operator
 import re
 import urllib.parse
-import urllib.request
 import xml.etree.ElementTree as ET
 from datetime import datetime
 from html.parser import HTMLParser
 from zoneinfo import ZoneInfo, available_timezones
 
+from hal_online import net
+
 from . import llm
 from .settings import settings
 
-UA = "Mozilla/5.0 (X11; Linux x86_64) Hal/1.0"
-
-
-def _get(url: str, timeout: float = 15) -> bytes:
-    req = urllib.request.Request(url, headers={"User-Agent": UA, "Accept-Language": "en-GB,en"})
-    with urllib.request.urlopen(req, timeout=timeout) as r:
-        return r.read()
+_get = net.get
 
 
 def _json(url: str) -> dict | list:
@@ -113,9 +108,12 @@ class _Text(HTMLParser):
 def read_page(url: str, summarise: bool = False, limit: int = 6000) -> dict:
     """The readable text of a web page, or a short summary of it from the local model."""
     p = _Text()
-    p.feed(_get(url).decode(errors="ignore"))
+    response = net.fetch(url)
+    p.feed(response.body.decode(errors="ignore"))
     text = re.sub(r"\n\s*\n+", "\n\n", re.sub(r"[ \t]+", " ", "".join(p.parts))).strip()
     out = {"url": url, "title": p.title.strip()}
+    if response.truncated:
+        out["note"] = "the page was cut at the read cap, so the text is partial"
     if summarise:
         out["summary"] = llm.chat(
             "Summarise this web page in at most 120 words of plain prose. Use only the page.",
@@ -226,7 +224,7 @@ def wikipedia(topic: str) -> dict:
     title = urllib.parse.quote(topic.strip().replace(" ", "_"))
     try:
         d = _json(f"https://en.wikipedia.org/api/rest_v1/page/summary/{title}?redirect=true")
-    except urllib.error.HTTPError as err:
+    except net.HTTPStatusError as err:
         hits = _json(
             "https://en.wikipedia.org/w/api.php?action=opensearch&limit=1&format=json&search="
             + urllib.parse.quote(topic)
@@ -293,8 +291,8 @@ def news(topic: str = "", limit: int = 8) -> list[dict]:
     items = []
     for name, url in settings()["feeds"].items():
         try:
-            root = ET.fromstring(_get(url))
-        except (OSError, ET.ParseError):
+            root = net.parse_xml(_get(url))
+        except (OSError, ValueError, ET.ParseError):  # ValueError: BlockedURL
             continue
         for it in root.iter():
             if it.tag.split("}")[-1] not in ("item", "entry"):

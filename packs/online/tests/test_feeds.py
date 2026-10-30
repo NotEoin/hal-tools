@@ -5,6 +5,7 @@ import sys
 import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
@@ -13,15 +14,18 @@ class FeedsTest(unittest.TestCase):
     def setUp(self):
         self.tmp = tempfile.TemporaryDirectory()
         os.environ["HAL_DATA_DIR"] = self.tmp.name
-        feed = Path(self.tmp.name) / "f.xml"
-        feed.write_text(
-            "<rss><channel><title>Blog</title><item><title>First post</title><link>http://x/1</link>"
-            "<description>&lt;p&gt;Hello&lt;/p&gt;</description></item></channel></rss>"
+        self.feed = (
+            b"<rss><channel><title>Blog</title><item><title>First post</title>"
+            b"<link>https://x.example/1</link>"
+            b"<description>&lt;p&gt;Hello&lt;/p&gt;</description></item></channel></rss>"
         )
-        self.url = feed.as_uri()
+        self.url = "https://x.example/feed.xml"
         from halfeeds import tools
 
         self.t = tools
+        patch = mock.patch.object(tools, "_get", side_effect=lambda url: self.feed)
+        patch.start()
+        self.addCleanup(patch.stop)
 
     def tearDown(self):
         self.tmp.cleanup()

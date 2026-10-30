@@ -31,7 +31,8 @@ python3 -m halfeeds save url=https://example.com/article summarise=true
 
 ## Configuration
 
-hal-feeds has no settings.
+hal-feeds has no table of its own. Feeds are fetched under the `[net]` table described in
+[web.md](web.md): https only, a stored `http` feed is refused at every refresh.
 
 ## Licence
 
