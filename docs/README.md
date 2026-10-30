@@ -15,3 +15,6 @@
 | [howto/add-a-mail-account.md](howto/add-a-mail-account.md) | Configure a mail account |
 | [howto/enable-the-host-shell.md](howto/enable-the-host-shell.md) | Widen the folders `shell_look` may read |
 | [howto/allow-a-website-for-web-read.md](howto/allow-a-website-for-web-read.md) | Let `web_read` fetch a new site |
+| [dev/architecture.md](dev/architecture.md) | How packs, manifests, the runner and halkit fit together |
+| [dev/testing.md](dev/testing.md) | How to run and write tests |
+| [dev/adding-a-tool.md](dev/adding-a-tool.md) | Steps to add a tool to a module |
