@@ -21,7 +21,7 @@ class CalendarTest(unittest.TestCase):
         self.tmp.cleanup()
 
     def test_parses_common_phrases(self):
-        from halcal.when import parse
+        from halkit.when import parse
 
         cases = {
             "dentist thursday at 10": ("2026-10-15 10:00", "dentist"),
@@ -36,7 +36,7 @@ class CalendarTest(unittest.TestCase):
             self.assertEqual(w.rest, rest, text)
 
     def test_repeats_and_durations(self):
-        from halcal.when import parse
+        from halkit.when import parse
 
         w = parse("gym every monday and wednesday at 7am for an hour", FRIDAY)
         self.assertEqual(w.rrule, "FREQ=WEEKLY;BYDAY=MO,WE")

@@ -14,8 +14,8 @@ import sqlite3
 from datetime import datetime
 
 from hal_organiser import proc
+from halkit import when
 
-from . import when
 from .settings import data_dir, settings
 
 

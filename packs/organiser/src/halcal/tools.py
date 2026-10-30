@@ -6,9 +6,10 @@ import re
 from datetime import date, datetime, time, timedelta
 from pathlib import Path
 
+from halkit import when
 from halkit.paths import config_file
 
-from . import ics, match, store, when
+from . import ics, match, store
 from .settings import settings
 
 

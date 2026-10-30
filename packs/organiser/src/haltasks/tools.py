@@ -13,7 +13,9 @@ import sqlite3
 from datetime import date, datetime, timedelta
 from pathlib import Path
 
-from . import match, when
+from halkit import when
+
+from . import match
 from .settings import data_dir, settings, vault
 
 PRIORITY = {"high": 1, "urgent": 1, "normal": 2, "medium": 2, "low": 3}

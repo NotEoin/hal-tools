@@ -10,7 +10,7 @@ SATURDAY = datetime(2026, 10, 10, 12, 0)
 
 
 def span(text, **kw):
-    from halcal.when import parse
+    from halkit.when import parse
 
     w = parse(text, SATURDAY, **kw)
     return (
@@ -52,7 +52,7 @@ class RangeTest(unittest.TestCase):
             self.assertEqual(span(text), want, text)
 
     def test_range_leaves_the_title(self):
-        from halcal.when import parse
+        from halkit.when import parse
 
         w = parse("Project meeting tomorrow from 2 till 3:30pm", SATURDAY)
         self.assertEqual(w.rest, "Project meeting")
@@ -99,7 +99,7 @@ class TimeOfDayTest(unittest.TestCase):
             self.assertEqual(span(text)[0], start, text)
 
     def test_all_day_dates(self):
-        from halcal.when import parse
+        from halkit.when import parse
 
         for text, day in {
             "the 3rd of March 2031": "2031-03-03",

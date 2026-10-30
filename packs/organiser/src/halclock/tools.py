@@ -12,7 +12,8 @@ import sqlite3
 import time
 from datetime import datetime, timedelta
 
-from . import when
+from halkit import when
+
 from .settings import data_dir
 
 

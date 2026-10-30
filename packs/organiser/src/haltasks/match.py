@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import re
 
-from . import when
+from halkit import when
 
 # Past tenses and other forms people use when reporting a task done.
 IRREGULAR = {

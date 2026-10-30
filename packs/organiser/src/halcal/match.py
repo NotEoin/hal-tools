@@ -12,7 +12,9 @@ from __future__ import annotations
 import re
 from datetime import datetime, timedelta
 
-from . import store, when
+from halkit import when
+
+from . import store
 
 FILLER = {
     "a",
