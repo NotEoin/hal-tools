@@ -1,4 +1,7 @@
+schema = 2
+
 [module]
+pack = "organiser"
 name = "calendar"
 summary = "Events, reminders with push notifications, agenda, free time and CalDAV (iCloud) sync"
 python = "halcal.tools"
@@ -7,6 +10,9 @@ python = "halcal.tools"
 name = "calendar_add"
 function = "add"
 description = "Add an event to the calendar. Times in plain English: 'thursday at 10', 'tomorrow from 2 till 3:30pm', 'every monday at 9'. Also use it when the user mentions a plan with a day and time ('I'm having lunch with Mum on Sunday at 1'), even without asking. Reminders are pushed to the phone and spoken. Reports any clash."
+tier = "write"
+reviewable = true
+reversible = true
 keywords = "appointment meeting schedule book remind event diary plan having lunch dinner party visit"
 [tools.params.title]
 description = "what the event is"
@@ -15,10 +21,13 @@ required = true
 description = "when, copied word for word from what the user said, including 'next', 'this' and the time"
 [tools.params.duration_minutes]
 type = "integer"
+minimum = 1
+maximum = 1440
 [tools.params.location]
 [tools.params.notes]
 [tools.params.reminders]
-type = "array"
+list = true
+item_type = "integer"
 description = "minutes before to remind, for example 10,60"
 [tools.params.repeat]
 description = "for example 'every weekday' or 'monthly'"
@@ -27,6 +36,10 @@ description = "for example 'every weekday' or 'monthly'"
 name = "calendar_agenda"
 function = "agenda"
 description = "What's on: list the events on any day, date or range, near or far ('today', 'friday', '3 March 2031', 'this weekend', 'next week'). Use it to answer 'what's on', 'am I busy' or 'have I got anything on <day>'; an empty list means nothing is booked and the day is free."
+tier = "read"
+untrusted_output = true
+reviewable = true
+reversible = true
 keywords = "what's on anything have got busy booked plans happening schedule diary day date today tomorrow weekend week month"
 [tools.params.span]
 description = "a day or range: today, tomorrow, friday, this weekend, week, next week, next 5 days, 3 March 2031, 2031-03-03"
@@ -35,17 +48,24 @@ description = "a day or range: today, tomorrow, friday, this weekend, week, next
 name = "calendar_find"
 function = "find"
 description = "Find an event by words in its title, notes or location, for 'when is my dentist appointment?'."
+tier = "read"
+untrusted_output = true
+reviewable = true
+reversible = true
 keywords = "when is search"
 [tools.params.query]
 required = true
 [tools.params.days]
 type = "integer"
+minimum = 0
+maximum = 3650
 
 [[tools]]
 name = "calendar_delete"
 function = "delete"
 description = "Delete an event, found by its id or by the user's words for it ('the pottery class on Friday'). If several events fit, the error lists them: ask which, then call again with its id."
-confirm = true
+tier = "write"
+reviewable = true
 keywords = "cancel remove"
 [tools.params.event]
 required = true
@@ -54,6 +74,9 @@ required = true
 name = "calendar_move"
 function = "move"
 description = "Move an event to a new date or time. The event is found by its id or by the user's words for it ('my haircut on Saturday')."
+tier = "write"
+reviewable = true
+reversible = true
 keywords = "reschedule postpone change time"
 [tools.params.event]
 required = true
@@ -65,32 +88,55 @@ description = "the new date or time, word for word"
 name = "calendar_free"
 function = "free"
 description = "Find free slots of a given length within working hours, for 'when am I free for two hours?'. To see what is on a day, use calendar_agenda."
+tier = "read"
+reviewable = true
+reversible = true
 keywords = "available free time when am i free slot"
 [tools.params.duration_minutes]
 type = "integer"
+minimum = 1
+maximum = 1440
 [tools.params.span]
 [tools.params.day_start]
 type = "integer"
+minimum = 0
+maximum = 23
 [tools.params.day_end]
 type = "integer"
+minimum = 1
+maximum = 24
 
 [[tools]]
 name = "calendar_import"
 function = "import_ics"
 description = "Import events from an .ics file."
+tier = "act"
+untrusted_output = true
+reviewable = true
 [tools.params.path]
 required = true
+format = "path"
+access = "read"
 
 [[tools]]
 name = "calendar_export"
 function = "export_ics"
 description = "Export every event to an .ics file."
+tier = "act"
+reviewable = true
 [tools.params.path]
+format = "path"
+access = "write"
 
 [[tools]]
 name = "calendar_sync"
 function = "sync"
 description = "Sync with the CalDAV account (such as Apple iCloud Calendar) now."
+tier = "send"
+network = true
+untrusted_output = true
+reviewable = true
+reversible = true
 keywords = "icloud apple sync"
 timeout = 120
 
@@ -98,4 +144,9 @@ timeout = 120
 name = "calendar_calendars"
 function = "calendars"
 description = "List the calendar names (such as Home and Work) on the connected CalDAV account. Not for events: use calendar_agenda for what is on."
+tier = "read"
+network = true
+untrusted_output = true
+reviewable = true
+reversible = true
 timeout = 60

@@ -1,4 +1,7 @@
+schema = 2
+
 [module]
+pack = "organiser"
 name = "briefing"
 summary = "Morning and evening briefings: weather, calendar, tasks, job search, headlines and computer health"
 python = "halbrief.tools"
@@ -8,6 +11,11 @@ calls = ["web_weather", "calendar_agenda", "tasks_list", "web_news", "system_ove
 name = "briefing_build"
 function = "build"
 description = "Put together a morning or evening briefing (weather, calendar, tasks, job search, headlines), or a job-search update (kind jobs), and return it to read out."
+tier = "read"
+network = true
+untrusted_output = true
+reviewable = true
+reversible = true
 keywords = "briefing morning summary my day today overview what's happening update"
 timeout = 300
 [tools.params.kind]
@@ -17,6 +25,9 @@ enum = ["morning", "evening", "jobs"]
 name = "briefing_deliver"
 function = "brief"
 description = "Deliver a briefing now: spoken aloud, pushed to the phone and saved in the daily note."
+tier = "send"
+network = true
+reviewable = true
 timeout = 300
 [tools.params.kind]
 enum = ["morning", "evening", "jobs"]

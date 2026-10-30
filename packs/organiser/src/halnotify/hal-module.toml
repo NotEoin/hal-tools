@@ -1,4 +1,7 @@
+schema = 2
+
 [module]
+pack = "organiser"
 name = "notify"
 summary = "Alerts to phone (ntfy), desktop, HAL's voice and Telegram, with quiet hours"
 python = "halnotify.tools"
@@ -7,6 +10,9 @@ python = "halnotify.tools"
 name = "notify_send"
 function = "send"
 description = "Send the user a notification: phone push, desktop and optionally spoken or Telegram. Urgent ones break through quiet hours."
+tier = "send"
+network = true
+reviewable = true
 keywords = "alert push message phone tell me ping"
 [tools.params.title]
 required = true
@@ -17,7 +23,7 @@ type = "boolean"
 type = "boolean"
 description = "also say it aloud"
 [tools.params.channels]
-type = "array"
+list = true
 description = "any of desktop, phone, voice, telegram"
 [tools.params.url]
 description = "link opened when the phone notification is tapped"
@@ -26,19 +32,32 @@ description = "link opened when the phone notification is tapped"
 name = "notify_dnd"
 function = "dnd"
 description = "Turn do-not-disturb on for a number of minutes (0 turns it off). Only urgent alerts get through."
+tier = "write"
+reviewable = true
+reversible = true
 keywords = "quiet silence focus do not disturb"
 [tools.params.minutes]
 type = "integer"
+minimum = 0
+maximum = 1440
 required = true
 
 [[tools]]
 name = "notify_state"
 function = "state"
 description = "Whether notifications are currently quiet, and until when."
+tier = "read"
+reviewable = true
+reversible = true
 
 [[tools]]
 name = "notify_history"
 function = "history"
 description = "Recent notifications Hal has sent."
+tier = "read"
+reviewable = true
+reversible = true
 [tools.params.limit]
 type = "integer"
+minimum = 1
+maximum = 200

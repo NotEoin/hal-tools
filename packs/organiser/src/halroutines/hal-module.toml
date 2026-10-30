@@ -1,4 +1,7 @@
+schema = 2
+
 [module]
+pack = "organiser"
 name = "routines"
 summary = "Scenes (focus, relax, goodnight, away, movie), scheduled actions and event triggers"
 python = "halroutines.tools"
@@ -7,6 +10,7 @@ python = "halroutines.tools"
 name = "routines_run"
 function = "run_scene"
 description = "Run a scene: focus, relax, goodnight, away, movie, or one saved earlier. Each sets several things at once (notifications, lights, music, lock)."
+tier = "act"
 keywords = "scene mode focus relax goodnight bedtime away movie routine"
 timeout = 600
 [tools.params.name]
@@ -16,18 +20,22 @@ required = true
 name = "routines_scenes"
 function = "scenes"
 description = "List the scenes and what each one does."
+tier = "read"
+reviewable = true
+reversible = true
 
 [[tools]]
 name = "routines_save_scene"
 # Steps run unattended with confirmation already given, so creating one needs the owner's say-so.
-confirm = true
 function = "save_scene"
 description = "Create or change a scene from a list of tool calls, each {tool, args}."
+tier = "act"
+reviewable = true
 keywords = "make a scene create routine"
 [tools.params.name]
 required = true
 [tools.params.steps]
-type = "array"
+format = "json"
 required = true
 description = "list of {\"tool\": name, \"args\": {...}}"
 
@@ -35,16 +43,19 @@ description = "list of {\"tool\": name, \"args\": {...}}"
 name = "routines_delete_scene"
 function = "delete_scene"
 description = "Delete a saved scene."
-confirm = true
+tier = "write"
+reviewable = true
 [tools.params.name]
 required = true
 
 [[tools]]
 name = "routines_schedule"
 # Steps run unattended with confirmation already given, so creating one needs the owner's say-so.
-confirm = true
 function = "schedule"
 description = "Run a scene or any tool at a time, once or repeating: 'every weekday at 8:45', 'at 23:00'."
+tier = "act"
+reviewable = true
+reversible = true
 keywords = "schedule every day automatically at time automate"
 [tools.params.target]
 required = true
@@ -52,27 +63,35 @@ description = "a scene name or a tool name"
 [tools.params.when_text]
 required = true
 [tools.params.args]
-type = "object"
+format = "json"
 [tools.params.label]
 
 [[tools]]
 name = "routines_schedules"
 function = "schedules"
 description = "List scheduled routines and when they next run."
+tier = "read"
+reviewable = true
+reversible = true
 
 [[tools]]
 name = "routines_unschedule"
 function = "unschedule"
 description = "Remove a schedule by id or name."
+tier = "write"
+reviewable = true
+reversible = true
 [tools.params.which]
 required = true
 
 [[tools]]
 name = "routines_add_trigger"
 # Steps run unattended with confirmation already given, so creating one needs the owner's say-so.
-confirm = true
 function = "add_trigger"
 description = "Run a scene or tool when something happens: idle, usb_added, offline, online, disk_full or login."
+tier = "act"
+reviewable = true
+reversible = true
 keywords = "when trigger if automatically event"
 [tools.params.event]
 required = true
@@ -80,17 +99,25 @@ enum = ["idle", "usb_added", "offline", "online", "disk_full", "login"]
 [tools.params.target]
 required = true
 [tools.params.args]
-type = "object"
+format = "json"
 
 [[tools]]
 name = "routines_triggers"
 function = "triggers"
 description = "List the triggers."
+tier = "read"
+reviewable = true
+reversible = true
 
 [[tools]]
 name = "routines_remove_trigger"
 function = "remove_trigger"
 description = "Remove a trigger by id."
+tier = "write"
+reviewable = true
+reversible = true
 [tools.params.trigger_id]
 type = "integer"
+minimum = 1
+maximum = 1000000
 required = true

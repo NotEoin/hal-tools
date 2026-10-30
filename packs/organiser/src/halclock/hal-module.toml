@@ -1,4 +1,7 @@
+schema = 2
+
 [module]
+pack = "organiser"
 name = "clock"
 summary = "Timers, alarms, snooze, stopwatch and Pomodoro sessions, announced aloud"
 python = "halclock.tools"
@@ -7,6 +10,9 @@ python = "halclock.tools"
 name = "clock_timer"
 function = "timer"
 description = "Start a countdown timer, such as '9 minutes' for pasta or '1h30'. Hal announces it when it ends."
+tier = "write"
+reviewable = true
+reversible = true
 keywords = "timer countdown minutes remind me in"
 [tools.params.duration]
 required = true
@@ -16,6 +22,9 @@ required = true
 name = "clock_alarm"
 function = "alarm"
 description = "Set an alarm at a time: '7am', '7 tomorrow morning', 'tomorrow at 6:30', 'in 20 minutes', 'every weekday at 7'. A bare hour means the morning."
+tier = "write"
+reviewable = true
+reversible = true
 keywords = "alarm wake me up morning"
 [tools.params.when_text]
 required = true
@@ -26,12 +35,18 @@ description = "when, word for word"
 name = "clock_list"
 function = "list_all"
 description = "List running timers and set alarms with the time left."
+tier = "read"
+reviewable = true
+reversible = true
 keywords = "how long left timers alarms"
 
 [[tools]]
 name = "clock_cancel"
 function = "cancel"
 description = "Cancel a timer or alarm by its name or id, or 'all'."
+tier = "write"
+reviewable = true
+reversible = true
 keywords = "stop cancel timer alarm"
 [tools.params.which]
 
@@ -39,14 +54,22 @@ keywords = "stop cancel timer alarm"
 name = "clock_snooze"
 function = "snooze"
 description = "Snooze the alarm that just went off."
+tier = "write"
+reviewable = true
+reversible = true
 keywords = "snooze five more minutes"
 [tools.params.minutes]
 type = "integer"
+minimum = 0
+maximum = 1440
 
 [[tools]]
 name = "clock_stopwatch"
 function = "stopwatch"
 description = "Start, stop, lap, reset or read the stopwatch."
+tier = "write"
+reviewable = true
+reversible = true
 keywords = "stopwatch time how long lap"
 [tools.params.action]
 enum = ["start", "stop", "lap", "reset", "status"]
@@ -55,12 +78,21 @@ enum = ["start", "stop", "lap", "reset", "status"]
 name = "clock_pomodoro"
 function = "pomodoro"
 description = "Start, stop or check a Pomodoro session of work and break periods."
+tier = "write"
+reviewable = true
+reversible = true
 keywords = "pomodoro focus work session study"
 [tools.params.action]
 enum = ["start", "stop", "status"]
 [tools.params.work]
 type = "integer"
+minimum = 1
+maximum = 180
 [tools.params.rest]
 type = "integer"
+minimum = 1
+maximum = 180
 [tools.params.rounds]
 type = "integer"
+minimum = 1
+maximum = 20
