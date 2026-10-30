@@ -14,7 +14,7 @@ FRIDAY = datetime(2026, 10, 9, 1, 50)
 class CalendarTest(unittest.TestCase):
     def setUp(self):
         self.tmp = tempfile.TemporaryDirectory()
-        os.environ["HAL_DATA"] = self.tmp.name
+        os.environ["HAL_DATA_DIR"] = self.tmp.name
         os.environ["HAL_CONFIG"] = str(Path(self.tmp.name) / "none.toml")
 
     def tearDown(self):

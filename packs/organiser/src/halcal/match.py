@@ -57,7 +57,6 @@ FILLER = {
     "reschedule",
     "one",
     "next",
-    "this",
     "coming",
     "upcoming",
 }

@@ -65,7 +65,7 @@ class RangeTest(unittest.TestCase):
         import tempfile
 
         with tempfile.TemporaryDirectory() as tmp:
-            os.environ["HAL_DATA"] = tmp
+            os.environ["HAL_DATA_DIR"] = tmp
             os.environ["HAL_CONFIG"] = str(Path(tmp) / "none.toml")
             from halcal import tools
 

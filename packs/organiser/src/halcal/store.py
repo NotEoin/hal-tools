@@ -12,7 +12,7 @@ import uuid
 from dataclasses import dataclass, field
 from datetime import date, datetime, time, timedelta
 
-from .config import data_dir
+from .settings import data_dir
 
 CODES = ["MO", "TU", "WE", "TH", "FR", "SA", "SU"]
 
@@ -133,7 +133,9 @@ def get(uid: str) -> Event | None:
 
 
 def all_events(include_deleted: bool = False) -> list[Event]:
-    sql = "SELECT * FROM events" + ("" if include_deleted else " WHERE deleted = 0")
+    sql = "SELECT * FROM events" + (  # noqa: S608 - fixed fragments only, no user input
+        "" if include_deleted else " WHERE deleted = 0"
+    )
     return [_row(r) for r in db().execute(sql)]
 
 

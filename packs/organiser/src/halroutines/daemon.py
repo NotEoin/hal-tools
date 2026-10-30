@@ -14,7 +14,7 @@ from datetime import datetime
 from pathlib import Path
 
 from . import tools
-from .config import settings
+from .settings import settings
 
 POLL = 15  # seconds
 

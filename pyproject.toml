@@ -32,6 +32,8 @@ ignore = ["S603", "S607"]
 "scripts/*.py" = ["T201"]
 "packs/*/src/*/__main__.py" = ["T201"]
 "packs/*/src/hal_*/__init__.py" = ["T201"]
+# Daemons are long-running entry points; systemd captures their stdout in the journal.
+"packs/*/src/*/daemon.py" = ["T201"]
 # pytest tests use plain `assert`.
 "tests/**" = ["S101"]
 "packs/*/tests/**" = ["S101"]

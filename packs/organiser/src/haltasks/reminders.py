@@ -9,8 +9,8 @@ import time
 from datetime import date, datetime, timedelta
 
 from . import tools
-from .config import data_dir, settings
 from .notify import notify
+from .settings import data_dir, settings
 
 POLL = 30  # seconds
 

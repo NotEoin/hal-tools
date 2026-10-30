@@ -14,7 +14,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 class ClockTest(unittest.TestCase):
     def setUp(self):
         self.tmp = tempfile.TemporaryDirectory()
-        os.environ["HAL_DATA"] = self.tmp.name
+        os.environ["HAL_DATA_DIR"] = self.tmp.name
         os.environ["HAL_CONFIG"] = str(Path(self.tmp.name) / "none.toml")
         from halclock import daemon, tools
 

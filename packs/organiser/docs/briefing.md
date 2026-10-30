@@ -43,7 +43,7 @@ Settings live in the `[briefing]` table of `~/.config/hal/config.toml`:
 
 ```toml
 [briefing]
-name = "Dave"      # how the briefing addresses you
+name = "Dave"      # how the briefing addresses you; empty uses [hal].user_name
 ```
 
 Change the times by editing the timer units in `systemd/` and reinstalling them.

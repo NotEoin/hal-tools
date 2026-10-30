@@ -15,7 +15,6 @@ POLL = 1  # seconds
 
 
 def _next(at: float, rrule: str) -> float:
-    from .when import parse
 
     rule = dict(p.split("=") for p in rrule.split(";") if "=" in p)
     base = datetime.fromtimestamp(at)

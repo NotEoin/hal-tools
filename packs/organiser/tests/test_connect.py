@@ -6,6 +6,7 @@ import tempfile
 import tomllib
 import unittest
 from pathlib import Path
+from typing import ClassVar
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
@@ -17,7 +18,7 @@ CALENDARS = [
 
 
 class FakeClient:
-    made = []
+    made: ClassVar[list] = []
 
     def __init__(self, url, username, password):
         FakeClient.made.append((url, username, password))
@@ -26,7 +27,7 @@ class FakeClient:
     def calendars(self):
         from halcal.caldav import CalDAVError
 
-        if self.password != "good-pass":
+        if self.password != "good-pass":  # noqa: S105 - synthetic fixture
             raise CalDAVError("the server refused the username or app-specific password")
         return CALENDARS
 
@@ -37,7 +38,7 @@ class ConnectTest(unittest.TestCase):
         base = Path(self.tmp.name)
         self.cfg = base / "config" / "config.toml"
         self.cfg.parent.mkdir()
-        os.environ["HAL_DATA"] = str(base / "data")
+        os.environ["HAL_DATA_DIR"] = str(base / "data")
         os.environ["HAL_CONFIG"] = str(self.cfg)
         from halcal import caldav, connect, tools
 
@@ -156,6 +157,7 @@ class ConnectTest(unittest.TestCase):
 class PrivilegeTest(unittest.TestCase):
     def test_read_only_calendars_are_marked(self):
         import xml.etree.ElementTree as ET
+
         from halcal import caldav
 
         replies = {
@@ -188,7 +190,7 @@ class PrivilegeTest(unittest.TestCase):
             + "</d:multistatus>"
         )
         c = caldav.Client("https://x.example/", "u", "p")
-        c._propfind = lambda url, props, depth="0": ET.fromstring(replies.get(props, home))
+        c._propfind = lambda url, props, depth="0": ET.fromstring(replies.get(props, home))  # noqa: S314 - synthetic XML fixture
         self.assertEqual(
             [(x["name"], x["writable"]) for x in c.calendars()],
             [("Home", True), ("Shared", False), ("Plain", True)],

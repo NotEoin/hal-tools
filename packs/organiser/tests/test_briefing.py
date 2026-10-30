@@ -5,7 +5,7 @@ import unittest
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from halbrief import tools  # noqa: E402
+from halbrief import tools
 
 
 class BriefingTest(unittest.TestCase):

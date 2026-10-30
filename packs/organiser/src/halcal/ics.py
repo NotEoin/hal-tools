@@ -8,10 +8,10 @@ CalDAV servers such as iCloud expect. Stdlib only (zoneinfo for time zones).
 from __future__ import annotations
 
 import re
-from datetime import date, datetime, timedelta, timezone
+from datetime import UTC, date, datetime, timedelta
 from zoneinfo import ZoneInfo
 
-from .config import settings
+from .settings import settings
 from .store import Event
 
 # VTIMEZONE blocks for zones the writer knows; others fall back to UTC times.
@@ -65,7 +65,7 @@ def _parse_time(params: str, value: str) -> tuple[datetime, bool]:
     dt = datetime.strptime(value.rstrip("Z")[:15], "%Y%m%dT%H%M%S")
     tz = local_zone()
     if value.endswith("Z"):
-        dt = dt.replace(tzinfo=timezone.utc)
+        dt = dt.replace(tzinfo=UTC)
     else:
         m = re.search(r"TZID=([^;:]+)", params)
         if m:
@@ -155,7 +155,7 @@ def _fmt(dt: datetime, all_day: bool) -> str:
 def vevent(e: Event) -> str:
     """Returns one VEVENT block."""
     tzid = settings().get("timezone", "Europe/London")
-    stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+    stamp = datetime.now(UTC).strftime("%Y%m%dT%H%M%SZ")
     if e.all_day:
         start = f"DTSTART;VALUE=DATE:{_fmt(e.start, True)}"
         end = f"DTEND;VALUE=DATE:{_fmt(e.finish(), True)}"
@@ -163,9 +163,10 @@ def vevent(e: Event) -> str:
         start = f"DTSTART;TZID={tzid}:{_fmt(e.start, False)}"
         end = f"DTEND;TZID={tzid}:{_fmt(e.finish(), False)}"
     else:
-        utc = lambda d: (
-            d.replace(tzinfo=local_zone()).astimezone(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
-        )  # noqa: E731
+
+        def utc(d: datetime) -> str:
+            return d.replace(tzinfo=local_zone()).astimezone(UTC).strftime("%Y%m%dT%H%M%SZ")
+
         start, end = f"DTSTART:{utc(e.start)}", f"DTEND:{utc(e.finish())}"
     lines = [
         "BEGIN:VEVENT",

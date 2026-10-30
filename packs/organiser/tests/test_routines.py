@@ -3,9 +3,7 @@
 import os
 import sys
 import tempfile
-import time
 import unittest
-from datetime import datetime
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
@@ -14,7 +12,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 class RoutinesTest(unittest.TestCase):
     def setUp(self):
         self.tmp = tempfile.TemporaryDirectory()
-        os.environ["HAL_DATA"] = self.tmp.name
+        os.environ["HAL_DATA_DIR"] = self.tmp.name
         os.environ["HAL_CONFIG"] = str(Path(self.tmp.name) / "none.toml")
         from halroutines import daemon, tools
 

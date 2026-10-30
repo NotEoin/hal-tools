@@ -199,7 +199,7 @@ def _find_range(t: _Text, hint: str, prefer_pm: bool) -> tuple[time, time] | Non
         b = (b[0], b[1], hint)
     if isinstance(a, time) and isinstance(b, time):
         return a, b
-    if isinstance(a, tuple) and a[2] or isinstance(a, time):
+    if (isinstance(a, tuple) and a[2]) or isinstance(a, time):
         start = a if isinstance(a, time) else _hour(*a, prefer_pm)
         if isinstance(b, time):
             return start, b

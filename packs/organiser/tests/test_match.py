@@ -14,7 +14,7 @@ SATURDAY = datetime(2026, 10, 10, 12, 0)
 class Base(unittest.TestCase):
     def setUp(self):
         self.tmp = tempfile.TemporaryDirectory()
-        os.environ["HAL_DATA"] = self.tmp.name
+        os.environ["HAL_DATA_DIR"] = self.tmp.name
         os.environ["HAL_CONFIG"] = str(Path(self.tmp.name) / "none.toml")
         from halcal import tools
 

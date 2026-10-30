@@ -13,7 +13,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 class NotifyTest(unittest.TestCase):
     def setUp(self):
         self.tmp = tempfile.TemporaryDirectory()
-        os.environ["HAL_DATA"] = self.tmp.name
+        os.environ["HAL_DATA_DIR"] = self.tmp.name
         cfg = Path(self.tmp.name) / "c.toml"
         cfg.write_text(
             '[notify]\nntfy_topic = "test"\nquiet_from = 22\nquiet_until = 8\nchannels = ["desktop", "phone"]\n'

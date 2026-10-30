@@ -16,7 +16,7 @@ class TasksTest(unittest.TestCase):
         (base / "vault").mkdir()
         (base / "c.toml").write_text(f'[hal]\nvault = "{base / "vault"}"\n')
         os.environ["HAL_CONFIG"] = str(base / "c.toml")
-        os.environ["HAL_DATA"] = str(base / "data")
+        os.environ["HAL_DATA_DIR"] = str(base / "data")
         from haltasks import tools
 
         self.t = tools

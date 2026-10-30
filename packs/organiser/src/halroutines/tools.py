@@ -12,11 +12,10 @@ import json
 import shutil
 import sqlite3
 import subprocess
-import time
 from datetime import datetime
 
 from . import when
-from .config import data_dir, settings
+from .settings import data_dir, settings
 
 
 def _db() -> sqlite3.Connection:

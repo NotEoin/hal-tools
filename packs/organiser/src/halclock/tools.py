@@ -13,7 +13,7 @@ import time
 from datetime import datetime, timedelta
 
 from . import when
-from .config import data_dir
+from .settings import data_dir
 
 
 def _db() -> sqlite3.Connection:

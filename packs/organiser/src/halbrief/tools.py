@@ -13,8 +13,10 @@ import shutil
 import subprocess
 from datetime import datetime
 
-from .config import settings
+from halkit.config import hal
+
 from .notify import notify
+from .settings import settings
 
 
 def _hub(tool: str, **args) -> object | None:
@@ -111,7 +113,7 @@ def _health() -> str | None:
 
 def build(kind: str = "morning") -> str:
     """Assembles a morning, evening or job-search briefing and returns its text."""
-    name = settings()["name"]
+    name = settings()["name"] or hal()["user_name"] or "there"
     hour = datetime.now().hour
     greeting = "Good morning" if hour < 12 else "Good afternoon" if hour < 18 else "Good evening"
     parts = [f"{greeting}, {name}. It is {datetime.now():%A %-d %B}."]

@@ -7,17 +7,15 @@ Every alert is kept in a history table. Stdlib only.
 
 from __future__ import annotations
 
-import json
 import shutil
 import sqlite3
 import subprocess
-import time
 import urllib.parse
 import urllib.request
 from datetime import datetime, timedelta
 from pathlib import Path
 
-from .config import data_dir, settings
+from .settings import data_dir, settings
 
 TELEGRAM_DIR = Path("~/.config/hal").expanduser()
 # hal-voice's speaker, beside this module in the ecosystem's extensions folder.
@@ -75,10 +73,10 @@ def _ntfy(title: str, body: str, urgent: bool, silent: bool, url: str = "") -> b
         headers["Click"] = url
     server = settings().get("ntfy_server", "https://ntfy.sh").rstrip("/")
     try:
-        urllib.request.urlopen(
-            urllib.request.Request(f"{server}/{topic}", data=body.encode(), headers=headers),
-            timeout=10,
+        request = urllib.request.Request(  # noqa: S310 - the ntfy server URL is user config
+            f"{server}/{topic}", data=body.encode(), headers=headers
         )
+        urllib.request.urlopen(request, timeout=10)  # noqa: S310 - same URL
         return True
     except OSError:
         return False

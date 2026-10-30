@@ -14,7 +14,7 @@ from datetime import date, datetime, timedelta
 from pathlib import Path
 
 from . import match, when
-from .config import data_dir, settings, vault
+from .settings import data_dir, settings, vault
 
 PRIORITY = {"high": 1, "urgent": 1, "normal": 2, "medium": 2, "low": 3}
 NAMES = {1: "high", 2: "normal", 3: "low"}

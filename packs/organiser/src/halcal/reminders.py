@@ -10,12 +10,15 @@ CalDAV account is set up, it also syncs every [calendar].sync_minutes.
 
 from __future__ import annotations
 
+import logging
 import time
 from datetime import datetime, timedelta
 
 from . import store
-from .config import settings
 from .notify import notify
+from .settings import settings
+
+log = logging.getLogger(__name__)
 
 POLL = 30  # seconds
 MISSED_GRACE = timedelta(minutes=20)
@@ -88,7 +91,7 @@ def main() -> None:
 
                 sync()
             except Exception as e:  # noqa: BLE001 - a sync failure must not stop reminders
-                print(f"sync failed: {e}", flush=True)
+                log.warning("sync failed: %s", e)
         time.sleep(POLL)
 
 

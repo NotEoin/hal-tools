@@ -14,12 +14,12 @@ import re
 import urllib.error
 import urllib.request
 import xml.etree.ElementTree as ET
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from urllib.parse import urljoin
 
 from . import ics, store
-from .config import settings
+from .settings import settings
 
 NS = {"d": "DAV:", "c": "urn:ietf:params:xml:ns:caldav", "cs": "http://calendarserver.org/ns/"}
 PAST_DAYS, FUTURE_DAYS = 30, 400
@@ -61,11 +61,11 @@ class Client:
         h = {**self.auth, "Content-Type": "application/xml; charset=utf-8", **(headers or {})}
         if depth is not None:
             h["Depth"] = depth
-        req = urllib.request.Request(
+        req = urllib.request.Request(  # noqa: S310 - the URL is the user's configured CalDAV server
             urljoin(self.base, url), data=body.encode() if body else None, headers=h, method=method
         )
         try:
-            with urllib.request.urlopen(req, timeout=30) as r:
+            with urllib.request.urlopen(req, timeout=30) as r:  # noqa: S310 - same URL as above
                 return r.status, dict(r.headers), r.read()
         except urllib.error.HTTPError as e:
             if e.code == 401:
@@ -79,7 +79,7 @@ class Client:
         status, _, data = self.request("PROPFIND", url, body, depth)
         if status >= 400:
             raise CalDAVError(f"PROPFIND {url}: HTTP {status}")
-        return ET.fromstring(data)
+        return ET.fromstring(data)  # noqa: S314 - a reply from the user's own CalDAV server; the pack is stdlib only
 
     def calendars(self) -> list[dict]:
         """Returns the account's event calendars as {name, href, writable}."""
@@ -132,7 +132,7 @@ class Client:
 
     def events(self, href: str, start: datetime, end: datetime) -> list[tuple[str, str, str]]:
         """Returns (href, etag, ics) for events overlapping the window."""
-        fmt = lambda d: d.astimezone(timezone.utc).strftime("%Y%m%dT%H%M%SZ")  # noqa: E731
+        fmt = lambda d: d.astimezone(UTC).strftime("%Y%m%dT%H%M%SZ")  # noqa: E731
         body = (
             f'<c:calendar-query xmlns:d="DAV:" xmlns:c="urn:ietf:params:xml:ns:caldav"><d:prop><d:getetag/>'
             f'<c:calendar-data/></d:prop><c:filter><c:comp-filter name="VCALENDAR"><c:comp-filter name="VEVENT">'
@@ -143,7 +143,7 @@ class Client:
         if status >= 400:
             raise CalDAVError(f"REPORT {href}: HTTP {status}")
         out = []
-        for resp in ET.fromstring(data).findall("d:response", NS):
+        for resp in ET.fromstring(data).findall("d:response", NS):  # noqa: S314 - a reply from the user's own CalDAV server; the pack is stdlib only
             cal = resp.find(".//c:calendar-data", NS)
             if cal is not None and cal.text:
                 etag = resp.find(".//d:getetag", NS)
@@ -179,7 +179,7 @@ def sync() -> dict:
     cals = c.calendars()
     wanted = {w.lower() for w in (cfg.get("calendars") or [x["name"] for x in cals])}
     push_to = cfg.get("push_to") or (cals[0]["name"] if cals else None)
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     pulled = pushed = deleted = 0
     con = store.db()
     # Deletions go first, so a deleted event is not pulled straight back from the server.

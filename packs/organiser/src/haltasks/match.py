@@ -129,7 +129,7 @@ def stem(word: str) -> str:
         w = IRREGULAR[w]
     elif len(w) > 4 and w.endswith(("ies", "ied")):
         w = w[:-3] + "y"
-    elif len(w) > 5 and w.endswith("ing") or len(w) > 3 and w.endswith("ed"):
+    elif (len(w) > 5 and w.endswith("ing")) or (len(w) > 3 and w.endswith("ed")):
         w = w[:-3] if w.endswith("ing") else w[:-2]
         if len(w) > 3 and _DOUBLE.search(w):  # "running" -> "run", but "adding" -> "add"
             w = w[:-1]

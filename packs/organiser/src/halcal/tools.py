@@ -6,8 +6,10 @@ import re
 from datetime import date, datetime, time, timedelta
 from pathlib import Path
 
+from halkit.paths import config_file
+
 from . import ics, match, store, when
-from .config import config_path, settings
+from .settings import settings
 
 
 def _now() -> datetime:
@@ -234,7 +236,7 @@ def calendars() -> list[dict]:
 
 def password_file() -> Path:
     """The CalDAV password's file, beside config.toml (~/.config/hal/caldav-password)."""
-    return config_path().parent / "caldav-password"
+    return config_file().parent / "caldav-password"
 
 
 def write_caldav_settings(values: dict) -> None:
@@ -242,7 +244,7 @@ def write_caldav_settings(values: dict) -> None:
     import json
     import tomllib
 
-    path = config_path()
+    path = config_file()
     path.parent.mkdir(parents=True, exist_ok=True)
     lines = path.read_text().splitlines() if path.exists() else []
     todo = {k: v for k, v in values.items() if v is not None}
