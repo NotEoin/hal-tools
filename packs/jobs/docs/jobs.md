@@ -66,7 +66,9 @@ jobhunt_root = "~/src/employment-helper"
 employment_url = "http://127.0.0.1:8737/"
 ```
 
-The older key `jobhunt` is still read when `jobhunt_root` is not set.
+The older key `jobhunt` is still read when `jobhunt_root` is not set. While the `[jobs]` table is
+absent from the config, `jobhunt_root` falls back to the old default and a warning is logged once;
+write the table to silence it.
 
 ## Licence
 

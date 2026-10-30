@@ -15,15 +15,14 @@ from pathlib import Path
 
 from hal_jobs import proc
 
-from .settings import settings
+from .settings import jobhunt_root, settings
 
 SYSTEM_PYTHON = "/usr/bin/python3"
 PACK_TIMEOUT = 1800  # seconds; drafting a pack runs the local model and searches the web
 
 
 def _jobhunt(*args: str, timeout: float = 600) -> str:
-    s = settings()
-    root = Path(str(s["jobhunt_root"])).expanduser()
+    root = jobhunt_root()
     if not (root / "jobhunt").is_dir():
         raise RuntimeError(f"jobhunt not found at {root}; set [jobs].jobhunt_root")
     venv_python = root / ".venv" / "bin" / "python"  # holds Playwright; the same pick as the unit

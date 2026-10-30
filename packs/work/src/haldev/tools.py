@@ -13,7 +13,7 @@ from pathlib import Path
 from hal_work import proc
 from halkit import paths
 
-from .settings import settings
+from .settings import roots, settings
 
 SKIP = {"node_modules", ".venv", "venv", "__pycache__", "site-packages", "GPT-SoVITS"}
 
@@ -25,10 +25,7 @@ def _git(repo: Path, *args: str, timeout: float = 30) -> str:
 
 def _repos() -> list[Path]:
     found = []
-    for root in settings()["roots"]:
-        base = Path(root).expanduser()
-        if not base.is_dir():
-            continue
+    for base in roots():
         for git in base.glob("**/.git"):
             parts = set(git.relative_to(base).parts)
             if (
@@ -42,7 +39,7 @@ def _repos() -> list[Path]:
 def _find(repo: str) -> Path:
     """A repository by name, or by path when the path is inside `[dev].roots`."""
     if "/" in repo or repo.startswith("~"):
-        p = paths.confine(repo, [Path(r) for r in settings()["roots"]], [])
+        p = paths.confine(repo, roots(), [])
         if not (p / ".git").exists():
             raise ValueError(f"{repo} is not a git repository")
         return p

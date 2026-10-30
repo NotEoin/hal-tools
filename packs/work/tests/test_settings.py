@@ -6,7 +6,7 @@ import unittest
 from pathlib import Path
 from unittest import mock
 
-from haldev.settings import settings
+from haldev.settings import roots, settings
 from halkit.config import ConfigError
 
 
@@ -20,6 +20,14 @@ class SettingsTest(unittest.TestCase):
 
     def test_missing_file_gives_the_default_depth(self) -> None:
         self.assertEqual(self._load("")["depth"], 2)
+
+    def test_default_roots_are_personal_free_and_only_existing_ones_count(self) -> None:
+        self.assertEqual(self._load("")["roots"], ["~/src", "~/projects"])
+        with tempfile.TemporaryDirectory() as tmp:
+            cfg = Path(tmp) / "config.toml"
+            cfg.write_text(f'[dev]\nroots = ["{tmp}", "{tmp}/missing"]\n')
+            with mock.patch.dict(os.environ, {"HAL_CONFIG": str(cfg)}):
+                self.assertEqual(roots(), [Path(tmp)])
 
     def test_value_in_the_file_overrides_the_default(self) -> None:
         self.assertEqual(self._load("[dev]\ndepth = 3\n")["depth"], 3)

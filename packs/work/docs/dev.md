@@ -38,8 +38,8 @@ Settings live in the `[dev]` table of `~/.config/hal/config.toml`:
 
 ```toml
 [dev]
-roots = ["~/src", "~/code"]   # where repositories are looked for
-depth = 2                                 # how many folders deep
+roots = ["~/src", "~/projects"]   # where repositories are looked for; missing ones are skipped
+depth = 2                         # how many folders deep
 ```
 
 ## Licence
