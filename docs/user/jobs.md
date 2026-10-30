@@ -30,13 +30,12 @@ through jobhunt's command line and the Hal Employment web app.
 
 ### Use
 
-The tools run from the module folder, or through hal-hub as `hal-hub jobs_<tool>`:
+Run a tool with `hal-jobs call jobs_<tool>`:
 
 ```bash
-cd ~/src/hal-ecosystem/extensions/hal-jobs
-python3 -m haljobs queue
-python3 -m haljobs digest
-python3 -m haljobs mark job=acme status=interview
+hal-jobs call jobs_queue
+hal-jobs call jobs_digest
+hal-jobs call jobs_mark job=acme status=interview
 ```
 
 | Tool | Does | jobhunt |

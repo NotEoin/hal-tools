@@ -25,13 +25,12 @@ Atom subscriptions (blogs, podcasts, YouTube channels, news) with what is new si
 
 ### Use
 
-The tools run from the module folder, or through hal-hub as `hal-hub feeds_<tool>`:
+Run a tool with `hal-online call feeds_<tool>`:
 
 ```bash
-cd ~/src/hal-ecosystem/hal-feeds
-python3 -m halfeeds subscribe url=https://hnrss.org/frontpage name="Hacker News"
-python3 -m halfeeds whats_new limit=5
-python3 -m halfeeds save url=https://example.com/article summarise=true
+hal-online call feeds_subscribe url=https://hnrss.org/frontpage name="Hacker News"
+hal-online call feeds_whats_new limit=5
+hal-online call feeds_save url=https://example.com/article summarise=true
 ```
 
 ### Configuration
@@ -57,14 +56,13 @@ needs an API key.
 
 ### Use
 
-The tools run from the module folder, or through hal-hub as `hal-hub web_<tool>`:
+Run a tool with `hal-online call web_<tool>`:
 
 ```bash
-cd ~/src/hal-ecosystem/hal-web
-python3 -m halweb weather place=Leeds days=3
-python3 -m halweb search query="opening hours British Library"
-python3 -m halweb convert amount=100 from_unit=GBP to_unit=EUR
-python3 -m halweb calculate expression="15% of 80"
+hal-online call web_weather place=Leeds days=3
+hal-online call web_search query="opening hours British Library"
+hal-online call web_convert amount=100 from_unit=GBP to_unit=EUR
+hal-online call web_calculate expression="15% of 80"
 ```
 
 ### Configuration

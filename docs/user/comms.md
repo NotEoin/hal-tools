@@ -28,13 +28,12 @@ confirm.
 
 ### Use
 
-The tools run from the module folder, or through hal-hub as `hal-hub mail_<tool>`:
+Run a tool with `hal-comms call mail_<tool>`:
 
 ```bash
-cd ~/src/hal-ecosystem/hal-mail
-python3 -m halmail unread limit=5
-python3 -m halmail search query="interview" days=14
-python3 -m halmail summarise
+hal-comms call mail_unread limit=5
+hal-comms call mail_search query="interview" days=14
+hal-comms call mail_summarise
 ```
 
 ### Configuration
@@ -67,12 +66,11 @@ send it files, links and text, read its notifications, and send a text message f
 
 ### Use
 
-The tools run from the module folder, or through hal-hub as `hal-hub phone_<tool>`:
+Run a tool with `hal-comms call phone_<tool>`:
 
 ```bash
-cd ~/src/hal-ecosystem/hal-phone
-python3 -m halphone ring
-python3 -m halphone send_file path=~/Documents/ticket.pdf
+hal-comms call phone_ring
+hal-comms call phone_send_file path=~/Documents/ticket.pdf
 ```
 
 ### Configuration

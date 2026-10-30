@@ -27,14 +27,13 @@ whose birthday is coming and who you have not caught up with in a while.
 
 ### Use
 
-The tools run from the module folder, or through hal-hub as `hal-hub contacts_<tool>`:
+Run a tool with `hal-life call contacts_<tool>`:
 
 ```bash
-cd ~/src/hal-ecosystem/hal-contacts
-python3 -m halcontacts add name="Sam Lee" birthday="3 March" relationship="friend from uni"
-python3 -m halcontacts log name=Sam note="lunch, she's moving to Leeds"
-python3 -m halcontacts birthdays days=30
-python3 -m halcontacts import path=~/Downloads/contacts.vcf
+hal-life call contacts_add name="Sam Lee" birthday="3 March" relationship="friend from uni"
+hal-life call contacts_log name=Sam note="lunch, she's moving to Leeds"
+hal-life call contacts_birthdays days=30
+hal-life call contacts_import path=~/Downloads/contacts.vcf
 ```
 
 ### Configuration
@@ -61,14 +60,13 @@ slept seven hours" and it is logged; an evening nudge lists what is still to do.
 
 ### Use
 
-The tools run from the module folder, or through hal-hub as `hal-hub habits_<tool>`:
+Run a tool with `hal-life call habits_<tool>`:
 
 ```bash
-cd ~/src/hal-ecosystem/extensions/hal-habits
-python3 -m halhabits create name=water target=8 unit=glasses
-python3 -m halhabits log name=water
-python3 -m halhabits mood score=4 note="good run"
-python3 -m halhabits week
+hal-life call habits_create name=water target=8 unit=glasses
+hal-life call habits_log name=water
+hal-life call habits_mood score=4 note="good run"
+hal-life call habits_week
 ```
 
 ### Configuration
@@ -91,14 +89,13 @@ each renews; bank statement CSVs are imported in one go.
 
 ### Use
 
-The tools run from the module folder, or through hal-hub as `hal-hub ledger_<tool>`:
+Run a tool with `hal-life call ledger_<tool>`:
 
 ```bash
-cd ~/src/hal-ecosystem/extensions/hal-ledger
-python3 -m halledger spend amount=12.50 note="lunch at Pret"
-python3 -m halledger budget category="eating out" amount=150
-python3 -m halledger subscription name=Spotify amount=11.99 period=monthly next_payment=2026-11-02
-python3 -m halledger import path=~/Downloads/statement.csv
+hal-life call ledger_spend amount=12.50 note="lunch at Pret"
+hal-life call ledger_budget category="eating out" amount=150
+hal-life call ledger_subscription name=Spotify amount=11.99 period=monthly next_payment=2026-11-02
+hal-life call ledger_import path=~/Downloads/statement.csv
 ```
 
 ### Configuration

@@ -28,13 +28,12 @@ requests and issues.
 
 ### Use
 
-The tools run from the module folder, or through hal-hub as `hal-hub dev_<tool>`:
+Run a tool with `hal-work call dev_<tool>`:
 
 ```bash
-cd ~/src/hal-ecosystem/hal-dev
-python3 -m haldev repos dirty_only=true
-python3 -m haldev run_tests repo=hal-hub
-python3 -m haldev todos repo=hatch
+hal-work call dev_repos dirty_only=true
+hal-work call dev_run_tests repo=hal-hub
+hal-work call dev_todos repo=hatch
 ```
 
 ### Configuration
@@ -64,13 +63,12 @@ disk, spot duplicates, and sort the Downloads folder.
 
 ### Use
 
-The tools run from the module folder, or through hal-hub as `hal-hub files_<tool>`:
+Run a tool with `hal-work call files_<tool>`:
 
 ```bash
-cd ~/src/hal-ecosystem/hal-files
-python3 -m halfiles find name=invoice kind=documents modified_days=30
-python3 -m halfiles read path=~/Downloads/contract.pdf summarise=true
-python3 -m halfiles largest folder=~
+hal-work call files_find name=invoice kind=documents modified_days=30
+hal-work call files_read path=~/Downloads/contract.pdf summarise=true
+hal-work call files_largest folder=~
 ```
 
 ### Configuration
@@ -97,13 +95,12 @@ summaries, plain-English explanations and draft replies. Give it text, or copy t
 
 ### Use
 
-The tools run from the module folder, or through hal-hub as `hal-hub lang_<tool>`:
+Run a tool with `hal-work call lang_<tool>`:
 
 ```bash
-cd ~/src/hal-ecosystem/hal-lang
-python3 -m hallang translate text="Where is the station?" to=Japanese
-python3 -m hallang rewrite tone=professional length=shorter
-python3 -m hallang explain text="The lessee shall indemnify the lessor..."
+hal-work call lang_translate text="Where is the station?" to=Japanese
+hal-work call lang_rewrite tone=professional length=shorter
+hal-work call lang_explain text="The lessee shall indemnify the lessor..."
 ```
 
 ### Configuration

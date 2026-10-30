@@ -30,13 +30,12 @@ phone and writes it into the day's note in the vault.
 
 ### Use
 
-The tools run from the module folder, or through hal-hub as `hal-hub briefing_<tool>`:
+Run a tool with `hal-organiser call briefing_<tool>`:
 
 ```bash
-cd ~/src/hal-ecosystem/extensions/hal-briefing
-python3 -m halbrief build kind=morning
-python3 -m halbrief brief kind=evening speak=false
-python3 -m halbrief build kind=jobs
+hal-organiser call briefing_build kind=morning
+hal-organiser call briefing_deliver kind=evening speak=false
+hal-organiser call briefing_build kind=jobs
 ```
 
 ### Configuration
@@ -72,15 +71,14 @@ Calendar included.
 
 ### Use
 
-The tools run from the module folder, or through hal-hub as `hal-hub calendar_<tool>`:
+Run a tool with `hal-organiser call calendar_<tool>`:
 
 ```bash
-cd ~/src/hal-ecosystem/extensions/hal-calendar
-python3 -m halcal add title="Dentist" when_text="thursday at 10" location="Shoreditch"
-python3 -m halcal add title="Gym every monday and wednesday at 7am for an hour"
-python3 -m halcal agenda span="next 7 days"
-python3 -m halcal free duration_minutes=120 span=week
-python3 -m halcal move event=Dentist when_text="friday 11am"
+hal-organiser call calendar_add title="Dentist" when_text="thursday at 10" location="Shoreditch"
+hal-organiser call calendar_add title="Gym every monday and wednesday at 7am for an hour"
+hal-organiser call calendar_agenda span="next 7 days"
+hal-organiser call calendar_free duration_minutes=120 span=week
+hal-organiser call calendar_move event=Dentist when_text="friday 11am"
 ```
 
 ### Connect Apple iCloud Calendar
@@ -143,14 +141,13 @@ so aloud and the alert reaches your phone and desktop, even during quiet hours.
 
 ### Use
 
-The tools run from the module folder, or through hal-hub as `hal-hub clock_<tool>`:
+Run a tool with `hal-organiser call clock_<tool>`:
 
 ```bash
-cd ~/src/hal-ecosystem/extensions/hal-clock
-python3 -m halclock timer duration="9 minutes" label=pasta
-python3 -m halclock alarm when_text="every weekday at 7am" label="Wake up"
-python3 -m halclock pomodoro action=start work=25 rest=5 rounds=4
-python3 -m halclock list
+hal-organiser call clock_timer duration="9 minutes" label=pasta
+hal-organiser call clock_alarm when_text="every weekday at 7am" label="Wake up"
+hal-organiser call clock_pomodoro action=start work=25 rest=5 rounds=4
+hal-organiser call clock_list
 ```
 
 ### Configuration
@@ -173,14 +170,13 @@ a history.
 
 ### Use
 
-The tools run from the module folder, or through hal-hub as `hal-hub notify_<tool>`:
+Run a tool with `hal-organiser call notify_<tool>`:
 
 ```bash
-cd ~/src/hal-ecosystem/hal-notify
-python3 -m halnotify send title="Build finished" body="All tests passed" speak=true
-python3 -m halnotify dnd minutes=90
-python3 -m halnotify state
-python3 -m halnotify history limit=5
+hal-organiser call notify_send title="Build finished" body="All tests passed" speak=true
+hal-organiser call notify_dnd minutes=90
+hal-organiser call notify_state
+hal-organiser call notify_history limit=5
 ```
 
 ### Configuration
@@ -262,14 +258,13 @@ marks the task done.
 
 ### Use
 
-The tools run from the module folder, or through hal-hub as `hal-hub tasks_<tool>`:
+Run a tool with `hal-organiser call tasks_<tool>`:
 
 ```bash
-cd ~/src/hal-ecosystem/extensions/hal-tasks
-python3 -m haltasks add title="Buy milk tomorrow"
-python3 -m haltasks add title="Water the plants" due="every monday at 9" project=Home
-python3 -m haltasks list which=today
-python3 -m haltasks done task=milk
+hal-organiser call tasks_add title="Buy milk tomorrow"
+hal-organiser call tasks_add title="Water the plants" due="every monday at 9" project=Home
+hal-organiser call tasks_list which=today
+hal-organiser call tasks_done task=milk
 ```
 
 ### Configuration

@@ -25,13 +25,12 @@ their battery, connecting headphones, USB devices, printers and printing a file,
 
 ### Use
 
-The tools run from the module folder, or through hal-hub as `hal-hub devices_<tool>`:
+Run a tool with `hal-system call devices_<tool>`:
 
 ```bash
-cd ~/src/hal-ecosystem/hal-devices
-python3 -m haldevices printers
-python3 -m haldevices print_file path=~/Documents/ticket.pdf copies=1
-python3 -m haldevices bluetooth_connect device=headphones
+hal-system call devices_printers
+hal-system call devices_print path=~/Documents/ticket.pdf copies=1
+hal-system call devices_bluetooth_connect device=headphones
 ```
 
 ### Configuration
@@ -54,13 +53,12 @@ delete models, or ask a particular one a question.
 
 ### Use
 
-The tools run from the module folder, or through hal-hub as `hal-hub models_<tool>`:
+Run a tool with `hal-system call models_<tool>`:
 
 ```bash
-cd ~/src/hal-ecosystem/hal-models
-python3 -m halmodels loaded
-python3 -m halmodels unload
-python3 -m halmodels ask model=qwen3.5:9b prompt="Name three moons of Jupiter."
+hal-system call models_loaded
+hal-system call models_unload
+hal-system call models_ask model=qwen3.5:9b prompt="Name three moons of Jupiter."
 ```
 
 ### Configuration
@@ -83,13 +81,12 @@ local network, the public IP and provider, latency, open ports and a full speed 
 
 ### Use
 
-The tools run from the module folder, or through hal-hub as `hal-hub network_<tool>`:
+Run a tool with `hal-system call network_<tool>`:
 
 ```bash
-cd ~/src/hal-ecosystem/hal-network
-python3 -m halnet status
-python3 -m halnet devices
-python3 -m halnet speed_test megabytes=25
+hal-system call network_status
+hal-system call network_devices
+hal-system call network_speed_test megabytes=25
 ```
 
 ### Configuration
@@ -112,13 +109,12 @@ install updates or packages (through the desktop's password prompt) and empty th
 
 ### Use
 
-The tools run from the module folder, or through hal-hub as `hal-hub packages_<tool>`:
+Run a tool with `hal-system call packages_<tool>`:
 
 ```bash
-cd ~/src/hal-ecosystem/hal-packages
-python3 -m halpkgs updates
-python3 -m halpkgs installed name=wl-clipboard
-python3 -m halpkgs cleanup_report
+hal-system call packages_updates
+hal-system call packages_installed name=wl-clipboard
+hal-system call packages_cleanup_report
 ```
 
 ### Configuration
@@ -140,13 +136,12 @@ the session asks first.
 
 ### Use
 
-The tools run from the module folder, or through hal-hub as `hal-hub power_<tool>`:
+Run a tool with `hal-system call power_<tool>`:
 
 ```bash
-cd ~/src/hal-ecosystem/hal-power
-python3 -m halpower profile mode=balanced
-python3 -m halpower shutdown minutes=30
-python3 -m halpower cancel_shutdown
+hal-system call power_profile mode=balanced
+hal-system call power_shutdown minutes=30
+hal-system call power_cancel_shutdown
 ```
 
 ### Configuration
@@ -177,12 +172,11 @@ hub asks you before every run.
 
 ### Use
 
-The tools run from the module folder, or through hal-hub as `hal-hub shell_<tool>`:
+Run a tool with `hal-system call shell_<tool>`:
 
 ```bash
-cd ~/src/hal-ecosystem/hal-shell
-python3 -m halshell look command="du -sh --max-depth=1 ~/Downloads" head=20
-hal-hub shell_run command="mkdir -p ~/projects/new" --yes
+hal-system call shell_look command="du -sh --max-depth=1 ~/Downloads" head=20
+hal-system call shell_run command="mkdir -p ~/projects/new"
 ```
 
 ### Configuration
@@ -213,14 +207,13 @@ temperatures, what is running, which services have failed, and what the logs say
 
 ### Use
 
-The tools run from the module folder, or through hal-hub as `hal-hub system_<tool>`:
+Run a tool with `hal-system call system_<tool>`:
 
 ```bash
-cd ~/src/hal-ecosystem/hal-system
-python3 -m halsys overview
-python3 -m halsys processes sort=memory limit=5
-python3 -m halsys logs since="today" priority=err
-python3 -m halsys services failed_only=true
+hal-system call system_overview
+hal-system call system_processes sort=memory limit=5
+hal-system call system_logs since="today" priority=err
+hal-system call system_services failed_only=true
 ```
 
 ### Configuration

@@ -27,14 +27,13 @@ screenshots and lock the screen.
 
 ### Use
 
-The tools run from the module folder, or through hal-hub as `hal-hub desktop_<tool>`:
+Run a tool with `hal-desktop call desktop_<tool>`:
 
 ```bash
-cd ~/src/hal-ecosystem/hal-desktop
-python3 -m haldesk launch app=firefox
-python3 -m haldesk volume change=-10
-python3 -m haldesk theme mode=dark
-python3 -m haldesk screenshot
+hal-desktop call desktop_launch app=firefox
+hal-desktop call desktop_volume change=-10
+hal-desktop call desktop_theme mode=dark
+hal-desktop call desktop_screenshot
 ```
 
 ### Limitations
@@ -60,13 +59,12 @@ and play your own music by artist, album or song.
 
 ### Use
 
-The tools run from the module folder, or through hal-hub as `hal-hub media_<tool>`:
+Run a tool with `hal-desktop call media_<tool>`:
 
 ```bash
-cd ~/src/hal-ecosystem/hal-media
-/usr/bin/python3 -m halmedia status
-/usr/bin/python3 -m halmedia control action=toggle
-/usr/bin/python3 -m halmedia play_music query="radiohead ok computer" shuffle=true
+hal-desktop call media_status
+hal-desktop call media_control action=toggle
+hal-desktop call media_play_music query="radiohead ok computer" shuffle=true
 ```
 
 ### Configuration
@@ -95,14 +93,13 @@ listening).
 
 ### Use
 
-The tools run from the module folder, or through hal-hub as `hal-hub rgb_<tool>`:
+Run a tool with `hal-desktop call rgb_<tool>`:
 
 ```bash
-cd ~/src/hal-ecosystem/extensions/hal-rgb
-python3 -m halrgb devices
-python3 -m halrgb colour colour="warm white" brightness=40
-python3 -m halrgb effect effect=rainbow device=gpu
-python3 -m halrgb profile name=dark
+hal-desktop call rgb_devices
+hal-desktop call rgb_colour colour="warm white" brightness=40
+hal-desktop call rgb_effect effect=rainbow device=gpu
+hal-desktop call rgb_profile name=dark
 ```
 
 ### Configuration
@@ -135,13 +132,12 @@ image file.
 
 ### Use
 
-The tools run from the module folder, or through hal-hub as `hal-hub screen_<tool>`:
+Run a tool with `hal-desktop call screen_<tool>`:
 
 ```bash
-cd ~/src/hal-ecosystem/hal-screen
-/usr/bin/python3 -m halscreen describe question="Which app is in front?"
-/usr/bin/python3 -m halscreen explain_error
-/usr/bin/python3 -m halscreen describe_image path=~/Pictures/receipt.jpg question="What was the total?"
+hal-desktop call screen_describe question="Which app is in front?"
+hal-desktop call screen_explain_error
+hal-desktop call screen_describe_image path=~/Pictures/receipt.jpg question="What was the total?"
 ```
 
 ### Configuration
