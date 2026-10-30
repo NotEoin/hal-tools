@@ -34,7 +34,7 @@ class BriefingTest(unittest.TestCase):
 class TimerTest(unittest.TestCase):
     def test_morning_briefing_comes_after_quiet_hours(self):
         timer = (
-            Path(__file__).resolve().parents[1] / "systemd" / "hal-briefing-morning.timer"
+            Path(__file__).resolve().parents[1] / "src/halbrief/systemd/hal-briefing-morning.timer"
         ).read_text()
         self.assertIn("OnCalendar=*-*-* 08:05", timer)
 
