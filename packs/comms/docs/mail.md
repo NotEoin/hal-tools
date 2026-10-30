@@ -36,7 +36,9 @@ python3 -m halmail summarise
 
 ## Configuration
 
-Accounts live in the `[mail]` table of `~/.config/hal/config.toml`:
+Hal ships with no mail account. With none configured, every mail tool fails with
+`no mail account configured: add [mail.accounts.<name>] to ~/.config/hal/config.toml`.
+Accounts live in the `[mail]` table of that file; `default` may be left out when there is one:
 
 ```toml
 [mail]

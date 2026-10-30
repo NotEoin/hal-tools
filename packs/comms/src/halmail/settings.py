@@ -7,25 +7,18 @@ from collections.abc import Mapping
 
 from halkit import config
 
-ACCOUNTS_DEFAULT: dict = {
-    "jobs": {
-        "address": "you@example.com",
-        "imap": "imap.gmail.com",
-        "smtp": "smtp.gmail.com",
-        "password_file": "~/.config/hal/mail-password",
-    }
-}
-
 TABLE = config.register(
     config.Table(
         "mail",
         (
-            config.Key("default", str, "jobs", doc="Account used when none is named"),
+            config.Key(
+                "default", str, "", doc="Account used when none is named (empty: the only one)"
+            ),
             config.Key(
                 "accounts",
                 dict,
-                ACCOUNTS_DEFAULT,
-                doc="Accounts: address, imap, smtp, password_file",
+                {},
+                doc="Accounts (none by default): address, imap, smtp, password_file",
             ),
         ),
         owner="hal-comms",

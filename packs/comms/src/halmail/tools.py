@@ -26,9 +26,23 @@ from .settings import settings
 DRAFTS = {"imap.gmail.com": '"[Gmail]/Drafts"'}
 
 
+NO_ACCOUNT_MESSAGE = (
+    "no mail account configured: add [mail.accounts.<name>] to ~/.config/hal/config.toml"
+)
+
+
+def _quote(word: str) -> str:
+    """An IMAP quoted string; refuses line breaks and NUL, which cannot be quoted."""
+    if any(c in word for c in "\r\n\0"):
+        raise ValueError("search words must not contain line breaks")
+    return '"' + word.replace("\\", "\\\\").replace('"', '\\"') + '"'
+
+
 def _account(name: str = "") -> dict:
     accounts = settings()["accounts"]
-    key = name or settings()["default"]
+    if not accounts:
+        raise ValueError(NO_ACCOUNT_MESSAGE)
+    key = name or settings()["default"] or (next(iter(accounts)) if len(accounts) == 1 else "")
     if key not in accounts:
         raise ValueError(f"no mail account {key!r}; have {', '.join(accounts)}")
     a = dict(accounts[key])
@@ -122,7 +136,7 @@ def search(query: str, account: str = "", days: int = 30, limit: int = 10) -> li
     try:
         m.select("INBOX", readonly=True)
         since = (datetime.now() - timedelta(days=int(days))).strftime("%d-%b-%Y")
-        crit = ["SINCE", since] + [x for w in query.split() for x in ("TEXT", f'"{w}"')]
+        crit = ["SINCE", since] + [x for w in query.split() for x in ("TEXT", _quote(w))]
         _, data = m.uid("SEARCH", None, *crit)
         uids = data[0].split()[-int(limit) :][::-1]
         return [_summary(u, msg) for u, msg in _fetch(m, uids)]
@@ -204,4 +218,6 @@ def send(to: str, subject: str, body: str, account: str = "", reply_to: str = ""
 
 
 def accounts() -> list[str]:
+    if not settings()["accounts"]:
+        raise ValueError(NO_ACCOUNT_MESSAGE)
     return [f"{k}: {v['address']}" for k, v in settings()["accounts"].items()]
