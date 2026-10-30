@@ -17,6 +17,8 @@ cover the job search and the daily briefing.
 - Voice notes go through the `hal-voice` CLI (`transcribe-file`, `tts`). Without it the bot says
   "voice notes need hal-voice".
 - Job commands go through hal-jobs, and `/brief` through hal-briefing, by way of hal-hub.
+- A pairing code is valid for 10 minutes. Five wrong codes in 10 minutes lock pairing until the
+  bridge restarts, and a desktop notification says so.
 - Answers one paired chat only; anyone else who finds the bot is ignored.
 
 ## Install

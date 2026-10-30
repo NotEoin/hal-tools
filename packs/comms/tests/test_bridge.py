@@ -178,6 +178,37 @@ class PairingTest(Sandbox):
         self.assertFalse(config.pairing_file().exists())
         self.assertTrue(self.bot.sent[-1][1].startswith("Paired."))
 
+    def test_pairing_locks_after_five_wrong_codes(self):
+        b = bridge.Bridge(self.bot)
+        wrong = "/pair 1" if b.pairing_code != "1" else "/pair 2"
+        with mock.patch.object(bridge.proc, "completed") as notify:
+            for _ in range(5):
+                b.handle({"chat": {"id": STRANGER}, "text": wrong})
+            b.handle({"chat": {"id": STRANGER}, "text": f"/pair {b.pairing_code}"})
+        self.assertIsNone(b.chat, "the right code is refused once locked")
+        self.assertEqual(notify.call_count, 1)
+        self.assertEqual(len(self.bot.sent), 4, "the fifth wrong code gets a notice, not a reply")
+
+    def test_wrong_codes_outside_the_window_do_not_lock(self):
+        b = bridge.Bridge(self.bot)
+        clock = [1000.0]
+        b.clock = lambda: clock[0]
+        for _ in range(8):
+            b.handle({"chat": {"id": STRANGER}, "text": "/pair x"})
+            clock[0] += bridge.PAIRING_WINDOW_S / 3
+        self.assertFalse(b.locked)
+
+    def test_expired_code_is_replaced_and_refused(self):
+        b = bridge.Bridge(self.bot)
+        old = b.pairing_code
+        expired = time.time() - bridge.PAIRING_TTL_S - 1
+        os.utime(config.pairing_file(), (expired, expired))
+        with mock.patch.object(bridge.proc, "completed"):
+            b.handle({"chat": {"id": PHONE}, "text": f"/pair {old}"})
+        self.assertIsNone(b.chat)
+        self.assertIn("expired", self.bot.sent[-1][1])
+        self.assertTrue(config.pairing_file().exists())
+
     def test_ignores_other_chats_once_paired(self):
         b = self.paired()
         b.handle({"chat": {"id": STRANGER}, "text": "hello"})

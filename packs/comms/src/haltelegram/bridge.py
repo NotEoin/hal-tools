@@ -8,6 +8,7 @@ the box and no brain lives in this process. Approvals appear as inline buttons.
 
 from __future__ import annotations
 
+import hmac
 import logging
 import secrets
 import tempfile
@@ -45,6 +46,9 @@ APPROVAL_TIMEOUT_S = 300.0  # how long a button request waits for a press (01 ch
 LONG_DISPLAY = 3500  # a request longer than this is approved only from the CLI
 POLL_S = 50  # Bot API long-poll seconds
 APPROVAL_POLL_S = 5  # short polls while a turn waits for a button press
+PAIRING_TTL_S = 600.0  # a pairing code is valid for 10 minutes (REQ-PACK-28)
+PAIRING_MAX_WRONG = 5  # wrong codes inside the window that lock pairing
+PAIRING_WINDOW_S = 600.0  # the window for counting wrong codes
 TOO_LONG = "that took too long"
 
 
@@ -68,44 +72,74 @@ class Bridge:
         self.backlog: list[dict] = []
         chat = config.chat_file()
         self.chat = int(chat.read_text().strip()) if chat.exists() else None
+        self.clock: Callable[[], float] = time.time
+        self.wrong: list[float] = []
+        self.locked = False
         self.pairing_code = None if self.chat else self._pairing_code()
 
     # -- pairing -------------------------------------------------------------------
-    @staticmethod
-    def _pairing_code() -> str:
-        """Returns the saved pairing code, creating one on first run."""
+    def _pairing_code(self) -> str:
+        """Returns the saved pairing code while it is fresh; otherwise makes a new one."""
         path = config.pairing_file()
-        if path.exists():
+        if path.exists() and self.clock() - path.stat().st_mtime < PAIRING_TTL_S:
             return path.read_text().strip()
         code = f"{secrets.randbelow(10**6):06d}"
         config.write_private(path, code)
         return code
 
     def announce_pairing(self) -> None:
+        """Shows the pairing code as a desktop notification."""
         if self.pairing_code:
-            message = f"Send /pair {self.pairing_code} to your Hal bot in Telegram."
-            log.info(message)
-            try:
-                proc.completed(
-                    ["notify-send", "-a", "Hal", "-u", "critical", "Pair Telegram", message],
-                    timeout=NOTIFY_TIMEOUT_S,
-                )
-            except (OSError, proc.ProcTimeout) as exc:
-                log.warning("pairing notice not shown: %s", exc)
+            self._desktop(
+                "Pair Telegram", f"Send /pair {self.pairing_code} to your Hal bot in Telegram."
+            )
+
+    @staticmethod
+    def _desktop(title: str, message: str) -> None:
+        log.info(message)
+        try:
+            proc.completed(
+                ["notify-send", "-a", "Hal", "-u", "critical", title, message],
+                timeout=NOTIFY_TIMEOUT_S,
+            )
+        except (OSError, proc.ProcTimeout) as exc:
+            log.warning("desktop notice not shown: %s", exc)
 
     def _pair(self, chat: int, text: str) -> None:
         command, arg = parse(text)
-        if command == "/pair" and arg == self.pairing_code:
+        if command != "/pair":
+            return
+        if self.locked:
+            log.warning("pairing is locked; ignored an attempt from chat %s", chat)
+            return
+        stale = config.pairing_file().exists() and (
+            self.clock() - config.pairing_file().stat().st_mtime >= PAIRING_TTL_S
+        )
+        if stale:
+            self.pairing_code = self._pairing_code()
+            self.announce_pairing()
+            self.bot.send(chat, "That code has expired. A new one is in the desktop notification.")
+            return
+        if hmac.compare_digest(arg.encode(), (self.pairing_code or "").encode()):
             self.chat, self.pairing_code = chat, None
             config.write_private(config.chat_file(), str(chat))
             config.pairing_file().unlink(missing_ok=True)
             log.info("paired with chat %s", chat)
             self.bot.send(chat, "Paired. " + HELP)
-        elif command == "/pair":
-            log.info("rejected pairing attempt from chat %s", chat)
-            self.bot.send(
-                chat, "That code doesn't match. Use the code in the latest desktop notification."
+            return
+        now = self.clock()
+        self.wrong = [t for t in self.wrong if now - t < PAIRING_WINDOW_S] + [now]
+        log.info("rejected pairing attempt from chat %s", chat)
+        if len(self.wrong) >= PAIRING_MAX_WRONG:
+            self.locked = True
+            self._desktop(
+                "Telegram pairing locked",
+                "Too many wrong codes. Restart the Telegram bridge to pair again.",
             )
+            return
+        self.bot.send(
+            chat, "That code doesn't match. Use the code in the latest desktop notification."
+        )
 
     def dispatch(self, update: dict) -> None:
         """Handles one Bot API update; a failure is logged, never raised."""
