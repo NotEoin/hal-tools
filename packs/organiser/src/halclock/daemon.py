@@ -9,9 +9,9 @@ import time
 from datetime import datetime
 
 from halkit.when import next_occurrence
+from halnotify.alert import notify
 
 from . import tools
-from .notify import notify
 
 POLL = 1  # seconds
 

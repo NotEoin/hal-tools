@@ -7,7 +7,7 @@ from pathlib import Path
 
 from halcal.settings import settings as calendar_settings
 from halkit.config import ConfigError
-from halnotify.settings import settings as notify_settings
+from halkit.notify import settings as notify_settings
 
 
 class SettingsTest(unittest.TestCase):

@@ -9,8 +9,9 @@ from __future__ import annotations
 import time
 from datetime import date, datetime, timedelta
 
+from halnotify.alert import notify
+
 from . import tools
-from .notify import notify
 from .settings import data_dir, settings
 
 POLL = 30  # seconds

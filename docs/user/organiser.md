@@ -159,15 +159,16 @@ hal-clock has no settings of its own; alerts follow hal-notify's channels.
 
 ## notify
 
-hal-notify routes Hal's alerts to the right places: your phone through ntfy, the desktop, HAL's
-voice and Telegram. It respects quiet hours and do-not-disturb, lets urgent alerts through, and keeps
+hal-notify routes Hal's alerts to the right places: your phone through ntfy, the desktop and HAL's
+voice. It respects quiet hours and do-not-disturb, lets urgent alerts through, and keeps
 a history.
 
 ### Highlights
 
 - One call reaches every channel you configure; each module that alerts uses it when it is installed.
 - Quiet hours (22:00 to 08:00 by default) and do-not-disturb silence phone pushes and speech; urgent alerts still sound.
-- Spoken alerts through hal-voice's `hal-say`, and Telegram through the chat hal-telegram pairs.
+- Spoken alerts through the command in `[notify].say_command`. There is no Telegram channel; the
+  Telegram bridge is a chat, not an alert sink.
 - A history of every alert sent and the channels it reached.
 
 ### Use
@@ -190,7 +191,8 @@ Settings live in the `[notify]` table of `~/.config/hal/config.toml`:
 [notify]
 ntfy_topic = "hal-a-long-random-name"
 ntfy_server = "https://ntfy.sh"
-channels = ["desktop", "phone"]     # add "voice" or "telegram" to use them by default
+channels = ["desktop", "phone"]     # add "voice" to use it by default
+say_command = ""                    # command that speaks its last argument; empty disables voice
 quiet_from = 22
 quiet_until = 8
 ```

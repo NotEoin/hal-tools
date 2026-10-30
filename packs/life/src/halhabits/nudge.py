@@ -3,14 +3,19 @@
 python -m halhabits.nudge      (run by the systemd timer)
 """
 
+from halkit.notify import send
+
 from . import tools
-from .notify import notify
 
 
 def main() -> None:
     left = [h for h in tools.today() if not h["complete"]]
     if left:
-        notify("Habits still to do", "; ".join(f"{h['habit']} ({h['done']})" for h in left))
+        send(
+            "Habits still to do",
+            "; ".join(f"{h['habit']} ({h['done']})" for h in left),
+            source="habits",
+        )
 
 
 if __name__ == "__main__":

@@ -13,8 +13,8 @@ from datetime import datetime
 
 from halhub import client
 from halkit.config import hal
+from halnotify.alert import notify
 
-from .notify import notify
 from .settings import settings
 
 log = logging.getLogger(__name__)

@@ -3,13 +3,13 @@ schema = 2
 [module]
 pack = "organiser"
 name = "notify"
-summary = "Alerts to phone (ntfy), desktop, HAL's voice and Telegram, with quiet hours"
+summary = "Alerts to phone (ntfy), desktop and voice, with quiet hours"
 python = "halnotify.tools"
 
 [[tools]]
 name = "notify_send"
 function = "send"
-description = "Send the user a notification: phone push, desktop and optionally spoken or Telegram. Urgent ones break through quiet hours."
+description = "Send the user a notification: phone push, desktop and optionally spoken. Urgent ones break through quiet hours."
 tier = "send"
 network = true
 reviewable = true
@@ -24,7 +24,7 @@ type = "boolean"
 description = "also say it aloud"
 [tools.params.channels]
 list = true
-description = "any of desktop, phone, voice, telegram"
+description = "any of desktop, phone, voice"
 [tools.params.url]
 description = "link opened when the phone notification is tapped"
 

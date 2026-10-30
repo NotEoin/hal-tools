@@ -4,6 +4,10 @@
 
 ### Changed
 
+- `notify` and every pack that alerts now use `halkit.notify`; the `telegram` alert channel is gone and
+  voice alerts use `[notify].say_command`. Model calls go through `halkit.llm` (the Hal gateway),
+  so the `ollama_url`, `chat_model`, `vision_model` and `gpu_ignore` settings no longer apply to
+  these packs.
 - Telegram: the bridge is an ACP client of `hal acp --channel telegram --toolset assistant`. Tool
   approvals arrive as inline buttons; link previews are off; voice notes use the `hal-voice` CLI.
   The `persona`, `model`, `whisper_*` and `voice_root` keys are gone; `turn_timeout_s` is new.

@@ -14,8 +14,9 @@ import logging
 import time
 from datetime import datetime, timedelta
 
+from halnotify.alert import notify
+
 from . import store
-from .notify import notify
 from .settings import settings
 
 log = logging.getLogger(__name__)
