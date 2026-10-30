@@ -39,8 +39,11 @@ def _account(name: str = "") -> dict:
     return a
 
 
+NET_TIMEOUT_S = 30.0  # IMAP and SMTP servers answer in seconds; a stalled one must not hang a tool
+
+
 def _connect(a: dict) -> imaplib.IMAP4_SSL:
-    m = imaplib.IMAP4_SSL(a.get("imap", "imap.gmail.com"))
+    m = imaplib.IMAP4_SSL(a.get("imap", "imap.gmail.com"), timeout=NET_TIMEOUT_S)
     m.login(a["address"], a["password"])
     return m
 
@@ -193,7 +196,7 @@ def send(to: str, subject: str, body: str, account: str = "", reply_to: str = ""
     """Sends an email now."""
     a = _account(account)
     msg = _message(a, to, subject, body, reply_to)
-    with smtplib.SMTP_SSL(a.get("smtp", "smtp.gmail.com"), 465, timeout=30) as s:
+    with smtplib.SMTP_SSL(a.get("smtp", "smtp.gmail.com"), 465, timeout=NET_TIMEOUT_S) as s:
         s.login(a["address"], a["password"])
         s.send_message(msg)
     return {"sent": subject, "to": to}

@@ -9,8 +9,9 @@ from __future__ import annotations
 
 import re
 import shutil
-import subprocess
 from pathlib import Path
+
+from hal_comms import proc
 
 from .settings import settings
 
@@ -23,9 +24,7 @@ SETUP = (
 def _cli(*args: str, timeout: float = 20) -> str:
     if not shutil.which("kdeconnect-cli"):
         raise RuntimeError(SETUP)
-    done = subprocess.run(
-        ["kdeconnect-cli", *args], capture_output=True, text=True, timeout=timeout
-    )
+    done = proc.completed(["kdeconnect-cli", *args], timeout=timeout)
     if done.returncode:
         raise RuntimeError(done.stderr.strip() or "KDE Connect did not respond")
     return done.stdout.strip()
@@ -64,10 +63,8 @@ def battery(phone: str = "") -> dict:
     """The phone's battery level."""
     dev = _device(phone)
     out = (
-        subprocess.run(
+        proc.completed(
             ["qdbus", "org.kde.kdeconnect", f"/modules/kdeconnect/devices/{dev}/battery", "charge"],
-            capture_output=True,
-            text=True,
             timeout=10,
         ).stdout.strip()
         if shutil.which("qdbus")

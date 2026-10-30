@@ -6,12 +6,14 @@ is installed. Without them the bridge still works in text.
 
 from __future__ import annotations
 
-import subprocess
 import sys
 from pathlib import Path
 
+from hal_comms import proc
+
 from . import settings as config
 
+FFMPEG_TIMEOUT_S = 60.0  # a Telegram voice note is seconds of audio
 NEEDS_VOICE = "Voice notes need hal-voice installed (hal ext add voice)."
 
 _model = None
@@ -58,7 +60,7 @@ def synthesise(text: str, workdir: Path) -> Path | None:
     wav, ogg = workdir / "reply.wav", workdir / "reply.ogg"
     soundfile.write(wav, audio, sr)
     try:
-        subprocess.run(
+        done = proc.completed(
             [
                 "ffmpeg",
                 "-y",
@@ -72,9 +74,10 @@ def synthesise(text: str, workdir: Path) -> Path | None:
                 "48k",
                 str(ogg),
             ],
-            check=True,
-            timeout=60,
+            timeout=FFMPEG_TIMEOUT_S,
         )
-    except (OSError, subprocess.SubprocessError):
+    except (OSError, proc.ProcTimeout):
+        return None
+    if done.returncode:
         return None
     return ogg

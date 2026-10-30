@@ -12,9 +12,10 @@ import ipaddress
 import json
 import re
 import socket
-import subprocess
 import time
 import urllib.request
+
+from hal_system import proc
 
 UA = {"User-Agent": "Mozilla/5.0 (X11; Linux x86_64) Hal/1.0"}
 
@@ -28,8 +29,8 @@ def _open(url: str, data: bytes | None = None, timeout: float = 30):
 
 def _run(*cmd: str, timeout: float = 20) -> str:
     try:
-        return subprocess.run(cmd, capture_output=True, text=True, timeout=timeout).stdout
-    except (OSError, subprocess.TimeoutExpired):
+        return proc.completed(cmd, timeout=timeout).stdout
+    except (OSError, proc.ProcTimeout):
         return ""
 
 

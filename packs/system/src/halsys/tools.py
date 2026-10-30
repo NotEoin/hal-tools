@@ -14,15 +14,16 @@ import re
 import shutil
 import signal
 import socket
-import subprocess
 import time
 from pathlib import Path
+
+from hal_system import proc
 
 
 def _run(*cmd: str, timeout: float = 15) -> str:
     try:
-        return subprocess.run(cmd, capture_output=True, text=True, timeout=timeout).stdout
-    except (OSError, subprocess.TimeoutExpired):
+        return proc.completed(cmd, timeout=timeout).stdout
+    except (OSError, proc.ProcTimeout):
         return ""
 
 
@@ -319,7 +320,7 @@ def service_restart(name: str, user: bool = True) -> dict:
     cmd = (
         ["systemctl", *scope, "restart", name] if user else ["pkexec", "systemctl", "restart", name]
     )
-    done = subprocess.run(cmd, capture_output=True, text=True, timeout=60)
+    done = proc.completed(cmd, timeout=60)
     return {"restarted": done.returncode == 0, "error": done.stderr.strip()[:300]}
 
 

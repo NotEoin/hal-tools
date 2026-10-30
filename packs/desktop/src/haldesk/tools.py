@@ -18,6 +18,8 @@ import time
 from datetime import datetime
 from pathlib import Path
 
+from hal_desktop import proc
+
 from .settings import data_dir
 
 APP_DIRS = [
@@ -29,8 +31,8 @@ APP_DIRS = [
 ]
 
 
-def _run(*cmd: str, timeout: float = 15) -> subprocess.CompletedProcess:
-    return subprocess.run(cmd, capture_output=True, text=True, timeout=timeout)
+def _run(*cmd: str, timeout: float = 15) -> subprocess.CompletedProcess[str]:
+    return proc.completed(cmd, timeout=timeout)
 
 
 def _gset(schema: str, key: str, value: str | None = None) -> str:
@@ -241,6 +243,7 @@ def banners(on: str = "") -> dict:
 def clipboard(text: str | None = None) -> dict:
     """Reads the clipboard, or copies text to it (needs wl-clipboard or xclip)."""
     if text is not None:
+        # wl-copy forks a child that keeps the pipes open, so a captured run would wait for it
         if shutil.which("wl-copy"):
             subprocess.run(["wl-copy"], input=text, text=True, timeout=5)
         elif shutil.which("xclip"):

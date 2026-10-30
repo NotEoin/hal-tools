@@ -12,6 +12,8 @@ import subprocess
 import urllib.request
 from pathlib import Path
 
+from hal_jobs import proc
+
 from .settings import settings
 
 PACK_TIMEOUT = 1800  # seconds; drafting a pack runs the local model and searches the web
@@ -22,13 +24,7 @@ def _jobhunt(*args: str, timeout: float = 600) -> str:
     root = Path(str(s["jobhunt_root"])).expanduser()
     if not (root / "jobhunt").is_dir():
         raise RuntimeError(f"jobhunt not found at {root}; set [jobs].jobhunt_root")
-    done = subprocess.run(
-        ["/usr/bin/python3", "-m", "jobhunt", *args],
-        cwd=root,
-        capture_output=True,
-        text=True,
-        timeout=timeout,
-    )
+    done = proc.completed(["/usr/bin/python3", "-m", "jobhunt", *args], cwd=root, timeout=timeout)
     if done.returncode:
         raise RuntimeError((done.stderr or done.stdout).strip()[-400:])
     return done.stdout.strip()

@@ -9,14 +9,15 @@ from __future__ import annotations
 
 import re
 import shutil
-import subprocess
 from pathlib import Path
+
+from hal_system import proc
 
 
 def _run(*cmd: str, timeout: float = 120) -> str:
     try:
-        return subprocess.run(cmd, capture_output=True, text=True, timeout=timeout).stdout
-    except (OSError, subprocess.TimeoutExpired):
+        return proc.completed(cmd, timeout=timeout).stdout
+    except (OSError, proc.ProcTimeout):
         return ""
 
 
@@ -64,15 +65,13 @@ def updates() -> dict:
 
 def upgrade() -> dict:
     """Installs every apt update (asks for the password through the desktop)."""
-    done = subprocess.run(
+    done = proc.completed(
         [
             "pkexec",
             "bash",
             "-c",
             "apt-get update -q && DEBIAN_FRONTEND=noninteractive apt-get -y upgrade",
         ],
-        capture_output=True,
-        text=True,
         timeout=3600,
     )
     if done.returncode:
@@ -84,12 +83,7 @@ def install(package: str) -> dict:
     """Installs an apt package by exact name (asks for the password through the desktop)."""
     if not re.fullmatch(r"[a-z0-9][a-z0-9.+-]+", package):
         raise ValueError(f"not a package name: {package!r}")
-    done = subprocess.run(
-        ["pkexec", "apt-get", "install", "-y", package],
-        capture_output=True,
-        text=True,
-        timeout=1800,
-    )
+    done = proc.completed(["pkexec", "apt-get", "install", "-y", package], timeout=1800)
     if done.returncode:
         raise RuntimeError(done.stderr.strip()[-400:] or "the install was cancelled")
     return {"installed": package}

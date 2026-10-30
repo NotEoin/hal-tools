@@ -11,7 +11,8 @@ from __future__ import annotations
 import os
 import re
 import shlex
-import subprocess
+
+from hal_system import proc
 
 from .settings import settings
 
@@ -225,12 +226,8 @@ def _check_read_only(command: str) -> None:
 
 
 def _exec(command: str, cwd: str, timeout: float) -> dict:
-    done = subprocess.run(
-        ["bash", "-c", command],
-        cwd=os.path.expanduser(cwd or "~"),
-        capture_output=True,
-        text=True,
-        timeout=timeout,
+    done = proc.completed(
+        ["bash", "-c", command], cwd=os.path.expanduser(cwd or "~"), timeout=timeout
     )
     limit = int(settings()["max_output"])
     out = done.stdout

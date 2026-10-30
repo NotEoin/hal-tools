@@ -11,8 +11,9 @@ from __future__ import annotations
 import json
 import shutil
 import sqlite3
-import subprocess
 from datetime import datetime
+
+from hal_organiser import proc
 
 from . import when
 from .settings import data_dir, settings
@@ -37,9 +38,7 @@ def call_tool(tool: str, args: dict | None = None) -> dict:
     if not exe:
         return {"error": "hal-hub is not installed"}
     payload = json.dumps({**(args or {}), "_confirmed": True})
-    done = subprocess.run(
-        [exe, "call", tool, "--json", payload], capture_output=True, text=True, timeout=600
-    )
+    done = proc.completed([exe, "call", tool, "--json", payload], timeout=600)
     try:
         return (
             json.loads(done.stdout)

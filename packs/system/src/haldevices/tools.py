@@ -8,14 +8,15 @@ needs confirmation through hal-hub.
 from __future__ import annotations
 
 import re
-import subprocess
 from pathlib import Path
+
+from hal_system import proc
 
 
 def _run(*cmd: str, timeout: float = 8) -> str:
     try:
-        return subprocess.run(cmd, capture_output=True, text=True, timeout=timeout).stdout
-    except (OSError, subprocess.TimeoutExpired):
+        return proc.completed(cmd, timeout=timeout).stdout
+    except (OSError, proc.ProcTimeout):
         return ""
 
 
@@ -102,7 +103,7 @@ def print_file(path: str, printer: str = "", copies: int = 1, double_sided: bool
     cmd = ["lp", "-d", target, "-n", str(int(copies))]
     if double_sided:
         cmd += ["-o", "sides=two-sided-long-edge"]
-    done = subprocess.run([*cmd, str(p)], capture_output=True, text=True, timeout=60)
+    done = proc.completed([*cmd, str(p)], timeout=60)
     if done.returncode:
         raise RuntimeError(done.stderr.strip())
     return {"printing": p.name, "printer": target, "job": done.stdout.strip()}

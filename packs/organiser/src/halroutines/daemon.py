@@ -8,10 +8,11 @@ from __future__ import annotations
 import json
 import shutil
 import socket
-import subprocess
 import time
 from datetime import datetime
 from pathlib import Path
+
+from hal_organiser import proc
 
 from . import tools
 from .settings import settings
@@ -34,7 +35,7 @@ def _next(at: float, rrule: str) -> float:
 
 
 def _idle_seconds() -> float:
-    out = subprocess.run(
+    out = proc.completed(
         [
             "gdbus",
             "call",
@@ -46,8 +47,6 @@ def _idle_seconds() -> float:
             "--method",
             "org.gnome.Mutter.IdleMonitor.GetIdletime",
         ],
-        capture_output=True,
-        text=True,
         timeout=5,
     ).stdout
     digits = "".join(c for c in out if c.isdigit())

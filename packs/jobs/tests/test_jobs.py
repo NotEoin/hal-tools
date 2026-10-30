@@ -17,7 +17,7 @@ MANIFEST = Path(__file__).resolve().parents[1] / "src" / "haljobs" / "hal-module
 
 
 class FakeJobhunt:
-    """Stands in for subprocess.run, recording each jobhunt command and printing `stdout`."""
+    """Stands in for proc.completed, recording each jobhunt command and printing `stdout`."""
 
     def __init__(self, stdout="", returncode=0, stderr=""):
         self.stdout, self.returncode, self.stderr, self.calls = stdout, returncode, stderr, []
@@ -40,7 +40,7 @@ class Sandbox(unittest.TestCase):
         self.addCleanup(self.tmp.cleanup)
 
     def run_with(self, fake, fn, *args, **kwargs):
-        with mock.patch.object(tools.subprocess, "run", fake):
+        with mock.patch.object(tools.proc, "completed", fake):
             return fn(*args, **kwargs)
 
 

@@ -10,9 +10,11 @@ import re
 import subprocess
 from pathlib import Path
 
+from hal_system import proc
+
 
 def _run(*cmd: str) -> subprocess.CompletedProcess:
-    return subprocess.run(cmd, capture_output=True, text=True, timeout=30)
+    return proc.completed(cmd, timeout=30)
 
 
 def _ok(done: subprocess.CompletedProcess) -> None:

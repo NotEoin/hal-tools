@@ -8,8 +8,9 @@ from __future__ import annotations
 
 import re
 import shutil
-import subprocess
 from pathlib import Path
+
+from hal_work import proc
 
 from .settings import settings
 
@@ -17,9 +18,7 @@ SKIP = {"node_modules", ".venv", "venv", "__pycache__", "site-packages", "GPT-So
 
 
 def _git(repo: Path, *args: str, timeout: float = 30) -> str:
-    done = subprocess.run(
-        ["git", "-C", str(repo), *args], capture_output=True, text=True, timeout=timeout
-    )
+    done = proc.completed(["git", "-C", str(repo), *args], timeout=timeout)
     return done.stdout.strip()
 
 
@@ -134,7 +133,7 @@ def run_tests(repo: str) -> dict:
         cmd = ["python3", "-m", "unittest", "discover", "-s", "tests", "-q"]
     else:
         raise ValueError(f"{r.name} has no tests that hal-dev recognises")
-    done = subprocess.run(cmd, cwd=r, capture_output=True, text=True, timeout=1800)
+    done = proc.completed(cmd, cwd=r, timeout=1800)
     tail = (done.stdout + done.stderr).strip().splitlines()[-15:]
     return {
         "repo": r.name,
@@ -169,7 +168,7 @@ def github(kind: str = "prs", repo: str = "") -> list[str]:
             if not repo
             else ["gh", "pr", "list", *where]
         )
-    done = subprocess.run(cmd, capture_output=True, text=True, timeout=60)
+    done = proc.completed(cmd, timeout=60)
     if done.returncode:
         raise RuntimeError(done.stderr.strip()[-300:])
     return done.stdout.strip().splitlines()[:30]

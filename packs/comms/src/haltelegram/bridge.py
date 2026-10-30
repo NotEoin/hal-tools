@@ -10,7 +10,6 @@ from __future__ import annotations
 
 import logging
 import secrets
-import subprocess
 import sys
 import tempfile
 import threading
@@ -18,11 +17,14 @@ import time
 from collections.abc import Callable
 from pathlib import Path
 
+from hal_comms import proc
+
 from . import settings as config
 from . import voice
 from .jobs import Jobs
 
 log = logging.getLogger("hal-telegram")
+NOTIFY_TIMEOUT_S = 10.0  # notify-send returns at once; a hung desktop bus must not stall startup
 
 HELP = """Commands:
 /status - what needs you, and the pipeline
@@ -98,10 +100,13 @@ class Bridge:
         if self.pairing_code:
             message = f"Send /pair {self.pairing_code} to your Hal bot in Telegram."
             log.info(message)
-            subprocess.run(
-                ["notify-send", "-a", "Hal", "-u", "critical", "Pair Telegram", message],
-                check=False,
-            )
+            try:
+                proc.completed(
+                    ["notify-send", "-a", "Hal", "-u", "critical", "Pair Telegram", message],
+                    timeout=NOTIFY_TIMEOUT_S,
+                )
+            except (OSError, proc.ProcTimeout) as exc:
+                log.warning("pairing notice not shown: %s", exc)
 
     def _pair(self, chat: int, text: str) -> None:
         command, arg = parse(text)

@@ -8,8 +8,9 @@ confirmation through hal-hub.
 from __future__ import annotations
 
 import json
-import subprocess
 import urllib.request
+
+from hal_system import proc
 
 from .settings import shared
 
@@ -61,28 +62,24 @@ def loaded() -> list[dict]:
 
 def gpu() -> dict:
     """GPU memory and use, and every program on it."""
-    q = subprocess.run(
+    q = proc.completed(
         [
             "nvidia-smi",
             "--query-gpu=name,memory.used,memory.total,utilization.gpu,temperature.gpu",
             "--format=csv,noheader,nounits",
         ],
-        capture_output=True,
-        text=True,
         timeout=10,
     ).stdout.strip()
     if not q:
         return {"gpu": "no NVIDIA GPU found"}
     name, used, total, util, temp = [x.strip() for x in q.splitlines()[0].split(",")]
     apps = (
-        subprocess.run(
+        proc.completed(
             [
                 "nvidia-smi",
                 "--query-compute-apps=pid,process_name,used_memory",
                 "--format=csv,noheader,nounits",
             ],
-            capture_output=True,
-            text=True,
             timeout=10,
         )
         .stdout.strip()

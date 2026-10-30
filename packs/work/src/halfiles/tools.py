@@ -12,11 +12,12 @@ import hashlib
 import os
 import re
 import shutil
-import subprocess
 import time
 import zipfile
 from datetime import datetime
 from pathlib import Path
+
+from hal_work import proc
 
 from . import llm
 from .settings import settings
@@ -187,9 +188,7 @@ def read(path: str, summarise: bool = False, limit: int = 8000) -> dict:
         raise ValueError(f"{path} is not a file")
     ext = p.suffix.lower()
     if ext == ".pdf":
-        text = subprocess.run(
-            ["pdftotext", "-layout", str(p), "-"], capture_output=True, text=True, timeout=60
-        ).stdout
+        text = proc.completed(["pdftotext", "-layout", str(p), "-"], timeout=60).stdout
     elif ext in (".docx", ".odt", ".pptx", ".odp"):
         with zipfile.ZipFile(p) as z:
             names = [
@@ -223,9 +222,7 @@ def largest(folder: str = "~", limit: int = 12) -> dict:
         if child.is_symlink():
             continue
         if child.is_dir():
-            out = subprocess.run(
-                ["du", "-sb", str(child)], capture_output=True, text=True, timeout=300
-            ).stdout
+            out = proc.completed(["du", "-sb", str(child)], timeout=300).stdout
             sizes[child.name] = int(out.split()[0]) if out else 0
         elif child.is_file():
             sizes[child.name] = child.stat().st_size
@@ -300,5 +297,5 @@ def tidy_downloads(folder: str = "~/Downloads", older_than_days: int = 0) -> dic
 
 def folder_size(folder: str) -> dict:
     p = Path(folder).expanduser()
-    out = subprocess.run(["du", "-sb", str(p)], capture_output=True, text=True, timeout=600).stdout
+    out = proc.completed(["du", "-sb", str(p)], timeout=600).stdout
     return {"folder": str(p), "size_gb": round(int(out.split()[0]) / 1e9, 2) if out else None}
