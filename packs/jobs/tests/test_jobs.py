@@ -11,7 +11,7 @@ from pathlib import Path
 from unittest import mock
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from haljobs import tools  # noqa: E402
+from haljobs import tools
 
 MANIFEST = Path(__file__).resolve().parents[1] / "src" / "haljobs" / "hal-module.toml"
 

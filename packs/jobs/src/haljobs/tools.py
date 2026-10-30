@@ -12,14 +12,14 @@ import subprocess
 import urllib.request
 from pathlib import Path
 
-from .config import settings
+from .settings import settings
 
 PACK_TIMEOUT = 1800  # seconds; drafting a pack runs the local model and searches the web
 
 
 def _jobhunt(*args: str, timeout: float = 600) -> str:
     s = settings()
-    root = Path(s.get("jobhunt_root") or s["jobhunt"]).expanduser()
+    root = Path(str(s["jobhunt_root"])).expanduser()
     if not (root / "jobhunt").is_dir():
         raise RuntimeError(f"jobhunt not found at {root}; set [jobs].jobhunt_root")
     done = subprocess.run(
@@ -36,7 +36,7 @@ def _jobhunt(*args: str, timeout: float = 600) -> str:
 
 def _api(path: str) -> dict:
     url = settings()["employment_url"].rstrip("/") + "/api/" + path
-    with urllib.request.urlopen(url, timeout=10) as r:
+    with urllib.request.urlopen(url, timeout=10) as r:  # noqa: S310 - the URL is the user-configured local Hal Employment server
         return json.loads(r.read())
 
 
@@ -69,7 +69,7 @@ def applications() -> list[dict]:
             for j in _api("applications")["jobs"]
         ]
     except OSError:
-        return [{"line": l} for l in _jobhunt("list", "-s", "all", "-n", "40").splitlines()]
+        return [{"line": line} for line in _jobhunt("list", "-s", "all", "-n", "40").splitlines()]
 
 
 def todo() -> str:
@@ -146,7 +146,8 @@ def pack(job: str) -> dict:
     """Drafts the application pack for one job; returns the pack's files and jobhunt's output."""
     output = _jobhunt("pack", job, timeout=PACK_TIMEOUT)
     pack_md = next(
-        (Path(l.strip()) for l in output.splitlines() if l.strip().endswith("pack.md")), None
+        (Path(line.strip()) for line in output.splitlines() if line.strip().endswith("pack.md")),
+        None,
     )
     files = [pack_md, *sorted(pack_md.parent.glob("*.pdf"))] if pack_md and pack_md.exists() else []
     return {
