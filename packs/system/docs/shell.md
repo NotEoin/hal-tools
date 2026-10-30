@@ -1,18 +1,23 @@
 # hal-shell
 
 hal-shell is Hal's fallback for anything the other modules do not cover: it runs shell commands.
-Commands that only read run straight away; anything that could change the system runs only after you
-confirm.
+`shell_look` runs one read-only program from a fixed table; `shell_run` is denied by default and the
+hub asks you before every run.
 
 ## Highlights
 
-- `shell_look` runs read-only commands and pipelines (`ls`, `grep`, `df`, `ps`, `git log`, `journalctl`
-  and about seventy others) with no confirmation.
-- Every command in a pipeline is checked, with the subcommands that write refused (`git push`,
-  `systemctl stop`, `apt install`, `find -delete`, `sed -i`), along with redirection to files,
-  chaining, command substitution, background jobs, and awk or sed scripts that run programs.
-- `shell_run` runs anything, and hal-hub asks you first.
-- Output is cut to a readable length.
+- `shell_look` starts no shell. The command is split, the program must be on the table (`ls`, `cat`,
+  `grep`, `find`, `df`, `ps`, `systemctl status`, `journalctl` and about fifty more), every option
+  and argument must be allowed for that program, and it runs as an argv list from `/usr/bin`,
+  `/bin`, `/usr/sbin` or `/sbin`.
+- Pipes, redirects, chaining and substitution are refused. Use the `filter` argument to keep matching
+  lines and `head` to keep the first lines.
+- Every path argument and `cwd` is resolved (symlinks followed) and must be inside your home
+  directory or `/tmp`, and outside `~/.ssh`, `~/.gnupg`, Hal's own config and state, `/proc`, `/sys`
+  and `/dev`.
+- The child runs in its own process group with no stdin and a minimal environment. Output is read up
+  to `max_output` bytes, and the group is killed on a timeout or an overflow.
+- `shell_run` runs anything; see the tool table for its tier.
 
 ## Install
 
@@ -28,7 +33,7 @@ The tools run from the module folder, or through hal-hub as `hal-hub shell_<tool
 
 ```bash
 cd ~/src/hal-ecosystem/hal-shell
-python3 -m halshell look command="du -sh ~/Downloads/* | sort -h | tail -5"
+python3 -m halshell look command="du -sh --max-depth=1 ~/Downloads" head=20
 hal-hub shell_run command="mkdir -p ~/projects/new" --yes
 ```
 
@@ -38,7 +43,9 @@ Settings live in the `[shell]` table of `~/.config/hal/config.toml`:
 
 ```toml
 [shell]
-max_output = 12000     # characters of output returned
+timeout_s = 20         # seconds a shell_look command may run
+max_output = 65536     # bytes of output read
+max_timeout_s = 600    # upper bound for a shell_run timeout
 ```
 
 ## Licence

@@ -10,7 +10,11 @@ from halkit import config
 TABLE = config.register(
     config.Table(
         "shell",
-        (config.Key("max_output", int, 12000, doc="Cap on characters returned by a shell tool"),),
+        (
+            config.Key("timeout_s", int, 20, doc="Seconds a read-only shell_look command may run"),
+            config.Key("max_output", int, 65536, doc="Cap on bytes read from a shell tool"),
+            config.Key("max_timeout_s", int, 600, doc="Upper bound for a shell_run timeout"),
+        ),
         owner="hal-system",
     )
 )

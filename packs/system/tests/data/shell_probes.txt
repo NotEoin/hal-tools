@@ -1,0 +1,142 @@
+# One bypass attempt per line; every line must be refused by shell_look.
+# Blank lines and lines starting with # are ignored.
+rm -rf /tmp/x
+ls; rm x
+ls && rm x
+ls || rm x
+ls | sh
+ls | xargs rm
+ls & rm x
+ls &
+ls > /tmp/out
+ls >> /tmp/out
+ls 2>&1
+cat < /etc/passwd
+cat $(echo /etc/passwd)
+cat `echo /etc/passwd`
+cat <(echo hi)
+env rm x
+bash -c id
+sh -c id
+python3 -c 1
+python3 evil.py
+awk 'BEGIN{system("id")}'
+sed -i s/a/b/ f
+git -c alias.x=!id status
+find . -delete
+find . -exec id ;
+find . -execdir id ;
+find . -fprint /tmp/x
+find . -ok id ;
+find . -name x -fls /tmp/x
+find -L . -name x
+grep -R x .
+grep --pre=id x f
+grep -f /etc/passwd x
+rg --pre id x
+rg -z x
+rg --pre-glob '*' x f
+tar -xf a.tar
+tar -cf a.tar f
+tar --to-command=id -tf a.tar
+tar -tf a.tar --checkpoint-action=exec=id
+unzip -o a.zip
+unzip a.zip
+less /etc/hostname
+top -b
+head -f f
+tail -f f
+tail --follow f
+tail -F f
+cat /dev/zero
+ls -- -rf
+ls --color=always
+ls --block-size=1
+du --files0-from=/etc/passwd
+df --output=source
+journalctl -f
+journalctl --vacuum-size=1
+journalctl --rotate
+journalctl --flush
+journalctl -n 100000
+journalctl -n -1
+journalctl --file=/etc/shadow
+systemctl restart ssh
+systemctl start x
+systemctl edit x
+systemctl poweroff
+systemctl --user stop x
+systemctl status ssh; id
+systemctl set-property x CPUQuota=1
+systemctl kill x
+loginctl terminate-session 1
+loginctl kill-session 1
+timedatectl set-time 2020-01-01
+hostnamectl set-hostname x
+hostname evil
+date -s 2020-01-01
+date --set=2020-01-01
+date 010100002020
+nmcli r on
+nmcli radio wifi on
+nmcli radio all off
+nmcli n off
+nmcli connection up x
+nmcli connection delete x
+nmcli device connect x
+nmcli connection show --show-secrets
+nmcli -s connection show
+nmcli general hostname evil
+ip link set eth0 down
+ip addr add 1.2.3.4/24 dev eth0
+ip route add default via 1.2.3.4
+ip netns exec x id
+ss -K
+ss -D
+pgrep -f x --signal 9
+ps --sort=%cpu,evil
+ps -o evil
+dpkg -i x.deb
+dpkg --purge x
+apt install x
+apt update
+apt remove x
+snap install x
+snap remove x
+flatpak install x
+flatpak run x
+pdftotext f out.txt
+ffprobe http://example.com/x
+ffprobe -f lavfi -i x
+ffprobe -i f
+nvidia-smi --query-compute-apps=pid
+nvidia-smi -pm 1
+nvidia-smi -r
+ping -c1 localhost
+dig example.com
+nslookup example.com
+host example.com
+getent hosts example.com
+docker ps
+ollama list
+locate x
+printenv
+printenv HOME
+exiftool f
+identify f
+xdg-mime query default x
+gsettings set a b c
+/bin/ls
+/usr/bin/id
+../bin/ls
+./ls
+cat /proc/self/environ
+cat /etc/shadow
+cat ~/.ssh/id_rsa
+cat ../../../../../../../../etc/passwd
+ls /sys
+ls /dev
+ls /proc
+ls ~/.ssh
+ls ~/.config/hal
+tail -n 99999999 f

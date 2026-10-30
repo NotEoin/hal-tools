@@ -1,228 +1,23 @@
-"""hal-shell's tools: the fallback that lets Hal do anything the command line can.
+"""hal-shell's tools: `shell_look` for read-only listings, `shell_run` as the explicit last resort.
 
-shell_look runs only commands that read: every command in a pipeline must be
-on the read-only list, and redirection to files, command substitution and
-background jobs are refused. shell_run runs anything, and is marked confirm in
-the manifest, so hal-hub asks the user first. Output is cut to a readable size.
+`shell_look` never starts a shell: the command is split, checked against the program table in
+`readonly.py` and run as an argv list by the capped runner. `shell_run` is `runs_code`, so it is
+denied by default and the hub asks the user before every run. Output is cut to a readable size.
 """
 
 from __future__ import annotations
 
 import os
-import re
-import shlex
+from pathlib import Path
 
 from hal_system import proc
 
+from . import readonly
+from . import run as runner
+from .pathrule import read_ok
 from .settings import settings
 
-READ_ONLY = {
-    "ls",
-    "cat",
-    "head",
-    "tail",
-    "less",
-    "wc",
-    "grep",
-    "rg",
-    "find",
-    "locate",
-    "file",
-    "stat",
-    "du",
-    "df",
-    "free",
-    "uptime",
-    "whoami",
-    "id",
-    "date",
-    "cal",
-    "uname",
-    "hostname",
-    "ps",
-    "pgrep",
-    "top",
-    "lsblk",
-    "lscpu",
-    "lsusb",
-    "lspci",
-    "ip",
-    "ss",
-    "ping",
-    "dig",
-    "host",
-    "nslookup",
-    "which",
-    "whereis",
-    "type",
-    "echo",
-    "printf",
-    "printenv",
-    "sort",
-    "uniq",
-    "cut",
-    "tr",
-    "awk",
-    "sed",
-    "jq",
-    "column",
-    "diff",
-    "cmp",
-    "md5sum",
-    "sha256sum",
-    "tree",
-    "realpath",
-    "basename",
-    "dirname",
-    "journalctl",
-    "dmesg",
-    "sensors",
-    "nvidia-smi",
-    "git",
-    "apt",
-    "dpkg",
-    "snap",
-    "flatpak",
-    "systemctl",
-    "loginctl",
-    "timedatectl",
-    "hostnamectl",
-    "lsof",
-    "last",
-    "w",
-    "who",
-    "groups",
-    "getent",
-    "xdg-mime",
-    "gsettings",
-    "nmcli",
-    "pactl",
-    "wpctl",
-    "docker",
-    "ollama",
-    "seq",
-    "true",
-    "test",
-    "bc",
-    "numfmt",
-    "zcat",
-    "tar",
-    "unzip",
-    "pdftotext",
-    "identify",
-    "ffprobe",
-    "exiftool",
-}
-# Subcommands that change things, refused by shell_look even though the command itself is listed.
-WRITES = {
-    "git": {
-        "push",
-        "commit",
-        "reset",
-        "checkout",
-        "rebase",
-        "merge",
-        "clean",
-        "rm",
-        "mv",
-        "restore",
-        "switch",
-        "branch",
-        "tag",
-        "stash",
-        "pull",
-        "fetch",
-        "am",
-        "apply",
-        "cherry-pick",
-        "revert",
-        "init",
-        "clone",
-        "config",
-    },
-    "systemctl": {
-        "start",
-        "stop",
-        "restart",
-        "enable",
-        "disable",
-        "mask",
-        "unmask",
-        "kill",
-        "reload",
-        "edit",
-        "daemon-reload",
-        "set-property",
-        "poweroff",
-        "reboot",
-        "suspend",
-        "hibernate",
-        "isolate",
-    },
-    "apt": {
-        "install",
-        "remove",
-        "purge",
-        "upgrade",
-        "full-upgrade",
-        "autoremove",
-        "update",
-        "dist-upgrade",
-    },
-    "snap": {"install", "remove", "refresh", "disable", "enable"},
-    "flatpak": {"install", "uninstall", "update"},
-    "docker": {
-        "run",
-        "rm",
-        "rmi",
-        "stop",
-        "kill",
-        "exec",
-        "build",
-        "pull",
-        "push",
-        "prune",
-        "system",
-        "compose",
-    },
-    "ollama": {"rm", "pull", "push", "create", "cp", "run", "stop"},
-    "gsettings": {"set", "reset"},
-    "nmcli": {"connection", "device", "radio", "networking", "general"},
-    "ip": {"link", "addr", "route"},
-    "tar": {"-x", "x", "--extract", "-c", "c", "--create"},
-    "sed": {"-i", "--in-place"},
-    "dpkg": {"-i", "--install", "-r", "--remove", "-P", "--purge", "--configure"},
-    "journalctl": {"--vacuum-size", "--vacuum-time", "--vacuum-files", "--rotate", "--flush"},
-    "find": {"-delete", "-exec", "-execdir", "-ok", "-fprint"},
-    "unzip": {"-o"},
-    "loginctl": {"terminate-session", "kill-session", "lock-session", "poweroff", "reboot"},
-    "timedatectl": {"set-time", "set-timezone", "set-ntp"},
-    "hostnamectl": {"set-hostname"},
-}
-# awk and sed can run programs or write files from inside their scripts.
-SCRIPT_ESCAPES = re.compile(r"system\s*\(|getline|\|\s*\"|print\s*\||\bw\s+\S|\be\s|/e\b")
-UNSAFE = re.compile(r"[`]|\$\(|(?<![<>])>(?!&)|>>|&\s*$|;|\|\||&&")
-
-
-def _check_read_only(command: str) -> None:
-    if UNSAFE.search(command):
-        raise PermissionError(
-            "redirection, chaining and substitution are not read-only; use shell_run"
-        )
-    for part in command.split("|"):
-        words = shlex.split(part)
-        if not words:
-            continue
-        prog = os.path.basename(words[0])
-        if prog not in READ_ONLY:
-            raise PermissionError(f"{prog} is not on the read-only list; use shell_run")
-        bad = WRITES.get(prog, set()).intersection(w.split("=", 1)[0] for w in words[1:])
-        if bad:
-            raise PermissionError(f"{prog} {sorted(bad)[0]} changes things; use shell_run")
-        if prog in ("awk", "sed") and any(SCRIPT_ESCAPES.search(w) for w in words[1:]):
-            raise PermissionError(f"{prog} scripts that run commands or write files need shell_run")
-        if prog == "git" and any(w == "-c" or w.startswith("--exec-path") for w in words[1:]):
-            raise PermissionError("git -c can run commands; use shell_run")
+MAX_HEAD = 2000  # lines, the upper bound of the `head` argument
 
 
 def _exec(command: str, cwd: str, timeout: float) -> dict:
@@ -238,10 +33,39 @@ def _exec(command: str, cwd: str, timeout: float) -> dict:
     }
 
 
-def look(command: str, cwd: str = "") -> dict:
-    """Runs a read-only command (or pipeline of them) and returns its output."""
-    _check_read_only(command)
-    return _exec(command, cwd, 60)
+def look(command: str, cwd: str = "", filter: str = "", head: int = 0) -> dict:
+    """Runs one read-only program from the table and returns its argv, output and exit code.
+
+    `filter` keeps the lines that contain it (case-insensitive); `head` keeps the first lines.
+    They replace pipes. Raises `NotAllowed` for anything not on the table.
+    """
+    base = Path(os.path.expanduser(cwd or "~")).resolve()
+    if reason := read_ok(base):
+        raise readonly.NotAllowed(f"cwd: {reason}")
+    if not 0 <= head <= MAX_HEAD:
+        raise ValueError(f"head must be between 0 and {MAX_HEAD}")
+    argv = readonly.check(command, path_ok=read_ok, cwd=base)
+    cfg = settings()
+    extra = {}
+    if "--user" in argv:  # the user manager is reached through the session bus
+        for key in ("XDG_RUNTIME_DIR", "DBUS_SESSION_BUS_ADDRESS"):
+            if key in os.environ:
+                extra[key] = os.environ[key]
+    res = runner.capped(
+        argv,
+        timeout=float(cfg["timeout_s"]),
+        cwd=str(base),
+        env=runner.minimal_env(extra),
+        max_output=int(cfg["max_output"]),
+    )
+    lines = res["output"].splitlines()
+    if filter:
+        needle = filter.lower()
+        lines = [ln for ln in lines if needle in ln.lower()]
+    if head:
+        lines = lines[:head]
+    res["output"] = "\n".join(lines)
+    return {"argv": argv, **res}
 
 
 def run(command: str, cwd: str = "", timeout: int = 300) -> dict:

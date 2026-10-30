@@ -19,7 +19,7 @@ class SettingsTest(unittest.TestCase):
                 return settings()
 
     def test_missing_file_gives_the_default_max_output(self) -> None:
-        self.assertEqual(self._load("")["max_output"], 12000)
+        self.assertEqual(self._load("")["max_output"], 65536)
 
     def test_value_in_the_file_overrides_the_default(self) -> None:
         self.assertEqual(self._load("[shell]\nmax_output = 500\n")["max_output"], 500)

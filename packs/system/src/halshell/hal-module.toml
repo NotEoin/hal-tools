@@ -9,15 +9,24 @@ python = "halshell.tools"
 [[tools]]
 name = "shell_look"
 function = "look"
-description = "Run a read-only shell command or pipeline (ls, cat, grep, find, df, ps, git log, journalctl and similar) and see its output. Use when no other tool answers a question about this computer."
+description = "Run one read-only program (ls, cat, grep, find, df, ps, systemctl status, journalctl and similar) and see its output. No pipes or redirects: use filter to keep matching lines and head to keep the first lines. Use when no other tool answers a question about this computer."
 tier = "read"
 untrusted_output = true
 reversible = true
 keywords = "command terminal shell bash run check look"
-timeout = 70
+timeout = 30
 [tools.params.command]
 required = true
+max_length = 1000
 [tools.params.cwd]
+format = "path"
+access = "read"
+[tools.params.filter]
+max_length = 200
+[tools.params.head]
+type = "integer"
+minimum = 0
+maximum = 2000
 
 [[tools]]
 name = "shell_run"
@@ -30,8 +39,9 @@ keywords = "execute command terminal script do"
 timeout = 1800
 [tools.params.command]
 required = true
+max_length = 4000
 [tools.params.cwd]
 [tools.params.timeout]
 type = "integer"
 minimum = 1
-maximum = 300
+maximum = 600
