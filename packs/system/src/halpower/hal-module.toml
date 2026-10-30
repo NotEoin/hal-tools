@@ -1,4 +1,7 @@
+schema = 2
+
 [module]
+pack = "system"
 name = "power"
 summary = "Suspend, restart and shut down (now or scheduled), power profiles, battery and uptime"
 python = "halpower.tools"
@@ -7,42 +10,56 @@ python = "halpower.tools"
 name = "power_suspend"
 function = "suspend"
 description = "Put the computer to sleep."
-confirm = true
+tier = "system"
+reversible = true
 keywords = "sleep suspend standby"
 
 [[tools]]
 name = "power_restart"
 function = "restart"
 description = "Restart the computer now, or in some minutes."
-confirm = true
+tier = "system"
 keywords = "restart reboot"
 [tools.params.minutes]
 type = "integer"
+minimum = 0
+maximum = 1440
 
 [[tools]]
 name = "power_shutdown"
 function = "shutdown"
 description = "Turn the computer off now, or in some minutes."
-confirm = true
+tier = "system"
 keywords = "shut down turn off power off"
 [tools.params.minutes]
 type = "integer"
+minimum = 0
+maximum = 1440
 
 [[tools]]
 name = "power_cancel"
 function = "cancel_shutdown"
 description = "Cancel a scheduled restart or shutdown."
+tier = "act"
+reviewable = true
+reversible = true
 keywords = "cancel shutdown abort"
 
 [[tools]]
 name = "power_scheduled"
 function = "scheduled"
 description = "Whether a restart or shutdown is scheduled, and when."
+tier = "read"
+reviewable = true
+reversible = true
 
 [[tools]]
 name = "power_profile"
 function = "profile"
 description = "Read or set the power profile: power-saver, balanced or performance."
+tier = "act"
+reviewable = true
+reversible = true
 keywords = "power mode performance battery saver"
 [tools.params.mode]
 enum = ["power-saver", "balanced", "performance"]
@@ -51,10 +68,16 @@ enum = ["power-saver", "balanced", "performance"]
 name = "power_battery"
 function = "battery"
 description = "Battery charge and state."
+tier = "read"
+reviewable = true
+reversible = true
 keywords = "battery charge"
 
 [[tools]]
 name = "power_uptime"
 function = "uptime"
 description = "How long the computer has been on."
+tier = "read"
+reviewable = true
+reversible = true
 keywords = "uptime how long on running since boot"

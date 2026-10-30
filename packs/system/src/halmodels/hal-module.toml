@@ -1,4 +1,7 @@
+schema = 2
+
 [module]
+pack = "system"
 name = "models"
 summary = "Local AI models in Ollama: installed, loaded, VRAM and GPU, load, unload, pull, delete, ask one directly"
 python = "halmodels.tools"
@@ -7,6 +10,9 @@ python = "halmodels.tools"
 name = "models_installed"
 function = "installed"
 description = "Local AI models installed in Ollama, with size and parameters."
+tier = "read"
+reviewable = true
+reversible = true
 keywords = "models installed ollama llm local ai which"
 [tools.params.query]
 
@@ -14,28 +20,43 @@ keywords = "models installed ollama llm local ai which"
 name = "models_loaded"
 function = "loaded"
 description = "Models loaded in memory now and their VRAM use."
+tier = "read"
+reviewable = true
+reversible = true
 keywords = "loaded running models vram memory"
 
 [[tools]]
 name = "models_gpu"
 function = "gpu"
 description = "GPU memory, use and temperature, and each program on the GPU."
+tier = "read"
+untrusted_output = true
+reviewable = true
+reversible = true
 keywords = "gpu vram graphics memory nvidia what is using"
 
 [[tools]]
 name = "models_load"
 function = "load"
 description = "Load a model into memory and keep it there for some minutes."
+tier = "act"
+reviewable = true
+reversible = true
 timeout = 600
 [tools.params.model]
 required = true
 [tools.params.minutes]
 type = "integer"
+minimum = 0
+maximum = 1440
 
 [[tools]]
 name = "models_unload"
 function = "unload"
 description = "Unload one model, or all of them, to free GPU memory."
+tier = "act"
+reviewable = true
+reversible = true
 keywords = "free vram unload model gpu memory"
 timeout = 120
 [tools.params.model]
@@ -44,6 +65,9 @@ timeout = 120
 name = "models_pull"
 function = "pull"
 description = "Download a model from the Ollama library."
+tier = "act"
+network = true
+reviewable = true
 timeout = 7200
 [tools.params.model]
 required = true
@@ -52,7 +76,7 @@ required = true
 name = "models_delete"
 function = "delete"
 description = "Delete an installed model."
-confirm = true
+tier = "act"
 [tools.params.model]
 required = true
 
@@ -60,6 +84,10 @@ required = true
 name = "models_ask"
 function = "ask"
 description = "Ask a particular local model a question directly, to compare answers."
+tier = "read"
+untrusted_output = true
+reviewable = true
+reversible = true
 timeout = 600
 [tools.params.model]
 required = true

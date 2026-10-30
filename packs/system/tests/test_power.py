@@ -16,7 +16,7 @@ class PowerTest(unittest.TestCase):
         self.assertIn("uptime", tools.uptime())
         self.assertIn("scheduled", tools.scheduled())
 
-    def test_manifest_guards_every_session_ending_tool(self):
+    def test_session_ending_tools_are_system_tier(self):
         import tomllib
 
         spec = tomllib.loads(
@@ -24,7 +24,7 @@ class PowerTest(unittest.TestCase):
                 Path(__file__).resolve().parents[1] / "src" / "halpower" / "hal-module.toml"
             ).read_text()
         )
-        guarded = {t["name"] for t in spec["tools"] if t.get("confirm")}
+        guarded = {t["name"] for t in spec["tools"] if t.get("tier") == "system"}
         self.assertEqual(guarded, {"power_suspend", "power_restart", "power_shutdown"})
 
 

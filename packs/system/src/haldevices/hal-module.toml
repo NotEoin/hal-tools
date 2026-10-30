@@ -1,4 +1,7 @@
+schema = 2
+
 [module]
+pack = "system"
 name = "devices"
 summary = "Bluetooth devices, USB, printers and printing, monitors and cameras"
 python = "haldevices.tools"
@@ -7,12 +10,19 @@ python = "haldevices.tools"
 name = "devices_bluetooth"
 function = "bluetooth"
 description = "Bluetooth on or off, and paired devices (headphones, controllers) with connection and battery."
+tier = "read"
+untrusted_output = true
+reviewable = true
+reversible = true
 keywords = "bluetooth headphones earbuds controller paired"
 
 [[tools]]
 name = "devices_bluetooth_connect"
 function = "bluetooth_connect"
 description = "Connect a paired Bluetooth device by name."
+tier = "act"
+reviewable = true
+reversible = true
 keywords = "connect headphones bluetooth"
 timeout = 30
 [tools.params.device]
@@ -22,6 +32,9 @@ required = true
 name = "devices_bluetooth_disconnect"
 function = "bluetooth_disconnect"
 description = "Disconnect a Bluetooth device."
+tier = "act"
+reviewable = true
+reversible = true
 timeout = 30
 [tools.params.device]
 required = true
@@ -30,6 +43,9 @@ required = true
 name = "devices_bluetooth_power"
 function = "bluetooth_power"
 description = "Turn Bluetooth on or off."
+tier = "act"
+reviewable = true
+reversible = true
 [tools.params.on]
 type = "boolean"
 required = true
@@ -38,26 +54,38 @@ required = true
 name = "devices_usb"
 function = "usb"
 description = "USB devices plugged in."
+tier = "read"
+untrusted_output = true
+reviewable = true
+reversible = true
 keywords = "usb plugged connected devices drive stick"
 
 [[tools]]
 name = "devices_printers"
 function = "printers"
 description = "Printers, the default one and the print queue."
+tier = "read"
+untrusted_output = true
+reviewable = true
+reversible = true
 keywords = "printer print queue ink"
 
 [[tools]]
 name = "devices_print"
 function = "print_file"
 description = "Print a file (PDF, image or text), with copies and double-sided printing."
-confirm = true
+tier = "act"
 keywords = "print file document"
 timeout = 90
 [tools.params.path]
+format = "path"
+access = "read"
 required = true
 [tools.params.printer]
 [tools.params.copies]
 type = "integer"
+minimum = 1
+maximum = 99
 [tools.params.double_sided]
 type = "boolean"
 
@@ -65,10 +93,16 @@ type = "boolean"
 name = "devices_monitors"
 function = "monitors"
 description = "Connected monitors and their resolution."
+tier = "read"
+reviewable = true
+reversible = true
 keywords = "monitor screen display resolution"
 
 [[tools]]
 name = "devices_cameras"
 function = "cameras"
 description = "Webcams and other video devices."
+tier = "read"
+reviewable = true
+reversible = true
 keywords = "webcam camera video"

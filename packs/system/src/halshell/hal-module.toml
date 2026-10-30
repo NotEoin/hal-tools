@@ -1,12 +1,18 @@
+schema = 2
+
 [module]
+pack = "system"
 name = "shell"
-summary = "Runs shell commands: read-only ones directly, anything else after confirmation"
+summary = "Runs shell commands: read-only ones directly, anything else only after approval"
 python = "halshell.tools"
 
 [[tools]]
 name = "shell_look"
 function = "look"
 description = "Run a read-only shell command or pipeline (ls, cat, grep, find, df, ps, git log, journalctl and similar) and see its output. Use when no other tool answers a question about this computer."
+tier = "read"
+untrusted_output = true
+reversible = true
 keywords = "command terminal shell bash run check look"
 timeout = 70
 [tools.params.command]
@@ -16,8 +22,10 @@ required = true
 [[tools]]
 name = "shell_run"
 function = "run"
-description = "Run any shell command, including ones that change things. Last resort when no other tool can do it; the user confirms first."
-confirm = true
+description = "Run any shell command, including ones that change things. Last resort when no other tool can do it; the hub asks the user first."
+tier = "system"
+untrusted_output = true
+runs_code = true
 keywords = "execute command terminal script do"
 timeout = 1800
 [tools.params.command]
@@ -25,3 +33,5 @@ required = true
 [tools.params.cwd]
 [tools.params.timeout]
 type = "integer"
+minimum = 1
+maximum = 300

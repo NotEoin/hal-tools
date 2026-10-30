@@ -1,4 +1,7 @@
+schema = 2
+
 [module]
+pack = "system"
 name = "packages"
 summary = "Software updates (apt, snap, flatpak), installing packages, and disk clean-up"
 python = "halpkgs.tools"
@@ -7,6 +10,10 @@ python = "halpkgs.tools"
 name = "packages_updates"
 function = "updates"
 description = "Which software updates are waiting (apt, snap, flatpak), security updates, and whether a restart is needed."
+tier = "read"
+network = true
+reviewable = true
+reversible = true
 keywords = "updates upgrades outdated security patches software"
 timeout = 180
 
@@ -14,7 +21,8 @@ timeout = 180
 name = "packages_upgrade"
 function = "upgrade"
 description = "Install all waiting apt updates; asks for the password on screen."
-confirm = true
+tier = "system"
+network = true
 keywords = "upgrade update install updates"
 timeout = 3600
 
@@ -22,7 +30,8 @@ timeout = 3600
 name = "packages_install"
 function = "install"
 description = "Install an apt package by its exact name; asks for the password on screen."
-confirm = true
+tier = "system"
+network = true
 keywords = "install program package apt"
 timeout = 1800
 [tools.params.package]
@@ -32,15 +41,24 @@ required = true
 name = "packages_search"
 function = "search"
 description = "Search the available apt packages by name."
+tier = "read"
+untrusted_output = true
+reviewable = true
+reversible = true
 [tools.params.query]
 required = true
 [tools.params.limit]
 type = "integer"
+minimum = 1
+maximum = 200
 
 [[tools]]
 name = "packages_installed"
 function = "is_installed"
 description = "Whether a program or package is installed, and its version."
+tier = "read"
+reviewable = true
+reversible = true
 keywords = "installed do i have version"
 [tools.params.name]
 required = true
@@ -49,6 +67,9 @@ required = true
 name = "packages_cleanup_report"
 function = "cleanup_report"
 description = "How much space caches, the trash, logs, Docker and old snaps take."
+tier = "read"
+reviewable = true
+reversible = true
 keywords = "free space clean up junk cache disk"
 timeout = 600
 
@@ -56,7 +77,7 @@ timeout = 600
 name = "packages_cleanup"
 function = "cleanup"
 description = "Empty the trash and the thumbnail cache."
-confirm = true
+tier = "system"
 keywords = "empty trash clear cache"
 [tools.params.trash]
 type = "boolean"

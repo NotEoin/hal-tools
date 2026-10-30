@@ -1,4 +1,7 @@
+schema = 2
+
 [module]
+pack = "system"
 name = "network"
 summary = "Connection status, Wi-Fi, devices on the network, public IP, ping, ports and speed test"
 python = "halnet.tools"
@@ -7,57 +10,94 @@ python = "halnet.tools"
 name = "network_status"
 function = "status"
 description = "How the computer is connected: devices, addresses, gateway, DNS, VPN and whether the internet is reachable."
+tier = "read"
+untrusted_output = true
+reviewable = true
+reversible = true
 keywords = "internet connection online network ip address vpn dns ethernet"
 
 [[tools]]
 name = "network_wifi"
 function = "wifi"
 description = "The Wi-Fi network in use, its signal, and the networks in range."
+tier = "read"
+untrusted_output = true
+reviewable = true
+reversible = true
 keywords = "wifi wireless signal network"
 
 [[tools]]
 name = "network_public_ip"
 function = "public_ip"
 description = "The public IP address, internet provider and approximate location."
+tier = "read"
+network = true
+reviewable = true
+reversible = true
 keywords = "public ip isp external address"
 
 [[tools]]
 name = "network_devices"
 function = "devices"
 description = "Other devices on the local network (phones, printers, TVs) seen recently."
+tier = "read"
+untrusted_output = true
+reviewable = true
+reversible = true
 keywords = "devices on network who is connected lan"
 
 [[tools]]
 name = "network_ping"
 function = "ping"
 description = "Check whether a host answers, with latency and packet loss."
+tier = "read"
+network = true
+reviewable = true
+reversible = true
 keywords = "ping latency lag reachable down"
 timeout = 70
 [tools.params.host]
 [tools.params.count]
 type = "integer"
+minimum = 1
+maximum = 20
 
 [[tools]]
 name = "network_port"
 function = "port"
 description = "Whether a TCP port is open on this machine or another local device."
+tier = "read"
+network = true
+reviewable = true
+reversible = true
 [tools.params.host]
 required = true
 [tools.params.port]
 type = "integer"
+minimum = 1
+maximum = 65535
 required = true
 
 [[tools]]
 name = "network_listening"
 function = "listening"
 description = "Programs on this computer listening for connections, and their ports."
+tier = "read"
+reviewable = true
+reversible = true
 keywords = "ports listening servers open"
 
 [[tools]]
 name = "network_speed_test"
 function = "speed_test"
 description = "Measure internet download and upload speed and latency."
+tier = "read"
+network = true
+reviewable = true
+reversible = true
 keywords = "speed test internet fast slow bandwidth broadband"
 timeout = 300
 [tools.params.megabytes]
 type = "integer"
+minimum = 1
+maximum = 1000
