@@ -1,4 +1,7 @@
+schema = 2
+
 [module]
+pack = "life"
 name = "contacts"
 summary = "People: contact details, birthdays (added to the calendar), interaction log and who you have not spoken to"
 python = "halcontacts.tools"
@@ -8,6 +11,9 @@ calls = ["calendar_add"]
 name = "contacts_add"
 function = "add"
 description = "Add a person or fill in their details: email, phone, birthday, relationship, company, notes. A birthday also goes in the calendar every year."
+tier = "write"
+reviewable = true
+reversible = true
 keywords = "contact person add phone number email birthday friend family"
 timeout = 60
 [tools.params.name]
@@ -24,6 +30,9 @@ description = "for example '3 March' or 1999-03-03"
 name = "contacts_get"
 function = "get"
 description = "Everything known about a person: details, notes and the log of interactions."
+tier = "read"
+reviewable = true
+reversible = true
 keywords = "who is phone number email of person contact details"
 [tools.params.name]
 required = true
@@ -32,6 +41,9 @@ required = true
 name = "contacts_find"
 function = "find"
 description = "Find people by words in their name, details or notes ('works at Google', 'from uni')."
+tier = "read"
+reviewable = true
+reversible = true
 keywords = "find person who contact search"
 [tools.params.query]
 required = true
@@ -40,6 +52,9 @@ required = true
 name = "contacts_log"
 function = "log"
 description = "Record that you spoke to or saw someone, with a note, so Hal remembers when and what."
+tier = "write"
+reviewable = true
+reversible = true
 keywords = "spoke to saw met called caught up with"
 [tools.params.name]
 required = true
@@ -52,22 +67,37 @@ description = "YYYY-MM-DD; today by default"
 name = "contacts_birthdays"
 function = "birthdays"
 description = "Birthdays coming up in the next N days."
+tier = "read"
+reviewable = true
+reversible = true
 keywords = "birthday upcoming birthdays"
 [tools.params.days]
 type = "integer"
+minimum = 0
+maximum = 3650
 
 [[tools]]
 name = "contacts_stale"
 function = "stale"
 description = "People you have not been in touch with for a while."
+tier = "read"
+reviewable = true
+reversible = true
 keywords = "lost touch catch up haven't spoken"
 [tools.params.days]
 type = "integer"
+minimum = 0
+maximum = 3650
 
 [[tools]]
 name = "contacts_import"
 function = "import_vcard"
 description = "Import contacts from a .vcf file exported from a phone, Google or iCloud."
+tier = "act"
+untrusted_output = true
+reviewable = true
 timeout = 600
 [tools.params.path]
+format = "path"
+access = "read"
 required = true

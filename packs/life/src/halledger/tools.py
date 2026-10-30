@@ -20,10 +20,12 @@ def _db() -> sqlite3.Connection:
     con = sqlite3.connect(data_dir() / "ledger.db")
     con.row_factory = sqlite3.Row
     con.executescript("""
-        CREATE TABLE IF NOT EXISTS spend (id INTEGER PRIMARY KEY, day TEXT, pence INTEGER, category TEXT, note TEXT,
+        CREATE TABLE IF NOT EXISTS spend (id INTEGER PRIMARY KEY, day TEXT, pence INTEGER,
+        category TEXT, note TEXT,
             source TEXT, UNIQUE(day, pence, note, source));
         CREATE TABLE IF NOT EXISTS budgets (category TEXT PRIMARY KEY, pence INTEGER);
-        CREATE TABLE IF NOT EXISTS subs (name TEXT PRIMARY KEY, pence INTEGER, period TEXT, next TEXT, reminded TEXT);
+        CREATE TABLE IF NOT EXISTS subs (name TEXT PRIMARY KEY, pence INTEGER, period TEXT, next
+        TEXT, reminded TEXT);
     """)
     return con
 
@@ -54,7 +56,8 @@ def spend(amount: str, note: str = "", category: str = "", day: str = "") -> dic
     d = day or date.today().isoformat()
     con = _db()
     con.execute(
-        "INSERT OR IGNORE INTO spend (day, pence, category, note, source) VALUES (?, ?, ?, ?, 'hal')",
+        "INSERT OR IGNORE INTO spend (day, pence, category, note, source) "
+        "VALUES (?, ?, ?, ?, 'hal')",
         (
             d,
             p,
@@ -175,7 +178,7 @@ def cancel_subscription(name: str) -> dict:
 
 
 def import_csv(path: str) -> dict:
-    """Imports a bank statement CSV, finding its date, description and amount columns; repeats are skipped."""
+    """Imports a bank statement CSV, finding its columns; repeated rows are skipped."""
     rows = list(csv.reader(Path(path).expanduser().read_text(errors="ignore").splitlines()))
     head = [h.strip().lower() for h in rows[0]]
     col = lambda *names: next((i for i, h in enumerate(head) if any(n in h for n in names)), None)  # noqa: E731
@@ -198,7 +201,8 @@ def import_csv(path: str) -> dict:
             p = -p
         d = _date(r[di])
         cur = con.execute(
-            "INSERT OR IGNORE INTO spend (day, pence, category, note, source) VALUES (?, ?, ?, ?, ?)",
+            "INSERT OR IGNORE INTO spend (day, pence, category, note, source) "
+            "VALUES (?, ?, ?, ?, ?)",
             (d, p, categorise(r[ni]), r[ni].strip(), Path(path).name),
         )
         added += cur.rowcount

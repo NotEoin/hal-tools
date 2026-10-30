@@ -17,10 +17,12 @@ def _db() -> sqlite3.Connection:
     con = sqlite3.connect(data_dir() / "habits.db")
     con.row_factory = sqlite3.Row
     con.executescript("""
-        CREATE TABLE IF NOT EXISTS habits (name TEXT PRIMARY KEY, target REAL, unit TEXT, created TEXT);
+        CREATE TABLE IF NOT EXISTS habits (name TEXT PRIMARY KEY, target REAL, unit TEXT, created
+        TEXT);
         CREATE TABLE IF NOT EXISTS entries (habit TEXT, day TEXT, amount REAL, at TEXT);
         CREATE TABLE IF NOT EXISTS mood (day TEXT, at TEXT, score INTEGER, note TEXT);
-        CREATE TABLE IF NOT EXISTS sleep (day TEXT PRIMARY KEY, hours REAL, quality INTEGER, note TEXT);
+        CREATE TABLE IF NOT EXISTS sleep (day TEXT PRIMARY KEY, hours REAL, quality INTEGER, note
+        TEXT);
     """)
     return con
 

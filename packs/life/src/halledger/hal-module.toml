@@ -1,4 +1,7 @@
+schema = 2
+
 [module]
+pack = "life"
 name = "ledger"
 summary = "Spending, monthly budgets, subscriptions with renewal reminders, and bank statement import"
 python = "halledger.tools"
@@ -7,6 +10,9 @@ python = "halledger.tools"
 name = "ledger_spend"
 function = "spend"
 description = "Record money spent: amount and what it was for ('12.50 lunch'). The category is worked out unless given."
+tier = "write"
+reviewable = true
+reversible = true
 keywords = "spent paid bought cost money expense pounds"
 [tools.params.amount]
 required = true
@@ -18,6 +24,9 @@ required = true
 name = "ledger_summary"
 function = "summary"
 description = "Spending for this month (or YYYY-MM) by category, against budgets."
+tier = "read"
+reviewable = true
+reversible = true
 keywords = "spending how much spent this month budget money summary"
 [tools.params.month]
 
@@ -25,13 +34,21 @@ keywords = "spending how much spent this month budget money summary"
 name = "ledger_recent"
 function = "recent"
 description = "The most recent spending entries."
+tier = "read"
+reviewable = true
+reversible = true
 [tools.params.limit]
 type = "integer"
+minimum = 1
+maximum = 200
 
 [[tools]]
 name = "ledger_budget"
 function = "budget"
 description = "Set a monthly budget for a category, such as eating out 150."
+tier = "write"
+reviewable = true
+reversible = true
 keywords = "budget limit monthly"
 [tools.params.category]
 required = true
@@ -42,6 +59,9 @@ required = true
 name = "ledger_subscription"
 function = "subscription"
 description = "Record a subscription, its cost, how often it renews and the next payment date."
+tier = "write"
+reviewable = true
+reversible = true
 keywords = "subscription renew netflix spotify membership"
 [tools.params.name]
 required = true
@@ -56,12 +76,17 @@ description = "YYYY-MM-DD"
 name = "ledger_subscriptions"
 function = "subscriptions"
 description = "Every subscription with its next renewal, and the total monthly and yearly cost."
+tier = "read"
+reviewable = true
+reversible = true
 keywords = "subscriptions how much do i pay"
 
 [[tools]]
 name = "ledger_cancel_subscription"
 function = "cancel_subscription"
 description = "Stop tracking a subscription."
+tier = "write"
+reviewable = true
 [tools.params.name]
 required = true
 
@@ -69,7 +94,11 @@ required = true
 name = "ledger_import"
 function = "import_csv"
 description = "Import a bank statement CSV; categories are worked out and repeats skipped."
+tier = "write"
+reviewable = true
 keywords = "bank statement import csv"
 timeout = 300
 [tools.params.path]
+format = "path"
+access = "read"
 required = true
