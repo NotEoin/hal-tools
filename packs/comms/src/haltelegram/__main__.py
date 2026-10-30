@@ -10,7 +10,8 @@ import json
 import re
 import sys
 
-from . import config, tools
+from . import settings as config
+from . import tools
 
 TOKEN = re.compile(r"^\d+:[A-Za-z0-9_-]{30,}$")
 

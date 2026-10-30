@@ -10,7 +10,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-from . import config
+from . import settings as config
 
 NEEDS_VOICE = "Voice notes need hal-voice installed (hal ext add voice)."
 

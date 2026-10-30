@@ -15,10 +15,11 @@ import sys
 import tempfile
 import threading
 import time
+from collections.abc import Callable
 from pathlib import Path
-from typing import Callable
 
-from . import config, voice
+from . import settings as config
+from . import voice
 from .jobs import Jobs
 
 log = logging.getLogger("hal-telegram")
@@ -243,5 +244,5 @@ def run() -> int:
             if "message" in update:
                 try:
                     bridge.handle(update["message"])
-                except Exception:  # noqa: BLE001 - one bad message must not stop the bot
+                except Exception:
                     log.exception("failed to handle message")

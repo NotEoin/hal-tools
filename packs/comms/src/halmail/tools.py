@@ -21,7 +21,7 @@ from email.message import EmailMessage
 from pathlib import Path
 
 from . import llm
-from .config import settings
+from .settings import settings
 
 DRAFTS = {"imap.gmail.com": '"[Gmail]/Drafts"'}
 

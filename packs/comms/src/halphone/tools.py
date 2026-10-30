@@ -12,7 +12,7 @@ import shutil
 import subprocess
 from pathlib import Path
 
-from .config import settings
+from .settings import settings
 
 SETUP = (
     "KDE Connect is not installed: run 'sudo apt install kdeconnect', install the KDE Connect app "

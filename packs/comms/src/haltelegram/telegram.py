@@ -18,7 +18,7 @@ class Telegram:
 
     def call(self, method: str, timeout: float = 70, **params) -> dict:
         data = urllib.parse.urlencode({k: v for k, v in params.items() if v is not None}).encode()
-        with urllib.request.urlopen(f"{self.base}/{method}", data=data, timeout=timeout) as r:
+        with urllib.request.urlopen(f"{self.base}/{method}", data=data, timeout=timeout) as r:  # noqa: S310 - https URL on the fixed Telegram API host
             reply = json.loads(r.read())
         if not reply.get("ok"):
             raise RuntimeError(f"{method}: {reply}")
@@ -36,17 +36,17 @@ class Telegram:
             f'filename="{path.name}"\r\nContent-Type: application/octet-stream\r\n\r\n'
         ).encode()
         body += path.read_bytes() + f"\r\n--{boundary}--\r\n".encode()
-        req = urllib.request.Request(
+        req = urllib.request.Request(  # noqa: S310 - https URL on the fixed Telegram API host
             f"{self.base}/{method}",
             data=body,
             headers={"Content-Type": f"multipart/form-data; boundary={boundary}"},
         )
-        with urllib.request.urlopen(req, timeout=120) as r:
+        with urllib.request.urlopen(req, timeout=120) as r:  # noqa: S310 - https URL on the fixed Telegram API host
             return json.loads(r.read())
 
     def download(self, file_id: str, dest: Path) -> Path:
         info = self.call("getFile", file_id=file_id)
-        urllib.request.urlretrieve(f"{self.files}/{info['file_path']}", dest)
+        urllib.request.urlretrieve(f"{self.files}/{info['file_path']}", dest)  # noqa: S310 - https URL on the fixed Telegram API host
         return dest
 
     def send(self, chat: int, text: str) -> None:
