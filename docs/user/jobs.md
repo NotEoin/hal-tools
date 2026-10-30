@@ -1,10 +1,23 @@
-# hal-jobs
+# jobs
+
+The `jobs` pack: an adapter to the Hal Employment job-search app. Each module below is a tool group with its own settings table.
+
+## Install
+
+```bash
+hal packs add hal-jobs   # installs the pack into its own environment
+hal packs list         # shows its modules and tools
+```
+
+Tool tiers and effects are in [the tool table](policy.md). Settings live in `~/.config/hal/config.toml`; each module section names its table.
+
+## jobs
 
 hal-jobs connects Hal to the job search: new matches, the application queue, applications by
 stage, the job to-do list, the job inbox, application packs and written or spoken summaries,
 through jobhunt's command line and the Hal Employment web app.
 
-## Highlights
+### Highlights
 
 - Holds no job data: it calls jobhunt and Hal Employment, so they stay the single source of truth.
 - The queue and applications from Hal Employment's API, with jobhunt as the fallback.
@@ -15,23 +28,7 @@ through jobhunt's command line and the Hal Employment web app.
 - Opens Hal Employment, where every application is still submitted by its owner.
 - Runs Hal Employment as a service, with a desktop launcher that starts it on demand.
 
-## Install
-
-hal-jobs needs Python 3.11 or later and a jobhunt checkout (the employment-helper repository). It
-lives in `extensions/hal-jobs` and is installed by the ecosystem installer:
-
-```bash
-hal ext add jobs
-```
-
-The manifest lists `systemd/hal-employment.service` and `desktop/hal-employment.desktop`
-(`[[units]]` and `[[desktop]]`); the installer renders them, replacing `@ROOT@` with the module folder. The service runs `bin/hal-employment-serve`, which starts
-`jobhunt serve` (Hal Employment, on http://127.0.0.1:8737) in `[jobs].jobhunt_root` with that
-checkout's virtualenv, reading the setting each time it starts. Its worker screens jobs and drafts
-packs with the local model, so the unit is `gpu = true` and `hal off` stops it. `bin/hal-employment`, which the desktop launcher
-runs, starts the service if needed and opens the app in the browser.
-
-## Use
+### Use
 
 The tools run from the module folder, or through hal-hub as `hal-hub jobs_<tool>`:
 
@@ -56,7 +53,7 @@ python3 -m haljobs mark job=acme status=interview
 | `jobs_check_email` | Sync the job inbox | `mail -q` |
 | `jobs_open` | Open Hal Employment | |
 
-## Configuration
+### Configuration
 
 Settings live in the `[jobs]` table of `~/.config/hal/config.toml`:
 
@@ -69,7 +66,3 @@ employment_url = "http://127.0.0.1:8737/"
 The older key `jobhunt` is still read when `jobhunt_root` is not set. While the `[jobs]` table is
 absent from the config, `jobhunt_root` falls back to the old default and a warning is logged once;
 write the table to silence it.
-
-## Licence
-
-MIT. See [LICENSE](LICENSE).

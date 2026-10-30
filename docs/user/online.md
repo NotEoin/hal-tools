@@ -1,10 +1,51 @@
-# hal-web
+# online
+
+The `online` pack: web search and reading, and news feeds. Each module below is a tool group with its own settings table.
+
+## Install
+
+```bash
+hal packs add hal-online   # installs the pack into its own environment
+hal packs list         # shows its modules and tools
+```
+
+Tool tiers and effects are in [the tool table](policy.md). Settings live in `~/.config/hal/config.toml`; each module section names its table.
+
+## feeds
+
+hal-feeds keeps Hal's reading: links you save to read later, with an optional summary, and RSS or
+Atom subscriptions (blogs, podcasts, YouTube channels, news) with what is new since you last looked.
+
+### Highlights
+
+- "Hal, save this for later": the link is stored with its title and, if asked, a short summary.
+- Subscriptions to any RSS or Atom feed, polled when you ask what is new.
+- Unread tracking across saved links and feed items.
+- No accounts and nothing from PyPI; summaries use the local model.
+
+### Use
+
+The tools run from the module folder, or through hal-hub as `hal-hub feeds_<tool>`:
+
+```bash
+cd ~/src/hal-ecosystem/hal-feeds
+python3 -m halfeeds subscribe url=https://hnrss.org/frontpage name="Hacker News"
+python3 -m halfeeds whats_new limit=5
+python3 -m halfeeds save url=https://example.com/article summarise=true
+```
+
+### Configuration
+
+hal-feeds has no table of its own. Feeds are fetched under the `[net]` table described in
+[web.md](#web): https only, a stored `http` feed is refused at every refresh.
+
+## web
 
 hal-web answers Hal's questions about the world: web search, reading and summarising pages, weather,
 news, Wikipedia, definitions, unit and currency conversion, world time and exact arithmetic. Nothing
 needs an API key.
 
-## Highlights
+### Highlights
 
 - Search through DuckDuckGo Lite, with Bing as a fallback.
 - Any page reduced to its readable text, or summarised by the local model.
@@ -14,15 +55,7 @@ needs an API key.
 - Units, temperatures and currencies (ECB rates through Frankfurter).
 - A calculator that parses expressions itself and never runs code.
 
-## Install
-
-hal-web needs Python 3.11 or later and an internet connection; page summaries need Ollama.
-
-```bash
-git clone <url> ~/src/hal-ecosystem/hal-web
-```
-
-## Use
+### Use
 
 The tools run from the module folder, or through hal-hub as `hal-hub web_<tool>`:
 
@@ -34,7 +67,7 @@ python3 -m halweb convert amount=100 from_unit=GBP to_unit=EUR
 python3 -m halweb calculate expression="15% of 80"
 ```
 
-## Configuration
+### Configuration
 
 Settings live in the `[web]` table of `~/.config/hal/config.toml`:
 
@@ -57,7 +90,3 @@ max_bytes = 2000000      # a page or feed above this is cut
 timeout_s = 20           # seconds before a fetch fails
 user_agent = "Hal/0.1 (+https://github.com/NotEoin/hal-tools)"
 ```
-
-## Licence
-
-MIT. See [LICENSE](LICENSE).

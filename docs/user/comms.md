@@ -1,11 +1,97 @@
-# hal-telegram
+# comms
+
+The `comms` pack: mail, phone and Telegram. Each module below is a tool group with its own settings table.
+
+## Install
+
+```bash
+hal packs add hal-comms   # installs the pack into its own environment
+hal packs list         # shows its modules and tools
+```
+
+Tool tiers and effects are in [the tool table](policy.md). Settings live in `~/.config/hal/config.toml`; each module section names its table.
+
+## mail
+
+hal-mail lets Hal read your email over IMAP: what is unread, a search, any message in full, and a
+short summary of what needs a reply. It saves replies to your Drafts folder, and sends only when you
+confirm.
+
+### Highlights
+
+- Read-only by default: mailboxes are opened with EXAMINE and messages fetched with BODY.PEEK, so
+  nothing is marked read, moved or deleted.
+- Several accounts, any IMAP provider; Gmail works with an app password.
+- HTML mail reduced to plain text; encoded and folded headers decoded.
+- Summaries of the unread mail from the local model.
+- Drafts appended to the Drafts folder for you to check; sending through SMTP asks for confirmation.
+
+### Use
+
+The tools run from the module folder, or through hal-hub as `hal-hub mail_<tool>`:
+
+```bash
+cd ~/src/hal-ecosystem/hal-mail
+python3 -m halmail unread limit=5
+python3 -m halmail search query="interview" days=14
+python3 -m halmail summarise
+```
+
+### Configuration
+
+Hal ships with no mail account. With none configured, every mail tool fails with
+`no mail account configured: add [mail.accounts.<name>] to ~/.config/hal/config.toml`.
+Accounts live in the `[mail]` table of that file; `default` may be left out when there is one:
+
+```toml
+[mail]
+default = "personal"
+[mail.accounts.personal]
+address = "you@gmail.com"
+imap = "imap.gmail.com"
+smtp = "smtp.gmail.com"
+password_file = "~/.config/hal/mail-personal"
+```
+
+## phone
+
+hal-phone connects Hal to your phone through KDE Connect: ring it when it is lost, check its battery,
+send it files, links and text, read its notifications, and send a text message from it.
+
+### Highlights
+
+- "Hal, where's my phone?" rings it at full volume.
+- Files, links and text sent from the computer to the phone.
+- The phone's notifications and battery level.
+- SMS from the phone's own number; Hal asks before sending.
+
+### Use
+
+The tools run from the module folder, or through hal-hub as `hal-hub phone_<tool>`:
+
+```bash
+cd ~/src/hal-ecosystem/hal-phone
+python3 -m halphone ring
+python3 -m halphone send_file path=~/Documents/ticket.pdf
+```
+
+### Configuration
+
+Settings live in the `[phone]` table of `~/.config/hal/config.toml`:
+
+```toml
+[phone]
+phone = "Pixel"      # which paired device to use when there are several
+```
+
+## telegram
 
 hal-telegram lets you talk to Hal from your phone through a Telegram bot. Messages and voice notes
 are answered by Hal through `hal acp --channel telegram --toolset assistant`, so every turn runs in the
 box, and a few commands
 cover the job search and the daily briefing.
 
-## Highlights
+### Highlights
 
 - Free text is an ACP prompt to `hal acp`: "add the dentist on thursday at ten" lands in the
   calendar, as it would by voice. The bridge keeps no brain of its own.
@@ -21,20 +107,7 @@ cover the job search and the daily briefing.
   bridge restarts, and a desktop notification says so.
 - Answers one paired chat only; anyone else who finds the bot is ignored.
 
-## Install
-
-hal-telegram needs Python 3.11 or later and Hal; voice notes need hal-voice. The manifest lists
-`systemd/hal-telegram.service`, which the installer renders (`@ROOT@`, `@PYTHON@`) into
-`~/.config/systemd/user`:
-
-```bash
-hal ext add telegram
-```
-
-The bridge needs `hal` and, for voice notes, `hal-voice` on `PATH`. If `hal acp` is missing or
-exits, the bot answers "Hal is not available" and starts it again on the next message.
-
-## Set up the bot
+### Set up the bot
 
 1. In Telegram, message [@BotFather](https://t.me/BotFather), send `/newbot` and follow the prompts.
    It replies with a token like `123456789:AA...`.
@@ -51,7 +124,7 @@ exits, the bot answers "Hal is not available" and starts it again on the next me
 `python3 -m haltelegram status` shows whether a token is saved and a chat paired, and
 `python3 -m haltelegram unpair` forgets the chat so the next start shows a new code.
 
-## Use
+### Use
 
 Anything that is not a command is a message for Hal. The commands are:
 
@@ -71,7 +144,7 @@ Each job command calls one hal-jobs tool through hal-hub: `/status` is `jobs_sta
 `jobs_shortlist`, `/discard` and `/applied` are `jobs_mark`, and `/pack` is `jobs_pack`. Without
 hal-jobs they say so.
 
-## Configuration
+### Configuration
 
 Settings live in the `[telegram]` table of `~/.config/hal/config.toml`:
 
@@ -82,7 +155,3 @@ turn_timeout_s = 600         # seconds a chat turn may take before it is cancell
 ```
 
 The job commands find jobhunt through hal-jobs' own `[jobs]` settings.
-
-## Licence
-
-MIT. See [LICENSE](LICENSE).
