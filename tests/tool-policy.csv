@@ -167,13 +167,13 @@ rgb_off,desktop,act,false,false,true,true,false,allow
 rgb_profile,desktop,act,false,false,true,true,false,allow
 rgb_profiles,desktop,read,false,false,true,true,false,allow
 rgb_state,desktop,act,false,false,true,true,false,allow
-routines_add_trigger,organiser,act,false,false,true,true,false,allow
+routines_add_trigger,organiser,act,false,false,false,false,false,ask
 routines_delete_scene,organiser,write,false,false,true,false,false,allow
 routines_remove_trigger,organiser,write,false,false,true,true,false,allow
 routines_run,organiser,write,false,false,false,false,false,allow
-routines_save_scene,organiser,act,false,false,true,false,false,ask
+routines_save_scene,organiser,act,false,false,false,false,false,ask
 routines_scenes,organiser,read,false,false,true,true,false,allow
-routines_schedule,organiser,act,false,false,true,true,false,allow
+routines_schedule,organiser,act,false,false,false,false,false,ask
 routines_schedules,organiser,read,false,false,true,true,false,allow
 routines_triggers,organiser,read,false,false,true,true,false,allow
 routines_unschedule,organiser,write,false,false,true,true,false,allow

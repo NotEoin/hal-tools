@@ -4,6 +4,10 @@
 
 ### Changed
 
+- `routines_schedule` and `routines_add_trigger` take `steps` (JSON) and a required `label` instead
+  of `target` and `args`. All three save tools are tier `act` and ask; approval creates a routine
+  grant for the exact steps. The routines daemon runs unattended under those grants, skips other
+  steps that need approval and notifies once, and refuses to start when the hub is not reachable.
 - `routines`: scene steps no longer carry `_confirmed`. Each step is its own hub call, so policy
   decides it; a step that needs approval is reported as `skipped`. `routines_run` is tier `write`
   and allowed; it adds no authority.

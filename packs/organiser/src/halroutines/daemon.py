@@ -5,7 +5,6 @@ python -m halroutines.daemon
 
 from __future__ import annotations
 
-import json
 import shutil
 import socket
 import time
@@ -13,12 +12,15 @@ from datetime import datetime
 from pathlib import Path
 
 from hal_organiser import proc
+from halhub import client as hub_client
+from halhub.client import ToolDenied, ToolFailed
 from halkit.when import next_occurrence
 
 from . import tools
 from .settings import settings
 
 POLL = 15  # seconds
+HUB_CHECK_TIMEOUT_S = 30.0  # a cold hub loads its manifests before it answers
 
 
 def _next(at: float, rrule: str) -> float:
@@ -103,7 +105,7 @@ def tick(watcher: Watcher, now: float | None = None) -> list[str]:
     con = tools._db()
     ran = []
     for r in con.execute("SELECT * FROM schedules WHERE at <= ?", (now,)).fetchall():
-        tools.run_target(r["target"], json.loads(r["args"]))
+        tools.run_routine(r["label"], tools.stored_steps(r))
         ran.append(r["label"])
         if r["rrule"]:
             con.execute(
@@ -114,12 +116,21 @@ def tick(watcher: Watcher, now: float | None = None) -> list[str]:
     con.commit()
     for event in watcher.events():
         for t in con.execute("SELECT * FROM triggers WHERE event = ?", (event,)).fetchall():
-            tools.run_target(t["target"], json.loads(t["args"]))
+            tools.run_routine(t["target"], tools.stored_steps(t))
             ran.append(f"{event}: {t['target']}")
     return ran
 
 
+def check_hub() -> None:
+    """Raises `RuntimeError` unless the hub answers a read call, so a dead hub fails at start."""
+    try:
+        hub_client.call("routines_scenes", {}, tools.CALLER, timeout=HUB_CHECK_TIMEOUT_S)
+    except (ToolDenied, ToolFailed, OSError, ValueError) as exc:
+        raise RuntimeError(f"hal-hub is not reachable, so no routine can run: {exc}") from exc
+
+
 def main() -> None:
+    check_hub()
     w = Watcher()
     while True:
         for r in tick(w):

@@ -209,22 +209,28 @@ drive appearing.
 ### Highlights
 
 - Built-in scenes: focus, relax, goodnight, away and movie, and any number you make by asking Hal.
-- Steps are tool calls through hal-hub, so a scene can use every installed module, and a step whose
-  module is missing is skipped without stopping the rest.
+- Every step is its own hub call, so policy decides it. A step that needs approval is skipped,
+  not forced, and one notification names it.
 - Schedules in plain English: "every weekday at 8:45", "at 23:30".
 - Triggers: idle, usb_added, offline, online, disk_full and login.
-- Creating a scene, schedule or trigger asks for confirmation, because its steps later run unattended.
+- Saving a scene, schedule or trigger asks you first. The prompt shows every step, and approving
+  it grants those exact steps to run unattended. Editing the steps voids the grant, so the new
+  version asks again.
+- The built-in scenes use only steps that are allowed by default, so they run unattended.
 
 ### Use
 
-The tools run from the module folder, or through hal-hub as `hal-hub routines_<tool>`:
+Run a tool by hand through the hub, for example `hal-organiser call routines_run name=focus`.
+A schedule or trigger takes its steps as JSON:
 
 ```bash
-cd ~/src/hal-ecosystem/extensions/hal-routines
-python3 -m halroutines run name=focus
-python3 -m halroutines schedule target=goodnight when_text="every day at 23:30"
-python3 -m halroutines add_trigger event=usb_added target=notify_send args='{"title": "USB drive connected"}'
+hal-organiser call routines_schedule when_text="every day at 23:30" label=goodnight \
+  steps='{"tool": "routines_run", "args": {"name": "goodnight"}}'   # run a scene each night
+hal-organiser call routines_add_trigger event=usb_added label=usb-note \
+  steps='{"tool": "notify_send", "args": {"title": "USB drive connected"}}'   # notify on a new USB device
 ```
+
+The commands are checked against the manifest and the CLI source, not run (unverified).
 
 ### Configuration
 

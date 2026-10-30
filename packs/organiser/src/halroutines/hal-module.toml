@@ -27,12 +27,12 @@ reversible = true
 
 [[tools]]
 name = "routines_save_scene"
-# Steps run unattended with confirmation already given, so creating one needs the owner's say-so.
+# Steps later run unattended, so saving asks and approval creates the routine grant (REQ-PACK-26).
 function = "save_scene"
 description = "Create or change a scene from a list of tool calls, each {tool, args}."
 tier = "act"
-reviewable = true
 keywords = "make a scene create routine"
+routine = { id = "name", steps = "steps" }
 [tools.params.name]
 required = true
 [tools.params.steps]
@@ -51,21 +51,21 @@ required = true
 
 [[tools]]
 name = "routines_schedule"
-# Steps run unattended with confirmation already given, so creating one needs the owner's say-so.
+# Steps later run unattended, so saving asks and approval creates the routine grant (REQ-PACK-26).
 function = "schedule"
-description = "Run a scene or any tool at a time, once or repeating: 'every weekday at 8:45', 'at 23:00'."
+description = "Run tool calls at a time, once or repeating: 'every weekday at 8:45', 'at 23:00'. To run a scene use the step {\"tool\": \"routines_run\", \"args\": {\"name\": scene}}."
 tier = "act"
-reviewable = true
-reversible = true
 keywords = "schedule every day automatically at time automate"
-[tools.params.target]
+routine = { id = "label", steps = "steps" }
+[tools.params.steps]
+format = "json"
 required = true
-description = "a scene name or a tool name"
+description = "one {\"tool\": name, \"args\": {...}} or a list of them"
 [tools.params.when_text]
 required = true
-[tools.params.args]
-format = "json"
 [tools.params.label]
+required = true
+description = "a short name for the schedule"
 
 [[tools]]
 name = "routines_schedules"
@@ -87,20 +87,22 @@ required = true
 
 [[tools]]
 name = "routines_add_trigger"
-# Steps run unattended with confirmation already given, so creating one needs the owner's say-so.
+# Steps later run unattended, so saving asks and approval creates the routine grant (REQ-PACK-26).
 function = "add_trigger"
-description = "Run a scene or tool when something happens: idle, usb_added, offline, online, disk_full or login."
+description = "Run tool calls when something happens: idle, usb_added, offline, online, disk_full or login. To run a scene use the step {\"tool\": \"routines_run\", \"args\": {\"name\": scene}}."
 tier = "act"
-reviewable = true
-reversible = true
 keywords = "when trigger if automatically event"
+routine = { id = "label", steps = "steps" }
 [tools.params.event]
 required = true
 enum = ["idle", "usb_added", "offline", "online", "disk_full", "login"]
-[tools.params.target]
-required = true
-[tools.params.args]
+[tools.params.steps]
 format = "json"
+required = true
+description = "one {\"tool\": name, \"args\": {...}} or a list of them"
+[tools.params.label]
+required = true
+description = "a short name for the trigger"
 
 [[tools]]
 name = "routines_triggers"

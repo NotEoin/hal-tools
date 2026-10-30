@@ -75,7 +75,7 @@ class RoutinesTest(unittest.TestCase):
         self.assertEqual(self.calls, ["rgb_colour"])
 
     def test_schedule_runs_and_repeats(self):
-        self.tools.schedule("rgb_off", "every day at 23:30")
+        self.tools.schedule('{"tool": "rgb_off"}', "every day at 23:30", "lights out")
         at = self.tools._db().execute("SELECT at FROM schedules").fetchone()[0]
 
         class Quiet:
@@ -86,6 +86,68 @@ class RoutinesTest(unittest.TestCase):
         self.assertEqual(self.calls, ["rgb_off"])
         nxt = self.tools._db().execute("SELECT at FROM schedules").fetchone()[0]
         self.assertAlmostEqual(nxt - at, 86400)
+
+    def test_unattended_run_uses_routine_caller(self):
+        self.tools.run_routine("lights out", [{"tool": "rgb_off", "args": {}}])
+        _, caller, kw = self.args[0]
+        self.assertEqual(caller, "routines")
+        self.assertEqual(kw["routine"].routine_id, "lights out")
+        self.assertIn("rgb_off", kw["routine"].steps)
+        self.assertTrue(kw["unattended"])
+
+    def test_unattended_run_skips_ungranted_ask_steps_and_notifies(self):
+        from halhub.client import ToolDenied
+
+        def fake(tool, args, caller, **kw):
+            self.calls.append(tool)
+            if tool == "desktop_lock":
+                raise ToolDenied("ask", "needs approval")
+            return "ok"
+
+        sent = []
+        with (
+            mock.patch.object(self.tools.hub_client, "call", side_effect=fake),
+            mock.patch.object(self.tools, "notify", lambda *a, **k: sent.append(a)),
+        ):
+            out = self.tools.run_routine(
+                "night", [{"tool": "routines_run", "args": {"name": "away"}}]
+            )
+        self.assertEqual([o["status"] for o in out], ["ok", "ok", "skipped"])
+        self.assertEqual(len(sent), 1)
+        self.assertIn("skipped desktop_lock", sent[0][1])
+        self.assertIn("routines_run name=away", sent[0][1])
+
+    def test_scene_step_in_a_routine_runs_under_the_scene_routine_id(self):
+        self.tools.run_routine("night", [{"tool": "routines_run", "args": {"name": "away"}}])
+        self.assertEqual({a[2]["routine"].routine_id for a in self.args}, {"away"})
+
+    def test_save_scene_rejects_steps_that_are_not_tool_calls(self):
+        for bad in ("not json", "[]", '[{"args": {}}]', '[{"tool": "x", "args": 3}]'):
+            with self.assertRaises(ValueError, msg=bad):
+                self.tools.save_scene("bad", bad)
+
+    def test_schedule_needs_a_label(self):
+        with self.assertRaises(ValueError):
+            self.tools.schedule('{"tool": "rgb_off"}', "every day at 23:30", " ")
+
+    def test_old_schedule_row_runs_its_target_tool(self):
+        con = self.tools._db()
+        con.execute(
+            "INSERT INTO schedules (target, args, at, rrule, label) "
+            "VALUES ('rgb_off', '{}', 1, '', 'old')"
+        )
+        con.commit()
+        row = con.execute("SELECT * FROM schedules").fetchone()
+        self.assertEqual(self.tools.stored_steps(row), [{"tool": "rgb_off", "args": {}}])
+
+    def test_daemon_refuses_to_start_without_a_reachable_hub(self):
+        from halhub.client import ToolFailed
+
+        with mock.patch.object(
+            self.daemon.hub_client, "call", side_effect=ToolFailed("unavailable", "no hub")
+        ):
+            with self.assertRaises(RuntimeError):
+                self.daemon.check_hub()
 
     def test_stored_desktop_open_and_clipboard_steps_are_upgraded(self):
         import json

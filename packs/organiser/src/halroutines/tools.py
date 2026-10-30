@@ -18,6 +18,7 @@ from datetime import datetime
 from halhub import client as hub_client
 from halhub.client import RoutineRun, ToolDenied, ToolFailed
 from halkit import when
+from halnotify.alert import notify
 
 from .settings import data_dir, settings
 
@@ -40,6 +41,10 @@ def _db() -> sqlite3.Connection:
         args TEXT,
             last REAL DEFAULT 0);
     """)
+    for table in ("schedules", "triggers"):
+        columns = {r["name"] for r in con.execute(f"PRAGMA table_info({table})")}
+        if "steps" not in columns:
+            con.execute(f"ALTER TABLE {table} ADD COLUMN steps TEXT")
     migrate(con)
     return con
 
@@ -143,13 +148,37 @@ def run_steps(steps: list[dict], *, routine: RoutineRun | None = None) -> list[d
     return outcomes
 
 
-def save_scene(name: str, steps: list | str) -> dict:
-    """Saves a scene: a list of {"tool": ..., "args": {...}} steps."""
-    parsed = json.loads(steps) if isinstance(steps, str) else steps
-    if not isinstance(parsed, list) or not all(isinstance(s, dict) and "tool" in s for s in parsed):
+def parse_steps(steps: list | dict | str) -> list[dict]:
+    """Returns `steps` as a non-empty list of `{"tool", "args"}` dicts; raises `ValueError`.
+
+    The hub has already checked tool names and arguments against the manifests before the call
+    reaches policy (REQ-PACK-26); this keeps the shape honest for CLI and test callers.
+    """
+    try:
+        parsed = json.loads(steps) if isinstance(steps, str) else steps
+    except json.JSONDecodeError as exc:
+        raise ValueError(f"steps are not JSON: {exc}") from exc
+    if isinstance(parsed, dict):
+        parsed = [parsed]
+    if (
+        not isinstance(parsed, list)
+        or not parsed
+        or not all(isinstance(s, dict) and isinstance(s.get("tool"), str) for s in parsed)
+        or not all(isinstance(s.get("args", {}), dict) for s in parsed)
+    ):
         raise ValueError(
             'steps must be a list like [{"tool": "rgb_colour", "args": {"colour": "blue"}}]'
         )
+    return [{"tool": s["tool"], "args": s.get("args", {})} for s in parsed]
+
+
+def save_scene(name: str, steps: list | str) -> dict:
+    """Saves a scene: a list of {"tool": ..., "args": {...}} steps.
+
+    Saving asks the owner; approval creates the routine grant bound to these exact steps, so a
+    later edit no longer matches it (01-security "Routines").
+    """
+    parsed = parse_steps(steps)
     con = _db()
     con.execute("INSERT OR REPLACE INTO scenes VALUES (?, ?)", (name, json.dumps(parsed)))
     con.commit()
@@ -163,24 +192,45 @@ def delete_scene(name: str) -> dict:
     return {"deleted": name}
 
 
-def schedule(target: str, when_text: str, args: dict | str | None = None, label: str = "") -> dict:
-    """Runs a scene, or any tool with arguments, at a time: 'at 23:00', 'every weekday at 8:45'."""
+def schedule(steps: list | dict | str, when_text: str, label: str) -> dict:
+    """Runs steps (one `{tool, args}` or a list) at a time: 'at 23:00', 'every weekday at 8:45'.
+
+    To run a scene, use the step `{"tool": "routines_run", "args": {"name": "<scene>"}}`.
+    `label` names the routine; its grant is bound to the label and the exact steps.
+    """
     w = when.parse(when_text, default_time=None)
     if w.start is None or w.all_day:
         raise ValueError(f"say a time, for example 'every day at 23:00'; got {when_text!r}")
-    parsed = json.loads(args) if isinstance(args, str) and args else (args or {})
+    parsed = parse_steps(steps)
+    if not label.strip():
+        raise ValueError("give the schedule a label")
     con = _db()
     cur = con.execute(
-        "INSERT INTO schedules (target, args, at, rrule, label) VALUES (?, ?, ?, ?, ?)",
-        (target, json.dumps(parsed), w.start.timestamp(), w.rrule, label or target),
+        "INSERT INTO schedules (target, args, at, rrule, label, steps) VALUES (?, ?, ?, ?, ?, ?)",
+        (parsed[0]["tool"], "{}", w.start.timestamp(), w.rrule, label, json.dumps(parsed)),
     )
     con.commit()
     return {
         "id": cur.lastrowid,
-        "runs": target,
+        "runs": _runs(parsed),
         "at": w.start.strftime("%a %-d %b %H:%M"),
         "repeat": w.rrule,
     }
+
+
+def _runs(steps: list[dict]) -> str:
+    """The tool names of `steps`, comma-joined, for listings."""
+    return ", ".join(s["tool"] for s in steps)
+
+
+def stored_steps(row: sqlite3.Row) -> list[dict]:
+    """The step list of a schedule or trigger row; older rows hold a target and arguments."""
+    if row["steps"]:
+        return json.loads(row["steps"])
+    args = json.loads(row["args"] or "{}")
+    if row["target"].lower() in {k.lower() for k in scenes()}:
+        return [{"tool": "routines_run", "args": {"name": row["target"]}}]
+    return [{"tool": row["target"], "args": args}]
 
 
 def schedules() -> list[dict]:
@@ -188,7 +238,7 @@ def schedules() -> list[dict]:
         {
             "id": r["id"],
             "label": r["label"],
-            "runs": r["target"],
+            "runs": _runs(stored_steps(r)),
             "next": datetime.fromtimestamp(r["at"]).strftime("%a %-d %b %H:%M"),
             "repeat": r["rrule"],
         }
@@ -214,23 +264,25 @@ def unschedule(which: str) -> dict:
 EVENTS = ("idle", "usb_added", "offline", "online", "disk_full", "login")
 
 
-def add_trigger(event: str, target: str, args: dict | str | None = None) -> dict:
-    """Runs a scene or tool when an event in `EVENTS` happens."""
+def add_trigger(event: str, steps: list | dict | str, label: str) -> dict:
+    """Runs steps (one `{tool, args}` or a list) when an event in `EVENTS` happens."""
     if event not in EVENTS:
         raise ValueError(f"event must be one of {', '.join(EVENTS)}")
-    parsed = json.loads(args) if isinstance(args, str) and args else (args or {})
+    parsed = parse_steps(steps)
+    if not label.strip():
+        raise ValueError("give the trigger a label")
     con = _db()
     cur = con.execute(
-        "INSERT INTO triggers (event, target, args) VALUES (?, ?, ?)",
-        (event, target, json.dumps(parsed)),
+        "INSERT INTO triggers (event, target, args, steps) VALUES (?, ?, ?, ?)",
+        (event, label, "{}", json.dumps(parsed)),
     )
     con.commit()
-    return {"id": cur.lastrowid, "when": event, "runs": target}
+    return {"id": cur.lastrowid, "when": event, "runs": _runs(parsed), "label": label}
 
 
 def triggers() -> list[dict]:
     return [
-        {"id": r["id"], "when": r["event"], "runs": r["target"], "args": json.loads(r["args"])}
+        {"id": r["id"], "when": r["event"], "label": r["target"], "runs": _runs(stored_steps(r))}
         for r in _db().execute("SELECT * FROM triggers")
     ]
 
@@ -242,8 +294,37 @@ def remove_trigger(trigger_id: int) -> dict:
     return {"removed": int(trigger_id)}
 
 
-def run_target(target: str, args: dict) -> dict:
-    """Runs a scene by name, or else a tool."""
-    if target.lower() in {k.lower() for k in scenes()}:
-        return run_scene(target)
-    return call_tool(target, args)
+def run_routine(label: str, steps: list[dict], *, routine_id: str | None = None) -> list[dict]:
+    """Runs a stored routine unattended (the daemon's path) and returns one outcome per step.
+
+    Each step is a hub call from origin `routine`, so only a step its grant covers, or whose
+    verdict is `allow`, runs. Any other step is skipped, and one notification names the skipped
+    tools (REQ-PACK-25). A `routines_run` step expands to the scene's own steps under the
+    scene's routine id, so a saved scene runs under its own grant.
+    """
+    run = RoutineRun(routine_id or label, json.dumps(steps))
+    known = scenes()
+    outcomes: list[dict] = []
+    scene_name = label
+    for step in steps:
+        wanted = str((step.get("args") or {}).get("name", ""))
+        key = next((k for k in known if k.lower() == wanted.lower()), None)
+        if step["tool"] != "routines_run":
+            outcomes += run_steps([step], routine=run)
+        elif key is None:
+            outcomes.append(
+                {"tool": "routines_run", "status": "error", "reason": f"no scene {wanted!r}"}
+            )
+        else:
+            scene_name = key
+            inner = known[key]
+            outcomes += run_steps(inner, routine=RoutineRun(key, json.dumps(inner)))
+    skipped = [o["tool"] for o in outcomes if o["status"] == "skipped"]
+    if skipped:
+        log.warning("routine %s: skipped %s", label, ", ".join(skipped))
+        notify(
+            f"Routine {label}",
+            f"skipped {', '.join(skipped)} (needs your approval). "
+            f"Run it with: hal-organiser call routines_run name={scene_name}",
+        )
+    return outcomes
