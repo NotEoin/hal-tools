@@ -47,9 +47,9 @@ def cpu() -> dict:
     """CPU model, cores, current use and load averages."""
     model = next(
         (
-            l.split(":", 1)[1].strip()
-            for l in Path("/proc/cpuinfo").read_text().splitlines()
-            if l.startswith("model name")
+            ln.split(":", 1)[1].strip()
+            for ln in Path("/proc/cpuinfo").read_text().splitlines()
+            if ln.startswith("model name")
         ),
         platform.processor(),
     )
@@ -189,7 +189,10 @@ def temperatures() -> dict:
 
 def battery() -> dict | None:
     for b in Path("/sys/class/power_supply").glob("BAT*"):
-        read = lambda f: (b / f).read_text().strip() if (b / f).exists() else None  # noqa: E731
+
+        def read(name: str, base: Path = b) -> str | None:
+            return (base / name).read_text().strip() if (base / name).exists() else None
+
         return {"percent": int(read("capacity") or 0), "status": read("status")}
     return None
 
@@ -199,9 +202,9 @@ def overview() -> dict:
     up = float(Path("/proc/uptime").read_text().split()[0])
     os_name = next(
         (
-            l.split("=", 1)[1].strip('"')
-            for l in Path("/etc/os-release").read_text().splitlines()
-            if l.startswith("PRETTY_NAME=")
+            ln.split("=", 1)[1].strip('"')
+            for ln in Path("/etc/os-release").read_text().splitlines()
+            if ln.startswith("PRETTY_NAME=")
         ),
         platform.system(),
     )
@@ -260,7 +263,7 @@ def _ancestors() -> set[int]:
 
 
 def kill(process: str, force: bool = False) -> dict:
-    """Stops processes by pid, or by program name (the user's own only, never a command-line match)."""
+    """Stops processes by pid or program name (the user's own only, never a command-line match)."""
     me = os.environ.get("USER")
     if str(process).isdigit():
         targets = [int(process)]
@@ -306,7 +309,7 @@ def service_status(name: str, user: bool = True) -> dict:
         name,
         "--property=ActiveState,SubState,Description,ActiveEnterTimestamp",
     )
-    info = dict(l.split("=", 1) for l in out.splitlines() if "=" in l)
+    info = dict(ln.split("=", 1) for ln in out.splitlines() if "=" in ln)
     logs = _run("journalctl", *scope, "-u", name, "-n", "8", "--no-pager", "-o", "cat")
     return {**info, "recent_log": logs.strip().splitlines()[-8:]}
 
@@ -356,7 +359,7 @@ def logs(
         .strip()
         .splitlines()
     )
-    merged = list(dict.fromkeys(l for l in lines + user if l and not l.startswith("-- ")))
+    merged = list(dict.fromkeys(ln for ln in lines + user if ln and not ln.startswith("-- ")))
     return sorted(merged)[-int(limit) :]
 
 
@@ -386,11 +389,11 @@ def hardware() -> dict:
         "cores": os.cpu_count(),
         "memory_gb": memory()["total_gb"],
         "graphics": [
-            l.split(": ", 1)[1] for l in pci.splitlines() if re.search(r"VGA|3D controller", l)
+            ln.split(": ", 1)[1] for ln in pci.splitlines() if re.search(r"VGA|3D controller", ln)
         ],
-        "audio": [l.split(": ", 1)[1] for l in pci.splitlines() if "Audio" in l],
+        "audio": [ln.split(": ", 1)[1] for ln in pci.splitlines() if "Audio" in ln],
         "network": [
-            l.split(": ", 1)[1] for l in pci.splitlines() if re.search(r"Ethernet|Network", l)
+            ln.split(": ", 1)[1] for ln in pci.splitlines() if re.search(r"Ethernet|Network", ln)
         ],
         "drives": drives,
         "motherboard": Path("/sys/class/dmi/id/board_name").read_text().strip()

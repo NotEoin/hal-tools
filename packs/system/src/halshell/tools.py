@@ -13,7 +13,7 @@ import re
 import shlex
 import subprocess
 
-from .config import settings
+from .settings import settings
 
 READ_ONLY = {
     "ls",

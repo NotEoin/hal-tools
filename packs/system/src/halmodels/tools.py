@@ -11,19 +11,19 @@ import json
 import subprocess
 import urllib.request
 
-from .config import shared
+from .settings import shared
 
 
 def _api(path: str, payload: dict | None = None, timeout: float = 30, method: str | None = None):
     url = shared()["ollama_url"].rstrip("/") + path
     data = json.dumps(payload).encode() if payload is not None else None
-    req = urllib.request.Request(
+    req = urllib.request.Request(  # noqa: S310 - the URL is the configured Ollama upstream
         url,
         data=data,
         method=method or ("POST" if data else "GET"),
         headers={"Content-Type": "application/json"},
     )
-    with urllib.request.urlopen(req, timeout=timeout) as r:
+    with urllib.request.urlopen(req, timeout=timeout) as r:  # noqa: S310 - same upstream URL
         body = r.read()
     return json.loads(body) if body.strip().startswith(b"{") else body.decode()
 

@@ -24,30 +24,32 @@ def updates() -> dict:
     """Updates waiting for apt, snap and flatpak packages."""
     apt = list(
         dict.fromkeys(
-            l.split("/")[0]
-            for l in _run("apt", "list", "--upgradable").splitlines()[1:]
-            if "/" in l
+            ln.split("/")[0]
+            for ln in _run("apt", "list", "--upgradable").splitlines()[1:]
+            if "/" in ln
         )
     )
     snaps = (
-        [l.split()[0] for l in _run("snap", "refresh", "--list").splitlines()[1:] if l.strip()]
+        [ln.split()[0] for ln in _run("snap", "refresh", "--list").splitlines()[1:] if ln.strip()]
         if shutil.which("snap")
         else []
     )
     flat = (
         [
-            l.split("\t")[0]
-            for l in _run("flatpak", "remote-ls", "--updates", "--columns=application").splitlines()
-            if l.strip()
+            ln.split("\t")[0]
+            for ln in _run(
+                "flatpak", "remote-ls", "--updates", "--columns=application"
+            ).splitlines()
+            if ln.strip()
         ]
         if shutil.which("flatpak")
         else []
     )
     security = list(
         dict.fromkeys(
-            l.split("/")[0]
-            for l in _run("apt", "list", "--upgradable").splitlines()
-            if "-security" in l
+            ln.split("/")[0]
+            for ln in _run("apt", "list", "--upgradable").splitlines()
+            if "-security" in ln
         )
     )
     return {
@@ -129,7 +131,9 @@ def cleanup_report() -> dict:
         "apt package cache": _size(Path("/var/cache/apt/archives")),
         "system journal": _size(Path("/var/log/journal")),
     }
-    disabled = [l.split()[0] for l in _run("snap", "list", "--all").splitlines() if "disabled" in l]
+    disabled = [
+        ln.split()[0] for ln in _run("snap", "list", "--all").splitlines() if "disabled" in ln
+    ]
     docker = _run("docker", "system", "df") if shutil.which("docker") else ""
     return {
         "sizes_gb": {k: round(v / 1e9, 2) for k, v in items.items()},

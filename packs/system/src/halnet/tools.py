@@ -16,15 +16,14 @@ import subprocess
 import time
 import urllib.request
 
-
 UA = {"User-Agent": "Mozilla/5.0 (X11; Linux x86_64) Hal/1.0"}
 
 
 def _open(url: str, data: bytes | None = None, timeout: float = 30):
-    return urllib.request.urlopen(
-        urllib.request.Request(url, data=data, headers=UA, method="POST" if data else "GET"),
-        timeout=timeout,
+    req = urllib.request.Request(  # noqa: S310 - callers pass fixed https URLs
+        url, data=data, headers=UA, method="POST" if data else "GET"
     )
+    return urllib.request.urlopen(req, timeout=timeout)  # noqa: S310 - same fixed URLs
 
 
 def _run(*cmd: str, timeout: float = 20) -> str:
@@ -38,7 +37,7 @@ def status() -> dict:
     """Connections, local addresses, gateway, DNS servers and any VPN."""
     devices = []
     for line in _run("nmcli", "-t", "-f", "DEVICE,TYPE,STATE,CONNECTION", "device").splitlines():
-        dev, kind, state, conn = (line.split(":") + ["", "", "", ""])[:4]
+        dev, kind, state, conn = [*line.split(":"), "", "", "", ""][:4]
         if kind in ("loopback", "bridge") or dev.startswith(("veth", "docker", "br-")):
             continue
         addr = re.search(r"inet (\S+)", _run("ip", "-4", "addr", "show", dev))
@@ -54,11 +53,11 @@ def status() -> dict:
     gw = re.search(r"default via (\S+) dev (\S+)", _run("ip", "route"))
     dns = re.findall(r"Current DNS Server: (\S+)|DNS Servers: (.+)", _run("resolvectl", "status"))
     vpns = [
-        l.split(":")[0]
-        for l in _run(
+        ln.split(":")[0]
+        for ln in _run(
             "nmcli", "-t", "-f", "NAME,TYPE", "connection", "show", "--active"
         ).splitlines()
-        if re.search(r":(vpn|wireguard)$", l)
+        if re.search(r":(vpn|wireguard)$", ln)
     ]
     return {
         "devices": devices,
@@ -115,7 +114,7 @@ def public_ip() -> dict:
 
 
 def devices() -> list[dict]:
-    """Other devices seen on the local network recently (from the neighbour table), with names where known."""
+    """Other devices seen on the local network recently (neighbour table), named where known."""
     out = []
     for line in _run("ip", "neigh").splitlines():
         m = re.match(r"(\S+) dev (\S+)(?: lladdr (\S+))? (\S+)", line)
@@ -179,7 +178,7 @@ def speed_test(megabytes: int = 25) -> dict:
     with _open(f"https://speed.cloudflare.com/__down?bytes={size}", timeout=120) as r:
         got = len(r.read())
     down = got * 8 / (time.time() - t) / 1e6
-    # urllib sends a body as form data, which throttles the upload; a raw connection measures the line.
+    # urllib sends a body as form data, which throttles the upload; a raw socket measures the line.
     import http.client
 
     up_size = max(size // 2, 5_000_000)

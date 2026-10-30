@@ -53,7 +53,7 @@ def scheduled() -> dict:
     f = Path("/run/systemd/shutdown/scheduled")
     if not f.exists():
         return {"scheduled": None}
-    info = dict(l.split("=", 1) for l in f.read_text().splitlines() if "=" in l)
+    info = dict(ln.split("=", 1) for ln in f.read_text().splitlines() if "=" in ln)
     from datetime import datetime
 
     when = datetime.fromtimestamp(int(info.get("USEC", "0")) / 1e6)
@@ -73,7 +73,10 @@ def profile(mode: str = "") -> dict:
 def battery() -> dict:
     """Battery charge and state, where there is a battery."""
     for b in Path("/sys/class/power_supply").glob("BAT*"):
-        r = lambda f: (b / f).read_text().strip() if (b / f).exists() else None  # noqa: E731
+
+        def r(name: str, base: Path = b) -> str | None:
+            return (base / name).read_text().strip() if (base / name).exists() else None
+
         return {
             "percent": int(r("capacity") or 0),
             "status": r("status"),
@@ -85,5 +88,7 @@ def battery() -> dict:
 def uptime() -> dict:
     s = float(Path("/proc/uptime").read_text().split()[0])
     return {
-        "uptime": f"{int(s // 86400)} days, {int(s % 86400 // 3600)} hours, {int(s % 3600 // 60)} minutes"
+        "uptime": (
+            f"{int(s // 86400)} days, {int(s % 86400 // 3600)} hours, {int(s % 3600 // 60)} minutes"
+        )
     }

@@ -74,7 +74,7 @@ def bluetooth_power(on: bool = True) -> dict:
 
 def usb() -> list[str]:
     """USB devices plugged in (hubs and root controllers left out)."""
-    names = [re.sub(r"^Bus \d+ Device \d+: ID \S+ ", "", l) for l in _run("lsusb").splitlines()]
+    names = [re.sub(r"^Bus \d+ Device \d+: ID \S+ ", "", ln) for ln in _run("lsusb").splitlines()]
     return [n for n in names if not re.search(r"\bhub\b", n, re.I)]
 
 
