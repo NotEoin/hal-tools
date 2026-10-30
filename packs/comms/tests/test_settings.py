@@ -36,12 +36,12 @@ class SettingsTest(unittest.TestCase):
         self.assertEqual(ctx.exception.line, 2)
 
     def test_unknown_key_raises_naming_the_key(self) -> None:
-        self.cfg.write_text("[telegram]\nwisper_model = 'x'\n")
+        self.cfg.write_text("[telegram]\nwisper_replies = 'x'\n")
         with self.assertRaises(ConfigError) as ctx:
             telegram_settings()
-        self.assertEqual(ctx.exception.key, "wisper_model")
+        self.assertEqual(ctx.exception.key, "wisper_replies")
 
-    def test_whisper_device_outside_choices_is_rejected(self) -> None:
-        self.cfg.write_text("[telegram]\nwhisper_device = 'tpu'\n")
+    def test_turn_timeout_of_the_wrong_type_is_rejected(self) -> None:
+        self.cfg.write_text("[telegram]\nturn_timeout_s = 'soon'\n")
         with self.assertRaises(ConfigError):
             telegram_settings()

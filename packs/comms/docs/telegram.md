@@ -1,17 +1,21 @@
 # hal-telegram
 
 hal-telegram lets you talk to Hal from your phone through a Telegram bot. Messages and voice notes
-are answered by core Hal's brain with the tools of every installed extension, and a few commands
+are answered by Hal through `hal acp --channel telegram --toolset assistant`, so every turn runs in the
+box, and a few commands
 cover the job search and the daily briefing.
 
 ## Highlights
 
-- Free text is answered by Hal's local brain, which can use any installed tool: "add the dentist on
-  thursday at ten" lands in the calendar, as it would by voice.
-- One conversation per chat, kept in memory until `/reset`; long jobs run in the background and the
-  result is sent when they finish.
-- Voice notes are transcribed locally with faster-whisper, and answered with a voice note in HAL's
-  voice when hal-voice's server is running.
+- Free text is an ACP prompt to `hal acp`: "add the dentist on thursday at ten" lands in the
+  calendar, as it would by voice. The bridge keeps no brain of its own.
+- One conversation per chat until `/reset`. A turn that runs past `turn_timeout_s` is cancelled.
+- A tool call that needs approval arrives as a message with the exact arguments and Allow once and
+  Deny buttons. Only a press from the paired chat counts. A request longer than 3500 characters
+  has only Deny and the line "Approve with: hal approve <id>".
+- Link previews are off on every message.
+- Voice notes go through the `hal-voice` CLI (`transcribe-file`, `tts`). Without it the bot says
+  "voice notes need hal-voice".
 - Job commands go through hal-jobs, and `/brief` through hal-briefing, by way of hal-hub.
 - Answers one paired chat only; anyone else who finds the bot is ignored.
 
@@ -25,9 +29,8 @@ hal-telegram needs Python 3.11 or later and core Hal; voice notes need hal-voice
 hal ext add telegram
 ```
 
-The service runs under hal-voice's virtualenv when it is there, for faster-whisper, and under
-`python3` (text only) when it is not. It belongs to `hal.target` and is marked `X-HalGPU=yes`, since
-it runs the local model, so `hal off` stops it.
+The bridge needs `hal` and, for voice notes, `hal-voice` on `PATH`. If `hal acp` is missing or
+exits, the bot answers "Hal is not available" and starts it again on the next message.
 
 ## Set up the bot
 
@@ -68,16 +71,12 @@ hal-jobs they say so.
 
 ## Configuration
 
-Settings live in the `[telegram]` table of `~/.config/hal/config.toml`; the brain itself follows
-`[brain]`:
+Settings live in the `[telegram]` table of `~/.config/hal/config.toml`:
 
 ```toml
 [telegram]
-persona = ""                 # empty = [brain].persona, else core Hal's own
-model = ""                   # empty = [brain].model, else [hal].chat_model
-whisper_model = "small.en"   # for voice notes
-whisper_device = "cpu"       # cpu | cuda | auto
 voice_replies = true         # answer voice notes and /brief with a voice note
+turn_timeout_s = 600         # seconds a chat turn may take before it is cancelled
 ```
 
 The job commands find jobhunt through hal-jobs' own `[jobs]` settings.

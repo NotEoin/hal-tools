@@ -1,65 +1,59 @@
-"""Voice notes: faster-whisper to read them, hal-voice to answer in HAL's voice.
+"""Voice notes through the `hal-voice` CLI: it reads them and speaks the replies.
 
-Both live in hal-voice's virtualenv, which the service runs under when hal-voice
-is installed. Without them the bridge still works in text.
+The bridge never loads a speech model itself (Decision D19). Without `hal-voice` on `PATH` it
+answers "voice notes need hal-voice" and stays a text bot.
 """
 
 from __future__ import annotations
 
-import sys
+import json
+import shutil
 from pathlib import Path
 
 from hal_comms import proc
 
 from . import settings as config
 
+TRANSCRIBE_TIMEOUT_S = 300.0  # spec 08: a long note on a CPU model
+TTS_TIMEOUT_S = 120.0  # one reply, spoken
 FFMPEG_TIMEOUT_S = 60.0  # a Telegram voice note is seconds of audio
-NEEDS_VOICE = "Voice notes need hal-voice installed (hal ext add voice)."
-
-_model = None
+NEEDS_VOICE = "voice notes need hal-voice"
 
 
 class VoiceUnavailable(RuntimeError):
-    pass
+    """`hal-voice` is not installed or could not read the note."""
 
 
 def transcribe(audio: Path) -> str:
-    """Returns the words in a voice note; raises VoiceUnavailable without faster-whisper."""
-    global _model
+    """Returns the words in a voice note; raises `VoiceUnavailable` without a working hal-voice."""
+    if shutil.which("hal-voice") is None:
+        raise VoiceUnavailable(NEEDS_VOICE)
     try:
-        from faster_whisper import WhisperModel
-    except ImportError as e:
-        raise VoiceUnavailable(NEEDS_VOICE) from e
-    if _model is None:
-        s = config.settings()
-        _model = WhisperModel(
-            s["whisper_model"],
-            device=s["whisper_device"],
-            compute_type="int8" if s["whisper_device"] == "cpu" else "default",
+        done = proc.completed(
+            ["hal-voice", "transcribe-file", str(audio), "--json"], timeout=TRANSCRIBE_TIMEOUT_S
         )
-    segments, _ = _model.transcribe(str(audio), language="en", beam_size=1, vad_filter=True)
-    return " ".join(seg.text.strip() for seg in segments).strip()
+    except (OSError, proc.ProcTimeout) as exc:
+        raise VoiceUnavailable(f"hal-voice could not read that note: {exc}") from exc
+    if done.returncode:
+        raise VoiceUnavailable("hal-voice could not read that note")
+    try:
+        data = json.loads(done.stdout)
+    except ValueError as exc:
+        raise VoiceUnavailable("hal-voice gave an unreadable answer") from exc
+    return str(data.get("text", "")).strip() if isinstance(data, dict) else ""
 
 
 def synthesise(text: str, workdir: Path) -> Path | None:
-    """Returns an Opus voice note in HAL's voice, or None if hal-voice is unavailable."""
-    if not config.settings()["voice_replies"]:
-        return None
-    root = config.find_voice()
-    if root is None:
-        return None
-    if str(root) not in sys.path:
-        sys.path.insert(0, str(root))
-    try:
-        import soundfile
-        from halvoice import tts
-
-        audio, sr = tts.synth(text)
-    except Exception:  # noqa: BLE001 - a voice reply is optional; the text is always sent
+    """Returns an Opus voice note of `text`, or None when voice replies are off or fail."""
+    if not config.settings()["voice_replies"] or shutil.which("hal-voice") is None:
         return None
     wav, ogg = workdir / "reply.wav", workdir / "reply.ogg"
-    soundfile.write(wav, audio, sr)
     try:
+        spoken = proc.completed(
+            ["hal-voice", "tts", "--out", str(wav), text], timeout=TTS_TIMEOUT_S
+        )
+        if spoken.returncode:
+            return None
         done = proc.completed(
             [
                 "ffmpeg",
@@ -78,6 +72,4 @@ def synthesise(text: str, workdir: Path) -> Path | None:
         )
     except (OSError, proc.ProcTimeout):
         return None
-    if done.returncode:
-        return None
-    return ogg
+    return None if done.returncode else ogg

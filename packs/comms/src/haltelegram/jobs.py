@@ -10,6 +10,27 @@ import json
 from datetime import datetime
 from pathlib import Path
 
+CALLER = (
+    "telegram"  # names this channel to the hub, which applies policy to the paired human's commands
+)
+
+
+class HubClient:
+    """Adapts `halhub.client.call` to the `get`/`call` pair that `Jobs` uses."""
+
+    def get(self, name: str) -> str:
+        """Every tool is attempted; the hub reports an unknown one as a failure."""
+        return name
+
+    def call(self, name: str, args: dict) -> dict:
+        """Returns {"result": ...} or {"error": message}."""
+        from halhub import client
+
+        try:
+            return {"result": client.call(name, args, CALLER)}
+        except (client.ToolDenied, client.ToolFailed) as exc:
+            return {"error": str(exc)}
+
 
 class Jobs:
     """Runs job commands through a hal-hub module (halhub) when it has the tool."""

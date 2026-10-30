@@ -8,10 +8,13 @@ import urllib.request
 import uuid
 from pathlib import Path
 
+NO_PREVIEW = json.dumps({"is_disabled": True})
 LIMIT = 4000  # Telegram's limit is 4096 characters per message
 
 
 class Telegram:
+    """The Bot API calls the bridge needs."""
+
     def __init__(self, token: str) -> None:
         self.base = f"https://api.telegram.org/bot{token}"
         self.files = f"https://api.telegram.org/file/bot{token}"
@@ -49,9 +52,30 @@ class Telegram:
         urllib.request.urlretrieve(f"{self.files}/{info['file_path']}", dest)  # noqa: S310 - https URL on the fixed Telegram API host
         return dest
 
-    def send(self, chat: int, text: str) -> None:
-        for start in range(0, len(text) or 1, LIMIT):
-            self.call("sendMessage", chat_id=chat, text=text[start : start + LIMIT] or "(nothing)")
+    def send(self, chat: int, text: str, buttons: list[tuple[str, str]] | None = None) -> None:
+        """Sends text in chunks; link previews stay off (R-new-2); buttons go on the last chunk."""
+        starts = list(range(0, len(text) or 1, LIMIT))
+        for start in starts:
+            markup = None
+            if buttons and start == starts[-1]:
+                keyboard = [[{"text": label, "callback_data": data} for label, data in buttons]]
+                markup = json.dumps({"inline_keyboard": keyboard})
+            self.call(
+                "sendMessage",
+                chat_id=chat,
+                text=text[start : start + LIMIT] or "(nothing)",
+                link_preview_options=NO_PREVIEW,
+                reply_markup=markup,
+            )
+
+    def answer_callback(self, query_id: str, text: str = "") -> None:
+        """Stops the button spinner; never raises."""
+        try:
+            self.call(
+                "answerCallbackQuery", timeout=10, callback_query_id=query_id, text=text or None
+            )
+        except (OSError, RuntimeError):
+            pass
 
     def typing(self, chat: int) -> None:
         """Shows "typing..." in the chat; never raises."""

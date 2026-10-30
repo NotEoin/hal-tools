@@ -1,16 +1,15 @@
-"""The Telegram bridge: pairing, commands, and chat answered by core Hal's brain.
+"""The Telegram bridge: pairing, commands, and chat answered by `hal acp`.
 
-The bot answers one chat only. Until a chat is paired it shows a pairing code as
-a desktop notification; sending `/pair <code>` from Telegram saves that chat.
-Free text and voice notes go to a halcore Brain(channel="telegram") with the
-tools of every installed extension, one Brain per chat, kept until /reset.
+The bot answers one chat only. Until a chat is paired it shows a pairing code as a desktop
+notification; sending `/pair <code>` from Telegram saves that chat. Free text and voice notes
+go to `hal acp --channel telegram --toolset assistant` as ACP prompts, so every turn runs in
+the box and no brain lives in this process. Approvals appear as inline buttons.
 """
 
 from __future__ import annotations
 
 import logging
 import secrets
-import sys
 import tempfile
 import threading
 import time
@@ -21,7 +20,8 @@ from hal_comms import proc
 
 from . import settings as config
 from . import voice
-from .jobs import Jobs
+from .acp import AcpClient, AcpClosed, AcpError, AcpTimeout
+from .jobs import HubClient, Jobs
 
 log = logging.getLogger("hal-telegram")
 NOTIFY_TIMEOUT_S = 10.0  # notify-send returns at once; a hung desktop bus must not stall startup
@@ -39,7 +39,13 @@ HELP = """Commands:
 /reset - start a new conversation
 Anything else is a message for Hal, who can use all of its tools. Voice notes work too."""
 
-NO_MODEL = "The local model isn't answering, so I can only take commands right now.\n\n" + HELP
+NO_AGENT = "Hal is not available, so I can only take commands right now.\n\n" + HELP
+AGENT_ARGV = ["hal", "acp", "--channel", "telegram", "--toolset", "assistant"]
+APPROVAL_TIMEOUT_S = 300.0  # how long a button request waits for a press (01 channel timeout)
+LONG_DISPLAY = 3500  # a request longer than this is approved only from the CLI
+POLL_S = 50  # Bot API long-poll seconds
+APPROVAL_POLL_S = 5  # short polls while a turn waits for a button press
+TOO_LONG = "that took too long"
 
 
 def parse(text: str) -> tuple[str | None, str]:
@@ -51,36 +57,15 @@ def parse(text: str) -> tuple[str | None, str]:
     return command.split("@", 1)[0].lower(), arg.strip()
 
 
-def load_core():
-    """Puts core hal on sys.path; returns (Brain, halhub or None), or (None, None) without it."""
-    core = config.find_core()
-    if core is None:
-        return None, None
-    if str(core) not in sys.path:
-        sys.path.insert(0, str(core))
-    from halcore import hub
-    from halcore.brain import Brain
-
-    return Brain, hub.load()
-
-
-def brain_factory() -> Callable[[], object] | None:
-    """Returns a function making a telegram-channel Brain, or None without core hal."""
-    brain_cls, _ = load_core()
-    if brain_cls is None:
-        return None
-    s = config.settings()
-    return lambda: brain_cls(
-        channel="telegram", persona=s["persona"] or None, model=s["model"] or None, tools=True
-    )
-
-
 class Bridge:
-    def __init__(self, bot, make_brain: Callable[[], object] | None = None, hub=None) -> None:
+    def __init__(self, bot, spawn_agent: Callable[[], AcpClient] | None = None, hub=None) -> None:
         self.bot = bot
-        self.make_brain = make_brain
+        self.spawn_agent = spawn_agent
+        self.agent: AcpClient | None = None
+        self.sessions: dict[int, str] = {}
         self.jobs = Jobs(hub)
-        self.brains: dict[int, object] = {}
+        self.offset: int | None = None
+        self.backlog: list[dict] = []
         chat = config.chat_file()
         self.chat = int(chat.read_text().strip()) if chat.exists() else None
         self.pairing_code = None if self.chat else self._pairing_code()
@@ -121,6 +106,14 @@ class Bridge:
             self.bot.send(
                 chat, "That code doesn't match. Use the code in the latest desktop notification."
             )
+
+    def dispatch(self, update: dict) -> None:
+        """Handles one Bot API update; a failure is logged, never raised."""
+        if "message" in update:
+            try:
+                self.handle(update["message"])
+            except Exception:
+                log.exception("failed to handle message")
 
     # -- messages ------------------------------------------------------------------
     def handle(self, message: dict) -> None:
@@ -163,9 +156,7 @@ class Bridge:
         if command in ("/start", "/help"):
             return HELP
         if command == "/reset":
-            brain = self.brains.get(chat)
-            if brain is not None:
-                brain.reset()
+            self.sessions.pop(chat, None)
             return "Starting afresh."
         simple = {
             "/status": self.jobs.status,
@@ -197,25 +188,92 @@ class Bridge:
         for path in files:
             self.bot.upload("sendDocument", "document", path, chat_id=chat)
 
-    # -- the brain -----------------------------------------------------------------
-    def brain_for(self, chat: int):
-        """Returns this chat's Brain, making it on first use."""
-        if chat not in self.brains:
-            brain = self.make_brain()
-            brain.on_deep_done = lambda text, c=chat: self.bot.send(
-                c, "Background task finished.\n\n" + text[-3500:]
-            )
-            self.brains[chat] = brain
-        return self.brains[chat]
+    # -- the agent -----------------------------------------------------------------
+    def _session(self, chat: int) -> tuple[AcpClient, str]:
+        """Returns the live agent and this chat's session, starting either when missing."""
+        if self.agent is None or not self.agent.alive:
+            self.sessions.clear()
+            agent = self.spawn_agent()
+            agent.initialize()
+            self.agent = agent
+        if chat not in self.sessions:
+            self.sessions[chat] = self.agent.new_session(str(config.work_dir()))
+        return self.agent, self.sessions[chat]
 
     def chat_reply(self, chat: int, text: str) -> str:
-        if self.make_brain is None:
-            return "Core Hal isn't installed, so I can only take commands.\n\n" + HELP
+        """Runs one turn through `hal acp` and returns the reply, or why there was none."""
+        if self.spawn_agent is None:
+            return NO_AGENT
         try:
-            return self.brain_for(chat).reply(text) or "(no reply)"
-        except (OSError, RuntimeError) as e:
-            log.warning("brain failed: %s", e)
-            return NO_MODEL
+            agent, session = self._session(chat)
+            reply = agent.prompt(
+                session,
+                text,
+                float(config.settings()["turn_timeout_s"]),
+                lambda params: self._approve(chat, params),
+            )
+        except AcpTimeout:
+            return TOO_LONG
+        except (AcpError, OSError) as e:
+            log.warning("hal acp failed: %s", e)
+            if isinstance(e, AcpClosed) or isinstance(e, OSError):
+                self.agent = None
+            return NO_AGENT
+        return reply or "(no reply)"
+
+    # -- approvals -----------------------------------------------------------------
+    def _approve(self, chat: int, params: dict) -> str | None:
+        """Shows a broker request with buttons; returns the chosen option id, else None."""
+        meta = params.get("_meta") or {}
+        if meta.get("hal/origin") != "broker" or not meta.get("hal/approval_id"):
+            return None  # agent-originated requests are cancelled
+        approval = str(meta["hal/approval_id"])
+        display = str(meta.get("hal/display", ""))
+        nonce = secrets.token_hex(4)
+        prefix = f"apr:{approval}:{nonce}"
+        options = params.get("options") or []
+        allow = next((o["optionId"] for o in options if o.get("kind") == "allow_once"), None)
+        deny = next(
+            (o["optionId"] for o in options if str(o.get("kind", "")).startswith("reject")), None
+        )
+        buttons = [("Deny", f"{prefix}:deny")]
+        text = display
+        if len(display) > LONG_DISPLAY or allow is None:
+            text = f"{display[:LONG_DISPLAY]}\n\nApprove with: hal approve {approval}"
+        else:
+            buttons.insert(0, ("Allow once", f"{prefix}:allow"))
+        self.bot.send(chat, text, buttons=buttons)
+        data = self._await_press(chat, prefix)
+        if data == f"{prefix}:allow" and allow:
+            return allow
+        return deny
+
+    def _await_press(self, chat: int, prefix: str) -> str | None:
+        """Polls for a button press on `prefix`; other updates wait in the backlog."""
+        deadline = time.monotonic() + APPROVAL_TIMEOUT_S
+        while time.monotonic() < deadline:
+            try:
+                updates = self.bot.call("getUpdates", offset=self.offset, timeout=APPROVAL_POLL_S)
+            except Exception as e:  # noqa: BLE001 - a dropped poll must not fail the turn
+                log.warning("poll failed: %s", e)
+                time.sleep(APPROVAL_POLL_S)
+                continue
+            for update in updates:
+                self.offset = update["update_id"] + 1
+                query = update.get("callback_query")
+                if query is None:
+                    self.backlog.append(update)
+                    continue
+                where = (query.get("message") or {}).get("chat", {}).get("id")
+                data = str(query.get("data", ""))
+                self.bot.answer_callback(query.get("id", ""))
+                if where != chat or not data.startswith(prefix + ":"):
+                    log.warning(
+                        "ignored a button press from chat %s with data %r", where, data[:80]
+                    )
+                    continue
+                return data
+        return None
 
 
 def run() -> int:
@@ -228,26 +286,18 @@ def run() -> int:
         log.error("no bot token at %s; save one with: python3 -m haltelegram token <TOKEN>", token)
         return 1
     bot = Telegram(token.read_text().strip())
-    _, hub = load_core()
-    make_brain = brain_factory()
-    if make_brain is None:
-        log.warning(
-            "core hal not found (HAL_CORE, the ecosystem layout or [hal].core): commands only"
-        )
-    bridge = Bridge(bot, make_brain, hub)
+    bridge = Bridge(bot, lambda: AcpClient.spawn(AGENT_ARGV), HubClient())
     bridge.announce_pairing()
-    offset = None
     while True:
+        for update in bridge.backlog[:]:
+            bridge.backlog.remove(update)
+            bridge.dispatch(update)
         try:
-            updates = bot.call("getUpdates", offset=offset, timeout=50)
+            updates = bot.call("getUpdates", offset=bridge.offset, timeout=POLL_S)
         except Exception as e:  # noqa: BLE001 - network drops are routine; retry
             log.warning("poll failed: %s", e)
             time.sleep(10)
             continue
         for update in updates:
-            offset = update["update_id"] + 1
-            if "message" in update:
-                try:
-                    bridge.handle(update["message"])
-                except Exception:
-                    log.exception("failed to handle message")
+            bridge.offset = update["update_id"] + 1
+            bridge.dispatch(update)
