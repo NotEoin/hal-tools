@@ -225,14 +225,14 @@ def overview() -> dict:
 
 
 def processes(sort: str = "cpu", limit: int = 10, name: str = "") -> list[dict]:
-    """Running processes, by CPU or memory use, optionally filtered by name."""
+    """Running processes by CPU or memory use, optionally filtered by name; no command lines."""
     key = "-%mem" if sort.startswith("mem") else "-%cpu"
     out = []
     for line in _run(
-        "ps", "-eo", "pid,user,%cpu,%mem,rss,etime,comm,args", f"--sort={key}"
+        "ps", "-eo", "pid,user,%cpu,%mem,rss,etime,comm", f"--sort={key}"
     ).splitlines()[1:]:
-        p = line.split(None, 7)
-        if len(p) < 8 or (name and name.lower() not in (p[6] + p[7]).lower()):
+        p = line.split(None, 6)  # comm is last: it may hold spaces
+        if len(p) < 7 or (name and name.lower() not in p[6].lower()):
             continue
         out.append(
             {
@@ -243,7 +243,6 @@ def processes(sort: str = "cpu", limit: int = 10, name: str = "") -> list[dict]:
                 "memory_mb": int(p[4]) // 1024,
                 "running_for": p[5],
                 "name": p[6],
-                "command": p[7][:160],
             }
         )
         if len(out) >= int(limit):

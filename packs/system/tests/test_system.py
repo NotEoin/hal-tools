@@ -3,6 +3,7 @@
 import sys
 import unittest
 from pathlib import Path
+from unittest import mock
 
 import pytest
 
@@ -26,6 +27,15 @@ class SystemTest(unittest.TestCase):
         procs = tools.processes("memory", 5)
         self.assertLessEqual(len(procs), 5)
         self.assertEqual(procs, sorted(procs, key=lambda p: -p["memory_percent"]))
+
+    def test_process_list_omits_arguments(self):
+        # ps is asked for the program name only; a secret in an argument never reaches a model
+        listing = "  PID USER %CPU %MEM RSS ELAPSED COMMAND\n  42 me 1.0 2.0 2048 01:00 my prog\n"
+        with mock.patch.object(tools, "_run", return_value=listing) as run:
+            out = tools.processes(name="prog")
+        self.assertNotIn("args", " ".join(run.call_args.args))
+        self.assertEqual(out[0]["name"], "my prog")
+        self.assertNotIn("command", out[0])
 
     def test_kill_refuses_unknown_names(self):
         with self.assertRaises(ValueError):

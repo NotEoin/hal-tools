@@ -8,7 +8,7 @@ delete models, or ask a particular one a question.
 
 - Installed models with size, family, parameters and quantisation.
 - Loaded models with VRAM use and when they unload.
-- The GPU's memory, use and temperature, with each program's command line.
+- The GPU's memory, use and temperature, with the name of each program (never its command line).
 - Unload everything to free the GPU before a game or a training run.
 - Deleting a model asks for confirmation.
 

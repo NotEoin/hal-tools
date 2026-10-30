@@ -61,7 +61,7 @@ def loaded() -> list[dict]:
 
 
 def gpu() -> dict:
-    """GPU memory and use, and every program on it."""
+    """GPU memory and use, and the name of every program on it (never its command line)."""
     q = proc.completed(
         [
             "nvidia-smi",
@@ -88,21 +88,11 @@ def gpu() -> dict:
     procs = []
     for a in apps:
         pid, path, mib = [x.strip() for x in a.split(",")]
-        try:
-            cmd = (
-                open(f"/proc/{pid}/cmdline", "rb")
-                .read()
-                .replace(b"\0", b" ")
-                .decode(errors="ignore")[:120]
-            )
-        except OSError:
-            cmd = path
         procs.append(
             {
                 "pid": int(pid),
                 "program": path.rsplit("/", 1)[-1],
                 "memory_mb": int(mib),
-                "command": cmd,
             }
         )
     return {
