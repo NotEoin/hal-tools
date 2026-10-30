@@ -8,6 +8,8 @@ from __future__ import annotations
 import time
 from datetime import datetime
 
+from halkit.when import next_occurrence
+
 from . import tools
 from .notify import notify
 
@@ -15,18 +17,8 @@ POLL = 1  # seconds
 
 
 def _next(at: float, rrule: str) -> float:
-
-    rule = dict(p.split("=") for p in rrule.split(";") if "=" in p)
-    base = datetime.fromtimestamp(at)
-    days = {"DAILY": 1, "WEEKLY": 7}.get(rule.get("FREQ", "DAILY"), 1)
-    if "BYDAY" in rule:
-        codes = ["MO", "TU", "WE", "TH", "FR", "SA", "SU"]
-        wanted = {codes.index(c) for c in rule["BYDAY"].split(",")}
-        step = 1
-        while (base.weekday() + step) % 7 not in wanted:
-            step += 1
-        days = step
-    return at + days * 86400
+    """Epoch seconds of the occurrence of `rrule` after `at`, in local time."""
+    return next_occurrence(datetime.fromtimestamp(at), rrule).timestamp()
 
 
 def tick(now: float | None = None) -> int:

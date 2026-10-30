@@ -36,6 +36,15 @@ class TasksTest(unittest.TestCase):
         self.assertIn("next", out)
         self.assertEqual(self.t.list_tasks()["count"], 1)
 
+    def test_monthly_task_due_on_the_31st_skips_short_months(self):
+        con = self.t._db()
+        con.execute(
+            "INSERT INTO tasks (title, due, rrule, created) VALUES (?, ?, ?, ?)",
+            ("Pay rent", "2026-10-31T09:00", "FREQ=MONTHLY", "2026-10-01T00:00"),
+        )
+        con.commit()
+        self.assertEqual(self.t.done("rent")["next"], "2026-12-31T09:00")
+
     def test_ticking_in_the_vault_completes_the_task(self):
         self.t.add("Call the bank", project="Admin")
         text = self.note.read_text()

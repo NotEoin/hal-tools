@@ -14,6 +14,7 @@ from datetime import date, datetime, timedelta
 from pathlib import Path
 
 from halkit import when
+from halkit.when import next_occurrence
 
 from . import match
 from .settings import data_dir, settings, vault
@@ -130,7 +131,7 @@ def done(task: str) -> dict:
     )
     nxt = None
     if r["rrule"] and r["due"]:
-        nxt = _next(datetime.fromisoformat(r["due"]), r["rrule"])
+        nxt = next_occurrence(datetime.fromisoformat(r["due"]), r["rrule"])
         con.execute(
             "INSERT INTO tasks (title, notes, due, timed, priority, tags, project, rrule, created) "
             "VALUES (?,?,?,?,?,?,?,?,?)",
@@ -149,32 +150,6 @@ def done(task: str) -> dict:
     con.commit()
     mirror()
     return {"done": r["title"], **({"next": nxt.isoformat(timespec="minutes")} if nxt else {})}
-
-
-def _next(due: datetime, rrule: str) -> datetime:
-    rule = dict(p.split("=") for p in rrule.split(";") if "=" in p)
-    n = int(rule.get("INTERVAL", 1))
-    freq = rule.get("FREQ", "DAILY")
-    if freq == "WEEKLY" and "BYDAY" in rule:
-        codes = ["MO", "TU", "WE", "TH", "FR", "SA", "SU"]
-        days = sorted(codes.index(c) for c in rule["BYDAY"].split(","))
-        d = due + timedelta(days=1)
-        while d.weekday() not in days:
-            d += timedelta(days=1)
-        return d
-    if freq == "DAILY":
-        return due + timedelta(days=n)
-    if freq == "WEEKLY":
-        return due + timedelta(weeks=n)
-    months = n if freq == "MONTHLY" else 12 * n
-    m = due.month - 1 + months
-    year, month = due.year + m // 12, m % 12 + 1
-    for day in (due.day, 30, 29, 28):
-        try:
-            return due.replace(year=year, month=month, day=day)
-        except ValueError:
-            continue
-    return due
 
 
 def undo(task: str) -> dict:

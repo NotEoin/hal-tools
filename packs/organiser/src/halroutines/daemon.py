@@ -13,6 +13,7 @@ from datetime import datetime
 from pathlib import Path
 
 from hal_organiser import proc
+from halkit.when import next_occurrence
 
 from . import tools
 from .settings import settings
@@ -21,17 +22,8 @@ POLL = 15  # seconds
 
 
 def _next(at: float, rrule: str) -> float:
-    rule = dict(p.split("=") for p in rrule.split(";") if "=" in p)
-    freq = rule.get("FREQ", "DAILY")
-    n = int(rule.get("INTERVAL", 1))
-    if "BYDAY" in rule:
-        codes = ["MO", "TU", "WE", "TH", "FR", "SA", "SU"]
-        days = {codes.index(c) for c in rule["BYDAY"].split(",")}
-        step = 1
-        while (datetime.fromtimestamp(at).weekday() + step) % 7 not in days:
-            step += 1
-        return at + step * 86400
-    return at + {"DAILY": 86400, "WEEKLY": 604800}.get(freq, 86400) * n
+    """Epoch seconds of the occurrence of `rrule` after `at`, in local time."""
+    return next_occurrence(datetime.fromtimestamp(at), rrule).timestamp()
 
 
 def _idle_seconds() -> float:
