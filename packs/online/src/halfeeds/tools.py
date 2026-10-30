@@ -24,9 +24,11 @@ def _db() -> sqlite3.Connection:
     con = sqlite3.connect(data_dir() / "feeds.db")
     con.row_factory = sqlite3.Row
     con.executescript("""
-        CREATE TABLE IF NOT EXISTS later (url TEXT PRIMARY KEY, title TEXT, summary TEXT, added TEXT, read TEXT);
+        CREATE TABLE IF NOT EXISTS later (
+            url TEXT PRIMARY KEY, title TEXT, summary TEXT, added TEXT, read TEXT);
         CREATE TABLE IF NOT EXISTS feeds (url TEXT PRIMARY KEY, name TEXT);
-        CREATE TABLE IF NOT EXISTS items (link TEXT PRIMARY KEY, feed TEXT, title TEXT, summary TEXT, seen TEXT,
+        CREATE TABLE IF NOT EXISTS items (
+            link TEXT PRIMARY KEY, feed TEXT, title TEXT, summary TEXT, seen TEXT,
             read INTEGER DEFAULT 0);
     """)
     return con
@@ -141,7 +143,8 @@ def refresh() -> dict:
             body = next((kids[k] for k in ("description", "summary", "content") if k in kids), None)
             summ = _strip(body.text if body is not None else "")
             new += con.execute(
-                "INSERT OR IGNORE INTO items (link, feed, title, summary, seen) VALUES (?, ?, ?, ?, ?)",
+                "INSERT OR IGNORE INTO items (link, feed, title, summary, seen)"
+                " VALUES (?, ?, ?, ?, ?)",
                 (href or title, f["url"], title, summ[:400], datetime.now().isoformat()),
             ).rowcount
     con.commit()

@@ -1,4 +1,7 @@
+schema = 2
+
 [module]
+pack = "online"
 name = "web"
 summary = "Web search, reading pages, weather, news, Wikipedia, definitions, unit and currency conversion, world time and maths"
 python = "halweb.tools"
@@ -7,19 +10,32 @@ python = "halweb.tools"
 name = "web_search"
 function = "search"
 description = "Search the web; returns titles, links and snippets. Use for current events, prices, opening hours and anything recent."
+tier = "read"
+network = true
+untrusted_output = true
+reviewable = true
+reversible = true
 keywords = "google search look up internet online find out latest"
 [tools.params.query]
 required = true
 [tools.params.limit]
 type = "integer"
+minimum = 1
+maximum = 200
 
 [[tools]]
 name = "web_read"
 function = "read_page"
 description = "Read a web page's text, or a short summary of it."
+tier = "send"
+network = true
+untrusted_output = true
+reviewable = true
+reversible = true
 keywords = "read page article website summarise link url"
 timeout = 120
 [tools.params.url]
+format = "url"
 required = true
 [tools.params.summarise]
 type = "boolean"
@@ -28,24 +44,43 @@ type = "boolean"
 name = "web_weather"
 function = "weather"
 description = "Current weather and the forecast for a place (home if none given): temperature, sky, rain chance, wind, sunrise and sunset."
+tier = "read"
+network = true
+untrusted_output = true
+reviewable = true
+reversible = true
 keywords = "weather forecast rain temperature umbrella cold hot sunny tomorrow"
 [tools.params.place]
 [tools.params.days]
 type = "integer"
+minimum = 0
+maximum = 3650
 
 [[tools]]
 name = "web_news"
 function = "news"
 description = "Latest news headlines, optionally only about a topic."
+tier = "read"
+network = true
+untrusted_output = true
+reviewable = true
+reversible = true
 keywords = "news headlines happening today current events"
 [tools.params.topic]
 [tools.params.limit]
 type = "integer"
+minimum = 1
+maximum = 200
 
 [[tools]]
 name = "web_wikipedia"
 function = "wikipedia"
 description = "A short Wikipedia summary of a person, place, thing or idea."
+tier = "read"
+network = true
+untrusted_output = true
+reviewable = true
+reversible = true
 keywords = "who is what is wikipedia encyclopedia explain about"
 [tools.params.topic]
 required = true
@@ -54,6 +89,11 @@ required = true
 name = "web_define"
 function = "define"
 description = "Dictionary definitions of an English word."
+tier = "read"
+network = true
+untrusted_output = true
+reviewable = true
+reversible = true
 keywords = "define meaning word dictionary definition"
 [tools.params.word]
 required = true
@@ -62,9 +102,15 @@ required = true
 name = "web_convert"
 function = "convert"
 description = "Convert units (length, weight, volume, speed, data, time), temperatures (C, F, K) and currencies (three-letter codes such as GBP, EUR, USD)."
+tier = "read"
+network = true
+reviewable = true
+reversible = true
 keywords = "convert how many units currency exchange rate pounds euros dollars miles km kg"
 [tools.params.amount]
 type = "number"
+minimum = 0
+maximum = 1000000000
 required = true
 [tools.params.from_unit]
 required = true
@@ -75,6 +121,9 @@ required = true
 name = "web_calculate"
 function = "calculate"
 description = "Work out arithmetic exactly: + - * / ** %, percentages ('15% of 80'), sqrt, log, sin and so on."
+tier = "read"
+reviewable = true
+reversible = true
 keywords = "calculate math maths sum multiply divide percent"
 [tools.params.expression]
 required = true
@@ -83,5 +132,8 @@ required = true
 name = "web_time"
 function = "world_time"
 description = "The time and date now in a city or time zone, or here."
+tier = "read"
+reviewable = true
+reversible = true
 keywords = "time clock what time timezone world"
 [tools.params.place]

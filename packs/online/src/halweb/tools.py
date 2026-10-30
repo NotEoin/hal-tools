@@ -179,8 +179,14 @@ def weather(place: str = "", days: int = 3) -> dict:
             "latitude": loc["latitude"],
             "longitude": loc["longitude"],
             "timezone": "auto",
-            "current": "temperature_2m,apparent_temperature,weather_code,wind_speed_10m,relative_humidity_2m,precipitation",
-            "daily": "weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max,sunrise,sunset",
+            "current": (
+                "temperature_2m,apparent_temperature,weather_code,wind_speed_10m,"
+                "relative_humidity_2m,precipitation"
+            ),
+            "daily": (
+                "weather_code,temperature_2m_max,temperature_2m_min,"
+                "precipitation_probability_max,sunrise,sunset"
+            ),
             "forecast_days": max(1, min(14, int(days))),
         }
     )
@@ -389,7 +395,7 @@ def _unit(u: str) -> tuple[str, float] | None:
 
 
 def convert(amount: float, from_unit: str, to_unit: str) -> dict:
-    """Converts between units (length, mass, volume, speed, data, time), temperatures and currencies."""
+    """Converts between units, temperatures and currencies."""
     a, f, t = float(amount), from_unit.strip(), to_unit.strip()
     temps = {"c": "c", "celsius": "c", "f": "f", "fahrenheit": "f", "k": "k", "kelvin": "k"}
     if f.lower() in temps and t.lower() in temps:

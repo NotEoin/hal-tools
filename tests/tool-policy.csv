@@ -39,6 +39,13 @@ desktop_session,desktop,read,false,false,true,true,false,allow
 desktop_theme,desktop,act,false,false,true,true,false,allow
 desktop_volume,desktop,act,false,false,true,true,false,allow
 desktop_wallpaper,desktop,act,false,false,true,true,false,allow
+feeds_list,online,read,false,true,true,true,false,allow
+feeds_mark_read,online,write,false,false,true,true,false,allow
+feeds_reading_list,online,read,false,true,true,true,false,allow
+feeds_save,online,send,true,true,true,true,false,ask
+feeds_subscribe,online,send,true,true,true,true,false,ask
+feeds_unsubscribe,online,write,false,false,true,true,false,allow
+feeds_whats_new,online,read,true,true,true,true,false,allow
 habits_create,life,write,false,false,true,true,false,allow
 habits_log,life,write,false,false,true,true,false,allow
 habits_mood,life,write,false,false,true,true,false,allow
@@ -121,3 +128,12 @@ tasks_list,organiser,read,false,false,true,true,false,allow
 tasks_projects,organiser,read,false,false,true,true,false,allow
 tasks_undo,organiser,write,false,false,true,true,false,allow
 telegram_status,comms,read,false,false,true,true,false,allow
+web_calculate,online,read,false,false,true,true,false,allow
+web_convert,online,read,true,false,true,true,false,allow
+web_define,online,read,true,true,true,true,false,allow
+web_news,online,read,true,true,true,true,false,allow
+web_read,online,send,true,true,true,true,false,ask
+web_search,online,read,true,true,true,true,false,allow
+web_time,online,read,false,false,true,true,false,allow
+web_weather,online,read,true,true,true,true,false,allow
+web_wikipedia,online,read,true,true,true,true,false,allow

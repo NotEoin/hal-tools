@@ -1,4 +1,7 @@
+schema = 2
+
 [module]
+pack = "online"
 name = "feeds"
 summary = "Read-later list with summaries, and RSS or Atom subscriptions with what's new"
 python = "halfeeds.tools"
@@ -7,9 +10,15 @@ python = "halfeeds.tools"
 name = "feeds_save"
 function = "save"
 description = "Save a link to read later, optionally with a short summary."
+tier = "send"
+network = true
+untrusted_output = true
+reviewable = true
+reversible = true
 keywords = "read later save link bookmark article"
 timeout = 180
 [tools.params.url]
+format = "url"
 required = true
 [tools.params.summarise]
 type = "boolean"
@@ -18,6 +27,10 @@ type = "boolean"
 name = "feeds_reading_list"
 function = "reading_list"
 description = "The read-later list."
+tier = "read"
+untrusted_output = true
+reviewable = true
+reversible = true
 keywords = "reading list saved articles"
 [tools.params.include_read]
 type = "boolean"
@@ -26,6 +39,9 @@ type = "boolean"
 name = "feeds_mark_read"
 function = "mark_read"
 description = "Mark a saved link or feed item as read."
+tier = "write"
+reviewable = true
+reversible = true
 [tools.params.item]
 required = true
 
@@ -33,9 +49,15 @@ required = true
 name = "feeds_subscribe"
 function = "subscribe"
 description = "Subscribe to an RSS or Atom feed (a blog, podcast, YouTube channel or news feed URL)."
+tier = "send"
+network = true
+untrusted_output = true
+reviewable = true
+reversible = true
 keywords = "subscribe follow rss feed blog"
 timeout = 60
 [tools.params.url]
+format = "url"
 required = true
 [tools.params.name]
 
@@ -43,6 +65,9 @@ required = true
 name = "feeds_unsubscribe"
 function = "unsubscribe"
 description = "Unsubscribe from a feed."
+tier = "write"
+reviewable = true
+reversible = true
 [tools.params.name]
 required = true
 
@@ -50,13 +75,24 @@ required = true
 name = "feeds_list"
 function = "feeds"
 description = "Subscribed feeds with their unread counts."
+tier = "read"
+untrusted_output = true
+reviewable = true
+reversible = true
 
 [[tools]]
 name = "feeds_whats_new"
 function = "whats_new"
 description = "Unread items across subscriptions (blogs, podcasts, channels), newest first."
+tier = "read"
+network = true
+untrusted_output = true
+reviewable = true
+reversible = true
 keywords = "what's new updates new posts blogs podcasts episodes"
 timeout = 120
 [tools.params.limit]
 type = "integer"
+minimum = 1
+maximum = 200
 [tools.params.feed]
