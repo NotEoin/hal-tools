@@ -36,9 +36,13 @@ tier = "act"
 network = true
 reviewable = true
 keywords = "open url link website file folder show browse"
-[tools.params.target]
-description = "a URL, or a file or folder path"
-required = true
+[tools.params.url]
+description = "an https web address; give this or path"
+format = "url"
+[tools.params.path]
+description = "a file or folder path; give this or url"
+format = "path"
+access = "read"
 
 [[tools]]
 name = "desktop_volume"

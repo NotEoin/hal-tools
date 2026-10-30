@@ -44,6 +44,31 @@ class Sandbox(unittest.TestCase):
             return fn(*args, **kwargs)
 
 
+class ArgumentTest(Sandbox):
+    def test_option_like_job_id_stays_after_the_separator(self):
+        # a job id such as "--help" must reach jobhunt as data, not as an option
+        fake = FakeJobhunt("ok")
+        self.run_with(fake, tools.mark, "--help", "applied")
+        argv = fake.calls[0][0]
+        self.assertLess(argv.index("--"), argv.index("--help"))
+
+    def test_checkout_venv_python_is_used_when_present(self):
+        seen = []
+
+        def fake(argv, cwd=None, timeout=None, **kwargs):
+            seen.append(argv[0])
+            return subprocess.CompletedProcess(argv, 0, "", "")
+
+        self.run_with(fake, tools.todo)
+        self.assertEqual(seen[-1], tools.SYSTEM_PYTHON)
+        python = self.root / ".venv" / "bin" / "python"
+        python.parent.mkdir(parents=True)
+        python.write_text("#!/bin/sh\n")
+        python.chmod(0o755)
+        self.run_with(fake, tools.todo)
+        self.assertEqual(seen[-1], str(python))
+
+
 class MarkTest(Sandbox):
     def test_unknown_status_is_refused(self):
         with self.assertRaises(ValueError):
@@ -55,12 +80,12 @@ class MarkTest(Sandbox):
             self.run_with(fake, tools.mark, "arm-1", "shortlisted"),
             "Arm | Graduate Engineer -> shortlisted",
         )
-        self.assertEqual(fake.calls[0][0], ["set", "arm-1", "shortlisted"])
+        self.assertEqual(fake.calls[0][0], ["set", "--", "arm-1", "shortlisted"])
 
     def test_shortlist_with_note(self):
         fake = FakeJobhunt("ok")
         self.run_with(fake, tools.shortlist, "arm-1", note="good fit")
-        self.assertEqual(fake.calls[0][0], ["set", "arm-1", "shortlisted", "good fit"])
+        self.assertEqual(fake.calls[0][0], ["set", "--", "arm-1", "shortlisted", "good fit"])
 
     def test_jobhunt_failure_is_raised(self):
         fake = FakeJobhunt(returncode=1, stderr="2 jobs match 'arm'")
@@ -112,7 +137,7 @@ class PackTest(Sandbox):
             (out / name).write_text("x")
         fake = FakeJobhunt(f"arm-1: drafting...\n  {out / 'pack.md'}\n")
         result = self.run_with(fake, tools.pack, "arm-1")
-        self.assertEqual(fake.calls[0], (["pack", "arm-1"], tools.PACK_TIMEOUT))
+        self.assertEqual(fake.calls[0], (["pack", "--", "arm-1"], tools.PACK_TIMEOUT))
         self.assertEqual(result["pack"], str(out / "pack.md"))
         self.assertEqual(
             result["files"], [str(out / n) for n in ("pack.md", "cover-letter.pdf", "cv.pdf")]

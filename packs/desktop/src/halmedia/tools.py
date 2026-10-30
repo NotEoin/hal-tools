@@ -173,7 +173,7 @@ def youtube(query: str) -> dict:
     """Opens a YouTube search in the browser."""
     url = "https://www.youtube.com/results?search_query=" + urllib.parse.quote_plus(query)
     subprocess.Popen(
-        ["gio", "open", url],
+        ["gio", "open", "--", url],
         stdout=subprocess.DEVNULL,
         stderr=subprocess.DEVNULL,
         start_new_session=True,
@@ -182,7 +182,9 @@ def youtube(query: str) -> dict:
 
 
 def play_url(url: str) -> dict:
-    """Plays a stream or file URL (radio, podcast) in the configured player."""
+    """Plays an http or https stream URL (radio, podcast) in the configured player."""
+    if not re.match(r"^https?://", url):
+        raise ValueError("url must start with http:// or https://")
     subprocess.Popen(
         [settings()["player"], url],
         stdout=subprocess.DEVNULL,

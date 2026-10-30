@@ -9,6 +9,8 @@ happens. The daemon (python -m halroutines.daemon) runs schedules and triggers.
 from __future__ import annotations
 
 import json
+import logging
+import re
 import shutil
 import sqlite3
 from datetime import datetime
@@ -17,6 +19,10 @@ from hal_organiser import proc
 from halkit import when
 
 from .settings import data_dir, settings
+
+log = logging.getLogger(__name__)
+
+URL_RE = re.compile(r"^[a-z][a-z0-9+.-]*://", re.I)
 
 
 def _db() -> sqlite3.Connection:
@@ -31,7 +37,47 @@ def _db() -> sqlite3.Connection:
         args TEXT,
             last REAL DEFAULT 0);
     """)
+    migrate(con)
     return con
+
+
+def split_open_target(args: dict) -> dict:
+    """`desktop_open` arguments with the old `target` rewritten to `url` or `path`."""
+    if "target" not in args:
+        return args
+    rest = {k: v for k, v in args.items() if k != "target"}
+    return {**rest, ("url" if URL_RE.match(str(args["target"])) else "path"): args["target"]}
+
+
+def migrate(con: sqlite3.Connection) -> int:
+    """Rewrites stored `desktop_open` steps that still use `target`; returns the rows changed."""
+    changed = 0
+    for row in con.execute("SELECT name, steps FROM scenes").fetchall():
+        steps = json.loads(row["steps"])
+        new = [
+            {**st, "args": split_open_target(st.get("args") or {})}
+            if st.get("tool") == "desktop_open" and "target" in (st.get("args") or {})
+            else st
+            for st in steps
+        ]
+        if new != steps:
+            con.execute(
+                "UPDATE scenes SET steps = ? WHERE name = ?", (json.dumps(new), row["name"])
+            )
+            changed += 1
+    for table in ("schedules", "triggers"):
+        for row in con.execute(f"SELECT id, args FROM {table} WHERE target = 'desktop_open'"):  # noqa: S608 - fixed table names
+            args = json.loads(row["args"] or "{}")
+            if "target" in args:
+                con.execute(
+                    f"UPDATE {table} SET args = ? WHERE id = ?",  # noqa: S608 - fixed table names
+                    (json.dumps(split_open_target(args)), row["id"]),
+                )
+                changed += 1
+    if changed:
+        con.commit()
+        log.info("rewrote %d stored desktop_open step(s) from target to url or path", changed)
+    return changed
 
 
 def call_tool(tool: str, args: dict | None = None) -> dict:

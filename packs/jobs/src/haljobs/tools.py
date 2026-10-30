@@ -8,6 +8,7 @@ Hal Employment, where every submit is pressed by the owner.
 from __future__ import annotations
 
 import json
+import os
 import subprocess
 import urllib.request
 from pathlib import Path
@@ -16,6 +17,7 @@ from hal_jobs import proc
 
 from .settings import settings
 
+SYSTEM_PYTHON = "/usr/bin/python3"
 PACK_TIMEOUT = 1800  # seconds; drafting a pack runs the local model and searches the web
 
 
@@ -24,7 +26,9 @@ def _jobhunt(*args: str, timeout: float = 600) -> str:
     root = Path(str(s["jobhunt_root"])).expanduser()
     if not (root / "jobhunt").is_dir():
         raise RuntimeError(f"jobhunt not found at {root}; set [jobs].jobhunt_root")
-    done = proc.completed(["/usr/bin/python3", "-m", "jobhunt", *args], cwd=root, timeout=timeout)
+    venv_python = root / ".venv" / "bin" / "python"  # holds Playwright; the same pick as the unit
+    python = str(venv_python) if os.access(venv_python, os.X_OK) else SYSTEM_PYTHON
+    done = proc.completed([python, "-m", "jobhunt", *args], cwd=root, timeout=timeout)
     if done.returncode:
         raise RuntimeError((done.stderr or done.stdout).strip()[-400:])
     return done.stdout.strip()
@@ -90,7 +94,7 @@ def status_counts() -> str:
 def open_employment() -> dict:
     """Opens Hal Employment in the browser."""
     subprocess.Popen(
-        ["gio", "open", settings()["employment_url"]],
+        ["gio", "open", "--", settings()["employment_url"]],
         stdout=subprocess.DEVNULL,
         stderr=subprocess.DEVNULL,
         start_new_session=True,
@@ -112,7 +116,7 @@ def mark(job: str, status: str, note: str = "") -> str:
     }
     if status not in allowed:
         raise ValueError(f"status must be one of {', '.join(sorted(allowed))}")
-    return _jobhunt("set", job, status, *([note] if note else []))
+    return _jobhunt("set", "--", job, status, *([note] if note else []))
 
 
 def status_digest() -> str:
@@ -140,7 +144,7 @@ def todo_add(text: str) -> str:
 
 def pack(job: str) -> dict:
     """Drafts the application pack for one job; returns the pack's files and jobhunt's output."""
-    output = _jobhunt("pack", job, timeout=PACK_TIMEOUT)
+    output = _jobhunt("pack", "--", job, timeout=PACK_TIMEOUT)
     pack_md = next(
         (Path(line.strip()) for line in output.splitlines() if line.strip().endswith("pack.md")),
         None,

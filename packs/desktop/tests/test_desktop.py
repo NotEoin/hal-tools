@@ -19,7 +19,12 @@ class DesktopTest(unittest.TestCase):
         with self.assertRaises(ValueError):
             tools.launch("no-such-application-xyz")
         with self.assertRaises(ValueError):
-            tools.open_item("/no/such/file.txt")
+            tools.open_item(path="/no/such/file.txt")
+
+    def test_open_needs_exactly_one_https_url_or_a_path(self):
+        for kwargs in ({}, {"url": "https://a.example", "path": "/usr"}, {"url": "file:///etc"}):
+            with self.assertRaises(ValueError):
+                tools.open_item(**kwargs)
 
     @pytest.mark.host  # needs a desktop session
     def test_reading_state_changes_nothing(self):

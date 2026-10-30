@@ -23,6 +23,11 @@ class MediaTest(unittest.TestCase):
         with self.assertRaises(ValueError):
             tools.play_music("zzqx no such artist zzqx")
 
+    def test_play_url_refuses_non_http_schemes_and_option_look_alikes(self):
+        for url in ("file:///etc/passwd", "--input-file=/etc/passwd", "ftp://a.example/x"):
+            with self.assertRaises(ValueError):
+                tools.play_url(url)
+
 
 if __name__ == "__main__":
     unittest.main()

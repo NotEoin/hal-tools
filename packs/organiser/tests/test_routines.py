@@ -48,6 +48,30 @@ class RoutinesTest(unittest.TestCase):
         nxt = self.tools._db().execute("SELECT at FROM schedules").fetchone()[0]
         self.assertAlmostEqual(nxt - at, 86400)
 
+    def test_stored_desktop_open_target_is_rewritten_to_url_or_path(self):
+        import json
+
+        con = self.tools._db()
+        steps = [
+            {"tool": "desktop_open", "args": {"target": "https://a.example/x"}},
+            {"tool": "desktop_open", "args": {"target": "~/notes.txt"}},
+            {"tool": "notify_dnd", "args": {"minutes": 5}},
+        ]
+        con.execute("INSERT INTO scenes VALUES ('old', ?)", (json.dumps(steps),))
+        con.execute(
+            "INSERT INTO schedules (target, args, at, rrule, label) VALUES (?, ?, 0, '', 'x')",
+            ("desktop_open", json.dumps({"target": "https://b.example"})),
+        )
+        con.commit()
+        con = self.tools._db()
+        scene = json.loads(con.execute("SELECT steps FROM scenes WHERE name='old'").fetchone()[0])
+        self.assertEqual(scene[0]["args"], {"url": "https://a.example/x"})
+        self.assertEqual(scene[1]["args"], {"path": "~/notes.txt"})
+        self.assertEqual(scene[2]["args"], {"minutes": 5})
+        sched = con.execute("SELECT args FROM schedules").fetchone()[0]
+        self.assertEqual(json.loads(sched), {"url": "https://b.example"})
+        self.assertEqual(self.tools.migrate(con), 0)
+
 
 if __name__ == "__main__":
     unittest.main()

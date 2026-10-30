@@ -117,15 +117,21 @@ def launch(app: str) -> dict:
     return {"launched": best["name"]}
 
 
-def open_item(target: str) -> dict:
-    """Opens a URL, file or folder with its default application."""
-    if not re.match(r"^[a-z][a-z0-9+.-]*://", target):
-        p = Path(target).expanduser()
+def open_item(url: str = "", path: str = "") -> dict:
+    """Opens an https URL, or a file or folder, with its default application; give exactly one."""
+    if bool(url) == bool(path):
+        raise ValueError("give exactly one of url or path")
+    if url:
+        if not url.startswith("https://"):
+            raise ValueError("url must start with https://")
+        target = url
+    else:
+        p = Path(path).expanduser()
         if not p.exists():
-            raise ValueError(f"{target} does not exist")
-        target = str(p)
+            raise ValueError(f"{path} does not exist")
+        target = str(p.resolve())
     subprocess.Popen(
-        ["gio", "open", target],
+        ["gio", "open", "--", target],
         stdout=subprocess.DEVNULL,
         stderr=subprocess.DEVNULL,
         start_new_session=True,
