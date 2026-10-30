@@ -17,7 +17,8 @@ hub asks you before every run.
   and `/dev`.
 - The child runs in its own process group with no stdin and a minimal environment. Output is read up
   to `max_output` bytes, and the group is killed on a timeout or an overflow.
-- `shell_run` runs anything; see the tool table for its tier.
+- `shell_run` runs any one program, also without a shell: `|`, `>` and `$VAR` reach the program as
+  literal arguments. Its timeout is capped at `max_timeout_s`.
 
 ## Install
 

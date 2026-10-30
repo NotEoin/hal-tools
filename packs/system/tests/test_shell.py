@@ -170,3 +170,26 @@ def test_runner_environment_hides_the_callers_secrets(tmp_path, monkeypatch):
         max_output=10000,
     )
     assert "hunter2" not in res["output"] and "HAL_TEST_SECRET" not in res["output"]
+
+
+def test_shell_run_passes_shell_grammar_literally(home):
+    res = tools.run("echo a | b ; c > d $HOME", cwd=str(home))
+    assert res["output"].strip() == "a | b ; c > d $HOME"
+    assert not (home / "d").exists()
+
+
+def test_shell_run_timeout_is_capped(home, monkeypatch):
+    seen = {}
+
+    def fake(argv, *, timeout, **_):
+        seen["timeout"] = timeout
+        return {"exit_code": 0, "output": "", "errors": "", "truncated": False, "timed_out": False}
+
+    monkeypatch.setattr(run, "capped", fake)
+    tools.run("true", timeout=100000)
+    assert seen["timeout"] == 600.0
+
+
+def test_shell_run_refuses_an_empty_command(home):
+    with pytest.raises(ValueError):
+        tools.run("   ")

@@ -8,9 +8,8 @@ denied by default and the hub asks the user before every run. Output is cut to a
 from __future__ import annotations
 
 import os
+import shlex
 from pathlib import Path
-
-from hal_system import proc
 
 from . import readonly
 from . import run as runner
@@ -18,19 +17,6 @@ from .pathrule import read_ok
 from .settings import settings
 
 MAX_HEAD = 2000  # lines, the upper bound of the `head` argument
-
-
-def _exec(command: str, cwd: str, timeout: float) -> dict:
-    done = proc.completed(
-        ["bash", "-c", command], cwd=os.path.expanduser(cwd or "~"), timeout=timeout
-    )
-    limit = int(settings()["max_output"])
-    out = done.stdout
-    return {
-        "exit_code": done.returncode,
-        "output": out[:limit] + ("\n[cut]" if len(out) > limit else ""),
-        "errors": done.stderr[-2000:],
-    }
 
 
 def look(command: str, cwd: str = "", filter: str = "", head: int = 0) -> dict:
@@ -69,5 +55,24 @@ def look(command: str, cwd: str = "", filter: str = "", head: int = 0) -> dict:
 
 
 def run(command: str, cwd: str = "", timeout: int = 300) -> dict:
-    """Runs any shell command. Confirmation is required through hal-hub."""
-    return _exec(command, cwd, int(timeout))
+    """Runs one program as an argv list; shell grammar reaches it as literal arguments.
+
+    No shell is started (`shlex.split` only). `timeout` is capped at `[shell].max_timeout_s`.
+    """
+    try:
+        argv = shlex.split(command)
+    except ValueError as exc:
+        raise ValueError(f"cannot parse the command: {exc}") from exc
+    if not argv:
+        raise ValueError("empty command")
+    cfg = settings()
+    limit = int(cfg["max_timeout_s"])
+    base = Path(os.path.expanduser(cwd or "~")).resolve()
+    res = runner.capped(
+        argv,
+        timeout=float(max(1, min(int(timeout), limit))),
+        cwd=str(base),
+        env=runner.minimal_env(),
+        max_output=int(cfg["max_output"]),
+    )
+    return {"argv": argv, **res}
