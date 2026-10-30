@@ -1,4 +1,4 @@
-"""Manifest checks over every pack: schema v2 loads, flags match `tests/tool-policy.csv`, bounds exist.
+"""Manifest checks over every pack: schema v2 loads, flags match the policy csv, bounds exist.
 
 Covers REQ-PACK-08 (tier and flags equal the policy table), REQ-PACK-09 (no `confirm`, no
 default verdict, no `_` argument) and REQ-PACK-10 (numeric parameters are bounded). Packs whose

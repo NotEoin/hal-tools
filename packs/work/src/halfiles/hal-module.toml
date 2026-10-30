@@ -1,4 +1,7 @@
+schema = 2
+
 [module]
+pack = "work"
 name = "files"
 summary = "Find files, recent files, read and summarise documents, largest folders, duplicates, tidy Downloads"
 python = "halfiles.tools"
@@ -7,6 +10,10 @@ python = "halfiles.tools"
 name = "files_find"
 function = "find"
 description = "Find files by words in the name, kind (documents, spreadsheets, presentations, images, videos, audio, archives, code, installers), minimum size and how recently changed."
+tier = "read"
+untrusted_output = true
+reviewable = true
+reversible = true
 keywords = "find file where is search locate document pdf"
 timeout = 120
 [tools.params.name]
@@ -15,69 +22,115 @@ timeout = 120
 description = "for example 100mb"
 [tools.params.modified_days]
 type = "integer"
+minimum = 0
+maximum = 3650
 [tools.params.root]
+format = "path"
+access = "read"
 description = "folder to search; the usual folders by default"
 [tools.params.limit]
 type = "integer"
+minimum = 1
+maximum = 200
 
 [[tools]]
 name = "files_recent"
 function = "recent"
 description = "Files changed most recently, optionally in one folder such as ~/Downloads."
+tier = "read"
+untrusted_output = true
+reviewable = true
+reversible = true
 keywords = "recent latest downloaded last file"
 timeout = 120
 [tools.params.limit]
 type = "integer"
+minimum = 1
+maximum = 200
 [tools.params.folder]
+format = "path"
+access = "read"
 
 [[tools]]
 name = "files_read"
 function = "read"
 description = "Read a document's text (text, Markdown, code, PDF, Word, OpenDocument, PowerPoint), or summarise it."
+tier = "read"
+untrusted_output = true
+reviewable = true
+reversible = true
 keywords = "read open summarise document pdf contents what does it say"
 timeout = 180
 [tools.params.path]
+format = "path"
+access = "read"
 required = true
 [tools.params.summarise]
 type = "boolean"
 [tools.params.limit]
 type = "integer"
+minimum = 1
+maximum = 200
 
 [[tools]]
 name = "files_largest"
 function = "largest"
 description = "The biggest folders and files under a folder, to find what is filling the disk."
+tier = "read"
+reviewable = true
+reversible = true
 keywords = "space disk full big large biggest"
 timeout = 600
 [tools.params.folder]
+format = "path"
+access = "read"
 [tools.params.limit]
 type = "integer"
+minimum = 1
+maximum = 200
 
 [[tools]]
 name = "files_duplicates"
 function = "duplicates"
 description = "Find identical duplicate files in a folder."
+tier = "read"
+reviewable = true
+reversible = true
 keywords = "duplicate copies same file"
 timeout = 600
 [tools.params.folder]
+format = "path"
+access = "read"
 [tools.params.min_size]
 [tools.params.limit]
 type = "integer"
+minimum = 1
+maximum = 200
 
 [[tools]]
 name = "files_tidy_downloads"
 function = "tidy_downloads"
 description = "Tidy the Downloads folder by moving loose files into folders by type."
-confirm = true
+tier = "act"
+reviewable = true
 keywords = "tidy organise clean downloads"
 [tools.params.folder]
+format = "path"
+access = "write"
 [tools.params.older_than_days]
 type = "integer"
+minimum = 0
+maximum = 3650
 
 [[tools]]
 name = "files_folder_size"
 function = "folder_size"
 description = "The total size of a folder."
+tier = "read"
+reviewable = true
+reversible = true
 timeout = 600
 [tools.params.folder]
+format = "path"
+access = "read"
 required = true

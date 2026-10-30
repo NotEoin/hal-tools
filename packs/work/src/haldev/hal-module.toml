@@ -1,4 +1,7 @@
+schema = 2
+
 [module]
+pack = "work"
 name = "dev"
 summary = "Git repositories (state, history, changes), TODO scans, running tests, GitHub pull requests and issues"
 python = "haldev.tools"
@@ -7,6 +10,10 @@ python = "haldev.tools"
 name = "dev_repos"
 function = "repos"
 description = "Every git repository with its branch, uncommitted changes, commits not pushed and last commit."
+tier = "read"
+untrusted_output = true
+reviewable = true
+reversible = true
 keywords = "git repos repositories projects code uncommitted unpushed status"
 timeout = 120
 [tools.params.dirty_only]
@@ -16,52 +23,92 @@ type = "boolean"
 name = "dev_status"
 function = "status"
 description = "Git status of one repository."
+tier = "read"
+untrusted_output = true
+reviewable = true
+reversible = true
 [tools.params.repo]
+format = "path"
+access = "read"
 required = true
 
 [[tools]]
 name = "dev_log"
 function = "log"
 description = "Recent commits of one repository."
+tier = "read"
+untrusted_output = true
+reviewable = true
+reversible = true
 keywords = "commits history git log recent"
 [tools.params.repo]
+format = "path"
+access = "read"
 required = true
 [tools.params.limit]
 type = "integer"
+minimum = 1
+maximum = 200
 
 [[tools]]
 name = "dev_diff"
 function = "diff"
 description = "What has changed in a repository and is not committed."
+tier = "read"
+untrusted_output = true
+reviewable = true
+reversible = true
 [tools.params.repo]
+format = "path"
+access = "read"
 required = true
 
 [[tools]]
 name = "dev_todos"
 function = "todos"
 description = "TODO and FIXME comments in one repository or all of them."
+tier = "read"
+untrusted_output = true
+reviewable = true
+reversible = true
 keywords = "todo fixme hack unfinished code"
 timeout = 120
 [tools.params.repo]
+format = "path"
+access = "read"
 [tools.params.limit]
 type = "integer"
+minimum = 1
+maximum = 200
 
 [[tools]]
 name = "dev_run_tests"
 function = "run_tests"
 description = "Run a project's tests and report whether they pass."
+tier = "act"
+untrusted_output = true
+runs_code = true
 keywords = "run tests test suite pass fail"
 timeout = 1800
 [tools.params.repo]
+format = "path"
+access = "read"
 required = true
 
 [[tools]]
 name = "dev_github"
 function = "github"
 description = "Open GitHub pull requests or issues involving the user, or GitHub notifications."
+tier = "send"
+network = true
+untrusted_output = true
+reviewable = true
+reversible = true
 keywords = "github pull requests issues notifications"
 timeout = 90
 [tools.params.kind]
 enum = ["prs", "issues", "notifications"]
 [tools.params.repo]
+format = "path"
+access = "read"
 description = "owner/name; all involving the user if empty"

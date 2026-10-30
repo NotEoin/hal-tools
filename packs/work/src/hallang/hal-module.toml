@@ -1,4 +1,7 @@
+schema = 2
+
 [module]
+pack = "work"
 name = "lang"
 summary = "Translate, proofread, rewrite in a tone, summarise, explain and draft replies, with the local model"
 python = "hallang.tools"
@@ -8,6 +11,9 @@ calls = ["desktop_clipboard"]
 name = "lang_translate"
 function = "translate"
 description = "Translate text (or the clipboard) into a language."
+tier = "read"
+reviewable = true
+reversible = true
 keywords = "translate language french spanish german japanese in english"
 timeout = 300
 [tools.params.text]
@@ -17,6 +23,9 @@ timeout = 300
 name = "lang_proofread"
 function = "proofread"
 description = "Fix spelling, grammar and punctuation in text (or the clipboard) and list the changes."
+tier = "read"
+reviewable = true
+reversible = true
 keywords = "proofread spelling grammar check correct"
 timeout = 300
 [tools.params.text]
@@ -27,6 +36,9 @@ type = "boolean"
 name = "lang_rewrite"
 function = "rewrite"
 description = "Rewrite text (or the clipboard) in a tone: professional, friendly, formal, casual, concise or persuasive; shorter or longer."
+tier = "read"
+reviewable = true
+reversible = true
 keywords = "rewrite rephrase reword tone more professional shorter"
 timeout = 300
 [tools.params.text]
@@ -37,16 +49,24 @@ timeout = 300
 name = "lang_summarise"
 function = "summarise"
 description = "Summarise text (or the clipboard) in a few words."
+tier = "read"
+reviewable = true
+reversible = true
 keywords = "summarise summary tldr shorten"
 timeout = 300
 [tools.params.text]
 [tools.params.words]
 type = "integer"
+minimum = 10
+maximum = 2000
 
 [[tools]]
 name = "lang_explain"
 function = "explain"
 description = "Explain text simply: a letter, a contract clause, jargon or code."
+tier = "read"
+reviewable = true
+reversible = true
 keywords = "explain what does this mean simply"
 timeout = 300
 [tools.params.text]
@@ -56,6 +76,9 @@ timeout = 300
 name = "lang_reply"
 function = "reply"
 description = "Draft a reply to a message, given what the user wants to say."
+tier = "read"
+reviewable = true
+reversible = true
 keywords = "reply respond answer message draft"
 timeout = 300
 [tools.params.message]
