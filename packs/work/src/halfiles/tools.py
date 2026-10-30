@@ -18,10 +18,12 @@ from datetime import datetime
 from pathlib import Path
 
 from hal_work import proc
+from halkit import llm as halkit_llm
 from halkit import paths as halpaths
 
-from . import llm
 from .settings import settings
+
+MODEL_TIMEOUT_S = 300.0  # a local model on a cold start can take minutes to answer
 
 SKIP = {
     ".cache",
@@ -210,9 +212,16 @@ def read(path: str, summarise: bool = False, limit: int = 8000) -> dict:
         text = p.read_text(errors="ignore")
     out = {"path": str(p), "characters": len(text)}
     if summarise:
-        out["summary"] = llm.chat(
-            "Summarise this document in at most 150 words of plain prose. Use only the document.",
-            text[:14000],
+        out["summary"] = halkit_llm.chat(
+            [
+                {
+                    "role": "system",
+                    "content": "Summarise this document in at most 150 words of plain prose. "
+                    "Use only the document.",
+                },
+                {"role": "user", "content": text[:14000]},
+            ],
+            timeout=MODEL_TIMEOUT_S,
         ).strip()
     else:
         out["text"] = text[: int(limit)]

@@ -108,4 +108,4 @@ python3 -m hallang explain text="The lessee shall indemnify the lessor..."
 
 ### Configuration
 
-The model is `chat_model` in the `[hal]` table of `~/.config/hal/config.toml`.
+Summaries and rewrites use the Hal gateway chat model (`hal-chat`); there is no per-pack model setting.

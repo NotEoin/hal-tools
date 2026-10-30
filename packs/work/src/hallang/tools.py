@@ -7,11 +7,14 @@ leaves the machine.
 
 from __future__ import annotations
 
+import json
 import logging
 
 from halhub import client
+from halkit import llm as halkit_llm
 
-from . import llm
+MODEL_TIMEOUT_S = 300.0  # a local model on a cold start can take minutes to answer
+MAX_TEXT_CHARS = 20000  # longer input exceeds the chat model context
 
 log = logging.getLogger(__name__)
 CALLER = "lang"  # the module name the hub checks against `calls`
@@ -34,10 +37,10 @@ def _text(text: str) -> str:
 
 
 def _ask(system: str, text: str) -> str:
-    busy = llm.gpu_busy()
-    if busy:
-        raise RuntimeError(f"the GPU is in use by {busy}")
-    return llm.chat(system, text[:20000]).strip()
+    return halkit_llm.chat(
+        [{"role": "system", "content": system}, {"role": "user", "content": text[:MAX_TEXT_CHARS]}],
+        timeout=MODEL_TIMEOUT_S,
+    ).strip()
 
 
 def translate(text: str = "", to: str = "English") -> dict:
@@ -53,12 +56,25 @@ def translate(text: str = "", to: str = "English") -> dict:
 def proofread(text: str = "", british: bool = True) -> dict:
     """Corrects spelling, grammar and punctuation, changing nothing else, and lists the changes."""
     spelling = "British" if british else "American"
-    out = llm.chat_json(
-        f"Proofread the text: fix spelling ({spelling}), grammar and punctuation only; "
-        "do not rephrase. "
-        'Reply with JSON: {"corrected": the full corrected text, "changes": [short descriptions]}',
-        _text(text),
+    raw = halkit_llm.chat(
+        [
+            {
+                "role": "system",
+                "content": f"Proofread the text: fix spelling ({spelling}), grammar and "
+                "punctuation only; do not rephrase. Reply with JSON: "
+                '{"corrected": the full corrected text, "changes": [short descriptions]}',
+            },
+            {"role": "user", "content": _text(text)},
+        ],
+        timeout=MODEL_TIMEOUT_S,
+        temperature=0.1,
     )
+    try:
+        out = json.loads(raw)
+    except json.JSONDecodeError:
+        out = {}
+    if not isinstance(out, dict):
+        out = {}
     return {"corrected": out.get("corrected", ""), "changes": out.get("changes", [])}
 
 

@@ -13,8 +13,11 @@ import time
 from datetime import datetime
 from pathlib import Path
 
-from . import llm
-from .settings import data_dir, settings, shared
+from halkit import llm as halkit_llm
+
+from .settings import data_dir, settings
+
+MODEL_TIMEOUT_S = 300.0  # a local model on a cold start can take minutes to answer
 
 DESCRIBE = (
     "You are looking at a screenshot of the user's computer screen. Answer briefly and concretely."
@@ -107,16 +110,20 @@ def capture() -> Path:
 
 
 def _look(image: Path, system: str, question: str = "") -> str:
-    busy = llm.gpu_busy()
-    if busy:
-        raise RuntimeError(f"the GPU is in use by {busy}; try again when it is free")
     b64 = base64.b64encode(image.read_bytes()).decode()
-    return llm.chat(
-        system,
-        question or "Describe what is on the screen.",
-        model=shared()["vision_model"],
-        images=[b64],
-        timeout=300,
+    question = question or "Describe what is on the screen."
+    return halkit_llm.chat(
+        [
+            {"role": "system", "content": system},
+            {
+                "role": "user",
+                "content": [
+                    {"type": "text", "text": question},
+                    {"type": "image_url", "image_url": {"url": f"data:image/png;base64,{b64}"}},
+                ],
+            },
+        ],
+        timeout=MODEL_TIMEOUT_S,
     ).strip()
 
 

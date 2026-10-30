@@ -21,9 +21,11 @@ from html.parser import HTMLParser
 from zoneinfo import ZoneInfo, available_timezones
 
 from hal_online import net
+from halkit import llm as halkit_llm
 
-from . import llm
 from .settings import settings
+
+MODEL_TIMEOUT_S = 300.0  # a local model on a cold start can take minutes to answer
 
 _get = net.get
 
@@ -115,9 +117,16 @@ def read_page(url: str, summarise: bool = False, limit: int = 6000) -> dict:
     if response.truncated:
         out["note"] = "the page was cut at the read cap, so the text is partial"
     if summarise:
-        out["summary"] = llm.chat(
-            "Summarise this web page in at most 120 words of plain prose. Use only the page.",
-            text[:12000],
+        out["summary"] = halkit_llm.chat(
+            [
+                {
+                    "role": "system",
+                    "content": "Summarise this web page in at most 120 words of plain prose. "
+                    "Use only the page.",
+                },
+                {"role": "user", "content": text[:12000]},
+            ],
+            timeout=MODEL_TIMEOUT_S,
         ).strip()
     else:
         out["text"] = text[: int(limit)]

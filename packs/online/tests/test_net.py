@@ -23,10 +23,6 @@ class NetguardUseTest(unittest.TestCase):
     def test_every_url_fetch_goes_through_netguard(self) -> None:
         for package in ("halweb", "halfeeds", "hal_online"):
             for path in (SRC / package).glob("*.py"):
-                if (
-                    path.name == "llm.py"
-                ):  # the local model socket, not a URL fetch (H-19 removes it)
-                    continue
                 for node in ast.walk(ast.parse(path.read_text())):
                     names = []
                     if isinstance(node, ast.Import):

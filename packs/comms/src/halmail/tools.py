@@ -20,7 +20,8 @@ from datetime import datetime, timedelta
 from email.message import EmailMessage
 from pathlib import Path
 
-from . import llm
+from halkit import llm as halkit_llm
+
 from .settings import settings
 
 DRAFTS = {"imap.gmail.com": '"[Gmail]/Drafts"'}
@@ -53,6 +54,7 @@ def _account(name: str = "") -> dict:
     return a
 
 
+MODEL_TIMEOUT_S = 300.0  # a local model on a cold start can take minutes to answer
 NET_TIMEOUT_S = 30.0  # IMAP and SMTP servers answer in seconds; a stalled one must not hang a tool
 
 
@@ -170,12 +172,17 @@ def summarise(account: str = "", limit: int = 15) -> dict:
     if not u["messages"]:
         return {"summary": "No unread mail."}
     listing = "\n".join(f"- {x['from']}: {x['subject']}" for x in u["messages"])
-    text = llm.chat(
-        "Summarise this list of unread emails for the owner in at most 80 words of plain speech. "
-        "Group newsletters and notifications together; name people who wrote personally "
-        "and anything "
-        "that needs a reply or action.",
-        listing,
+    text = halkit_llm.chat(
+        [
+            {
+                "role": "system",
+                "content": "Summarise this list of unread emails for the owner in at most 80 words "
+                "of plain speech. Group newsletters and notifications together; name people "
+                "who wrote personally and anything that needs a reply or action.",
+            },
+            {"role": "user", "content": listing},
+        ],
+        timeout=MODEL_TIMEOUT_S,
     )
     return {"unread": u["unread"], "summary": text.strip()}
 

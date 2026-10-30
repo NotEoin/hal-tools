@@ -14,9 +14,11 @@ import xml.etree.ElementTree as ET
 from datetime import datetime
 
 from hal_online import net
+from halkit import llm as halkit_llm
 
-from . import llm
 from .settings import data_dir
+
+MODEL_TIMEOUT_S = 300.0  # a local model on a cold start can take minutes to answer
 
 
 def _db() -> sqlite3.Connection:
@@ -50,8 +52,15 @@ def save(url: str, summarise: bool = False) -> dict:
         text = re.sub(
             r"\s+", " ", _strip(re.sub(r"(?is)<(script|style|nav|footer).*?</\1>", "", page))
         )
-        summary = llm.chat(
-            "Summarise this web page in at most 60 words. Use only the page.", text[:10000]
+        summary = halkit_llm.chat(
+            [
+                {
+                    "role": "system",
+                    "content": "Summarise this web page in at most 60 words. Use only the page.",
+                },
+                {"role": "user", "content": text[:10000]},
+            ],
+            timeout=MODEL_TIMEOUT_S,
         ).strip()
     con = _db()
     con.execute(

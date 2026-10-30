@@ -146,5 +146,5 @@ cd ~/src/hal-ecosystem/hal-screen
 
 ### Configuration
 
-The vision model is `vision_model` in the `[hal]` table of `~/.config/hal/config.toml`; the
+Screen questions go to the Hal gateway chat model (`hal-chat`), which must accept images. The
 `[screen]` table holds `keep`, the number of screenshots kept.
