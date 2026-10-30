@@ -19,6 +19,18 @@ class WebTest(unittest.TestCase):
             with self.assertRaises((ValueError, SyntaxError)):
                 tools.calculate(bad)
 
+    def test_calculator_refuses_huge_factorial(self):
+        for bad in ("factorial(1001)", "factorial(100000)", "factorial(999)"):
+            with self.assertRaises(ValueError, msg=bad):
+                tools.calculate(bad)
+        self.assertEqual(tools.calculate("factorial(20)")["result"], 2432902008176640000)
+
+    def test_calculator_refuses_results_above_ten_to_the_thousandth(self):
+        for bad in ("10**1001", "(10**900)**900", "10**600 * 10**600", "9**1000 * 9**1000"):
+            with self.assertRaises(ValueError, msg=bad):
+                tools.calculate(bad)
+        self.assertEqual(tools.calculate("10**1000")["result"], 10**1000)
+
     def test_units_and_temperature(self):
         self.assertAlmostEqual(tools.convert(10, "miles", "km")["result"], 16.09344)
         self.assertAlmostEqual(tools.convert(100, "C", "F")["result"], 212.0)

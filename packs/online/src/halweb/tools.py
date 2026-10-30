@@ -448,6 +448,19 @@ FUNCS = {
 FUNCS.update(abs=abs, round=round, pi=math.pi, e=math.e)
 
 
+MAX_FACTORIAL_ARG = 1000  # factorial(1000) has 2568 digits and is computed in microseconds
+MAX_EXPONENT = 1000
+MAX_INT_BITS = 3322  # 10**1000 is just under 2**3322; larger integers are refused
+POW_BITS_BUDGET = MAX_INT_BITS  # skips a power that surely exceeds it, before computing it
+
+
+def _bounded(value):
+    """Returns `value`, or raises `ValueError` for an integer above 10**1000."""
+    if isinstance(value, int) and value.bit_length() > MAX_INT_BITS:
+        raise ValueError("result too large")
+    return value
+
+
 def calculate(expression: str) -> dict:
     """Works out arithmetic: + - * / ** % and functions such as sqrt, log and sin."""
     expr = (
@@ -463,9 +476,20 @@ def calculate(expression: str) -> dict:
         if isinstance(node, ast.Constant) and isinstance(node.value, (int, float)):
             return node.value
         if isinstance(node, ast.BinOp) and type(node.op) in OPS:
-            if isinstance(node.op, ast.Pow) and abs(ev(node.right)) > 1000:
-                raise ValueError("exponent too large")
-            return OPS[type(node.op)](ev(node.left), ev(node.right))
+            left, right = ev(node.left), ev(node.right)
+            if isinstance(node.op, ast.Pow):
+                if abs(right) > MAX_EXPONENT:
+                    raise ValueError("exponent too large")
+                if (
+                    isinstance(left, int)
+                    and right > 0
+                    and (left.bit_length() - 1) * right > POW_BITS_BUDGET
+                ):
+                    raise ValueError("result too large")
+            try:
+                return _bounded(OPS[type(node.op)](left, right))
+            except OverflowError as exc:
+                raise ValueError("result too large") from exc
         if isinstance(node, ast.UnaryOp) and type(node.op) in OPS:
             return OPS[type(node.op)](ev(node.operand))
         if isinstance(node, ast.Name) and node.id in FUNCS and not callable(FUNCS[node.id]):
@@ -475,7 +499,13 @@ def calculate(expression: str) -> dict:
             and isinstance(node.func, ast.Name)
             and callable(FUNCS.get(node.func.id))
         ):
-            return FUNCS[node.func.id](*[ev(a) for a in node.args])
+            args = [ev(a) for a in node.args]
+            if node.func.id == "factorial" and args and abs(args[0]) > MAX_FACTORIAL_ARG:
+                raise ValueError("factorial argument too large")
+            try:
+                return _bounded(FUNCS[node.func.id](*args))
+            except OverflowError as exc:
+                raise ValueError("result too large") from exc
         raise ValueError(f"not allowed in a calculation: {ast.dump(node)[:60]}")
 
     value = ev(ast.parse(expr, mode="eval"))
