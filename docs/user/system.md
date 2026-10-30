@@ -167,9 +167,9 @@ hub asks you before every run.
   `/bin`, `/usr/sbin` or `/sbin`.
 - Pipes, redirects, chaining and substitution are refused. Use the `filter` argument to keep matching
   lines and `head` to keep the first lines.
-- Every path argument and `cwd` is resolved (symlinks followed) and must be inside your home
-  directory or `/tmp`, and outside `~/.ssh`, `~/.gnupg`, Hal's own config and state, `/proc`, `/sys`
-  and `/dev`.
+- Every path argument and `cwd` is resolved (symlinks followed) and must be inside
+  `[tools.shell_look].read_roots` in `policy.toml` (else `[paths].read_roots`), and outside the
+  hard-deny list (`~/.ssh`, `~/.gnupg`, Hal's own config and state, and so on).
 - The child runs in its own process group with no stdin and a minimal environment. Output is read up
   to `max_output` bytes, and the group is killed on a timeout or an overflow.
 - `shell_run` runs any one program, also without a shell: `|`, `>` and `$VAR` reach the program as

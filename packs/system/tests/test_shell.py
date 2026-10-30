@@ -19,8 +19,18 @@ PROBES = Path(__file__).parent / "data" / "shell_probes.txt"
 def home(tmp_path, monkeypatch):
     """A synthetic home directory with a file, a secret and a symlink to the secret."""
     monkeypatch.setenv("HOME", str(tmp_path))
-    for var in ("XDG_CONFIG_HOME", "XDG_STATE_HOME", "XDG_DATA_HOME", "XDG_RUNTIME_DIR"):
+    for var in (
+        "HAL_POLICY",
+        "XDG_CONFIG_HOME",
+        "XDG_STATE_HOME",
+        "XDG_DATA_HOME",
+        "XDG_RUNTIME_DIR",
+    ):
         monkeypatch.delenv(var, raising=False)
+    policy = tmp_path / "policy.toml"
+    policy.write_text('schema_version = 1\n[tools.shell_look]\nread_roots = ["~"]\n')
+    policy.chmod(0o600)  # the loader refuses a policy file others can edit
+    monkeypatch.setenv("HAL_POLICY", str(policy))
     (tmp_path / "notes.txt").write_text("alpha\nBeta\ngamma\n")
     (tmp_path / ".ssh").mkdir()
     (tmp_path / ".ssh" / "id_rsa").write_text("not a key")
@@ -193,3 +203,18 @@ def test_shell_run_timeout_is_capped(home, monkeypatch):
 def test_shell_run_refuses_an_empty_command(home):
     with pytest.raises(ValueError):
         tools.run("   ")
+
+
+def test_shell_look_reads_only_the_roots_set_for_it_in_the_policy(home, monkeypatch):
+    (home / "Documents").mkdir()
+    (home / "Documents" / "a.txt").write_text("x")
+    policy = home / "narrow.toml"
+    policy.write_text('schema_version = 1\n[tools.shell_look]\nread_roots = ["~/Documents"]\n')
+    policy.chmod(0o600)  # the loader refuses a policy file others can edit
+    monkeypatch.setenv("HAL_POLICY", str(policy))
+    assert pathrule.read_ok(home / "Documents" / "a.txt") is None
+    assert pathrule.read_ok(home / "notes.txt") == "path:outside-roots"
+
+
+def test_shell_look_refuses_a_hard_denied_path_inside_its_roots(home):
+    assert pathrule.read_ok(home / ".ssh" / "id_rsa") == "path:hard-deny"

@@ -15,7 +15,7 @@ runs any program; it is denied and a policy rule cannot allow it. This page wide
 
    ```toml
    [tools.shell_look]
-   read_roots = ["/etc", "/var/log"]   # folders shell_look may read, besides the defaults
+   read_roots = ["/etc", "/var/log"]   # folders shell_look may read; this replaces [paths].read_roots
    ```
 
 3. If a root holds private checkouts, deny them.
@@ -32,9 +32,8 @@ runs any program; it is denied and a policy rule cannot allow it. This page wide
    hal-system call shell_look command="ls /var/log" head=5   # lists five entries
    ```
 
-Status: unverified. The pack reads only home and the temporary directory today
-(`halshell.pathrule.read_roots`); reading `[tools.shell_look].read_roots` waits for the hub path
-rule. Check with the `call` in step 4.
+Status: the root rule is covered by `packs/system/tests/test_shell.py` (a policy file with
+narrow roots, and a hard-denied path inside a root). The `call` in step 4 was not run.
 
 Run Hal in the box when you widen roots. In an unsandboxed harness the shell is reachable anyway.
 
