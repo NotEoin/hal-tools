@@ -6,6 +6,7 @@ import tempfile
 import unittest
 from datetime import date, timedelta
 from pathlib import Path
+from unittest import mock
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
@@ -18,7 +19,9 @@ class ContactsTest(unittest.TestCase):
         os.environ["HAL_CONFIG"] = str(cfg)
         from halcontacts import tools
 
-        tools._hub = lambda *a, **k: None
+        patch = mock.patch.object(tools, "_hub", lambda *a, **k: None)
+        patch.start()
+        self.addCleanup(patch.stop)
         self.t = tools
 
     def tearDown(self):

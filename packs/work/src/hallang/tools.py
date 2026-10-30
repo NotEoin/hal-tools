@@ -1,33 +1,35 @@
 """hal-lang's tools: language work by the local model.
 
-Every tool takes text (or the clipboard's text, through hal-hub's
-desktop_clipboard, when no text is given) and returns plain text. Nothing
+Every tool takes text (or the clipboard's text, through the hub's
+`desktop_clipboard`, when no text is given) and returns plain text. Nothing
 leaves the machine.
 """
 
 from __future__ import annotations
 
-import json
-import shutil
-import subprocess
+import logging
+
+from halhub import client
 
 from . import llm
 
+log = logging.getLogger(__name__)
+CALLER = "lang"  # the module name the hub checks against `calls`
+HUB_TIMEOUT_S = 30.0  # reading the clipboard is instant; a stuck desktop must not hang a rewrite
+
 
 def _text(text: str) -> str:
+    """Returns `text`, or the clipboard's text when it is blank; raises when both are empty."""
     if text.strip():
         return text
-    exe = shutil.which("hal-hub")
-    if exe:
-        out = subprocess.run(
-            [exe, "desktop_clipboard"], capture_output=True, text=True, timeout=30
-        ).stdout
-        try:
-            clip = json.loads(out).get("text", "")
-        except (json.JSONDecodeError, AttributeError):
-            clip = ""
-        if clip.strip():
-            return clip
+    try:
+        clip = client.call("desktop_clipboard", {}, CALLER, timeout=HUB_TIMEOUT_S)
+    except (client.ToolDenied, client.ToolFailed) as exc:
+        log.warning("clipboard not read: %s", exc)
+        clip = None
+    clip_text = clip.get("text", "") if isinstance(clip, dict) else ""
+    if clip_text.strip():
+        return clip_text
     raise ValueError("give the text, or copy it to the clipboard first")
 
 

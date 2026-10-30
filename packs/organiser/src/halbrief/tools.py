@@ -1,39 +1,34 @@
 """hal-briefing's tools: morning, evening and job-search briefings assembled from the other modules.
 
 Each part (weather, calendar, tasks, job search, headlines, system health) is
-fetched through the hal-hub command, so a module that is not installed simply
+fetched through `halhub.client.call`, so a module that is not installed simply
 leaves its part out. The briefing is written as speech, can be sent through
 hal-notify and spoken, and is added to the day's note in the vault.
 """
 
 from __future__ import annotations
 
-import json
-import shutil
-import subprocess
+import logging
 from datetime import datetime
 
+from halhub import client
 from halkit.config import hal
 
 from .notify import notify
 from .settings import settings
 
+log = logging.getLogger(__name__)
+CALLER = "briefing"  # the module name the hub checks against `calls`
+HUB_TIMEOUT_S = 120.0  # one part may be slow (weather, headlines); the briefing waits no longer
 
-def _hub(tool: str, **args) -> object | None:
-    exe = shutil.which("hal-hub")
-    if not exe:
-        return None
-    cmd = [exe, tool, *(f"{k}={v}" for k, v in args.items())]
+
+def _hub(tool: str, **args: object) -> object | None:
+    """Calls another module's tool through the hub; returns None when it is denied or fails."""
     try:
-        done = subprocess.run(cmd, capture_output=True, text=True, timeout=120)
-    except (OSError, subprocess.TimeoutExpired):
+        return client.call(tool, args, CALLER, timeout=HUB_TIMEOUT_S)
+    except (client.ToolDenied, client.ToolFailed) as exc:
+        log.warning("briefing part skipped: %s: %s", tool, exc)
         return None
-    if done.returncode:
-        return None
-    try:
-        return json.loads(done.stdout)
-    except json.JSONDecodeError:
-        return done.stdout.strip() or None
 
 
 def _weather(day_index: int) -> str | None:
@@ -144,7 +139,7 @@ def build(kind: str = "morning") -> str:
 
 
 def brief(kind: str = "morning", speak: bool = True, push: bool = True, save: bool = True) -> dict:
-    """Builds a briefing and delivers it: spoken, pushed to the phone and saved to the daily note."""
+    """Builds a briefing and delivers it: spoken, pushed to the phone, saved to the daily note."""
     text = build(kind)
     if speak or push:
         notify(f"{kind.title()} briefing", text, speak=speak)

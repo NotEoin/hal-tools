@@ -2,6 +2,7 @@
 name = "briefing"
 summary = "Morning and evening briefings: weather, calendar, tasks, job search, headlines and computer health"
 python = "halbrief.tools"
+calls = ["web_weather", "calendar_agenda", "tasks_list", "web_news", "system_overview", "system_services", "jobs_digest"]
 
 [[tools]]
 name = "briefing_build"

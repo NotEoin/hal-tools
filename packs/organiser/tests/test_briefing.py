@@ -3,20 +3,28 @@
 import sys
 import unittest
 from pathlib import Path
+from unittest import mock
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from halbrief import tools
 
 
 class BriefingTest(unittest.TestCase):
+    def _stub(self, fake) -> None:
+        patch = mock.patch.object(tools, "_hub", fake)
+        patch.start()
+        self.addCleanup(patch.stop)
+
     def test_briefing_without_modules(self):
-        tools._hub = lambda *a, **k: None
+        self._stub(lambda *a, **k: None)
         text = tools.build("morning")
         self.assertTrue(text.startswith("Good "))
 
     def test_job_search_update(self):
-        tools._hub = lambda tool, **k: (
-            "Good morning. Two applications are waiting." if tool == "jobs_digest" else None
+        self._stub(
+            lambda tool, **k: (
+                "Good morning. Two applications are waiting." if tool == "jobs_digest" else None
+            )
         )
         text = tools.build("jobs")
         self.assertTrue(text.endswith("Two applications are waiting."))

@@ -2,6 +2,7 @@
 name = "lang"
 summary = "Translate, proofread, rewrite in a tone, summarise, explain and draft replies, with the local model"
 python = "hallang.tools"
+calls = ["desktop_clipboard"]
 
 [[tools]]
 name = "lang_translate"

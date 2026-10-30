@@ -2,6 +2,7 @@
 name = "contacts"
 summary = "People: contact details, birthdays (added to the calendar), interaction log and who you have not spoken to"
 python = "halcontacts.tools"
+calls = ["calendar_add"]
 
 [[tools]]
 name = "contacts_add"

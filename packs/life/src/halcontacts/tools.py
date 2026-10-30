@@ -8,14 +8,18 @@ yearly event through hal-hub when it is installed.
 
 from __future__ import annotations
 
-import json
+import logging
 import re
-import shutil
-import subprocess
 from datetime import date, datetime, timedelta
 from pathlib import Path
 
+from halhub import client
+
 from .settings import settings, vault
+
+logger = logging.getLogger(__name__)
+CALLER = "contacts"  # the module name the hub checks against `calls`
+HUB_TIMEOUT_S = 60.0  # a birthday event is one quick calendar write
 
 FIELDS = ("email", "phone", "birthday", "relationship", "company", "address", "last_contact")
 FRONT = re.compile(r"\A---\n(.*?)\n---\n?", re.S)
@@ -64,11 +68,11 @@ def _find(name: str) -> Path:
 
 
 def _hub(tool: str, args: dict) -> None:
-    exe = shutil.which("hal-hub")
-    if exe:
-        subprocess.run(
-            [exe, "call", tool, "--json", json.dumps(args)], capture_output=True, timeout=60
-        )
+    """Calls another module's tool through the hub; a denial or failure is logged, not raised."""
+    try:
+        client.call(tool, args, CALLER, timeout=HUB_TIMEOUT_S)
+    except (client.ToolDenied, client.ToolFailed) as exc:
+        logger.warning("%s was not done: %s", tool, exc)
 
 
 def _birthday(text: str) -> str:
@@ -157,7 +161,7 @@ def find(query: str) -> list[dict]:
 
 
 def log(name: str, note: str, when: str = "") -> dict:
-    """Records an interaction ('had coffee, she's moving to Leeds') and updates when you last spoke."""
+    """Records an interaction ('had coffee, she's moving') and updates when you last spoke."""
     p = _find(name)
     meta, body = _read(p)
     day = when or date.today().isoformat()
