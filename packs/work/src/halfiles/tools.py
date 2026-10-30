@@ -19,7 +19,7 @@ from datetime import datetime
 from pathlib import Path
 
 from . import llm
-from .config import settings
+from .settings import settings
 
 SKIP = {
     ".cache",
@@ -143,7 +143,7 @@ def find(
     root: str = "",
     limit: int = 25,
 ) -> list[dict]:
-    """Files whose name contains all the words, of a kind, above a size, changed in the last N days."""
+    """Files whose name has all the words, of a kind, above a size, changed in the last N days."""
     words = name.lower().split()
     exts = KINDS.get(kind.lower()) if kind else None
     if kind and exts is None:
@@ -181,7 +181,7 @@ def recent(limit: int = 15, folder: str = "") -> list[dict]:
 
 
 def read(path: str, summarise: bool = False, limit: int = 8000) -> dict:
-    """The text of a document (text, code, Markdown, PDF, Word, OpenDocument), or a summary of it."""
+    """The text of a document (text, code, Markdown, PDF, Word, OpenDocument) or a summary."""
     p = Path(path).expanduser()
     if not p.is_file():
         raise ValueError(f"{path} is not a file")
@@ -273,7 +273,7 @@ def duplicates(folder: str = "~/Downloads", min_size: str = "1mb", limit: int = 
 
 
 def tidy_downloads(folder: str = "~/Downloads", older_than_days: int = 0) -> dict:
-    """Moves loose files in Downloads into folders by type (Documents, Images, Installers and so on)."""
+    """Moves loose files in Downloads into folders by type (Documents, Images, Installers, ...)."""
     base = Path(folder).expanduser()
     cutoff = time.time() - int(older_than_days) * 86400
     moved: dict[str, int] = {}

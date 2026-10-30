@@ -11,7 +11,7 @@ import shutil
 import subprocess
 from pathlib import Path
 
-from .config import settings
+from .settings import settings
 
 SKIP = {"node_modules", ".venv", "venv", "__pycache__", "site-packages", "GPT-SoVITS"}
 
@@ -52,7 +52,7 @@ def _find(repo: str) -> Path:
 
 
 def repos(dirty_only: bool = False) -> list[dict]:
-    """Every repository: branch, uncommitted files, commits ahead or behind its upstream, last commit."""
+    """Every repository: branch, dirty files, commits ahead or behind upstream, last commit."""
     out = []
     for r in _repos():
         status = _git(r, "status", "--porcelain=v1", "--branch")
@@ -119,7 +119,7 @@ def todos(repo: str = "", limit: int = 40) -> list[dict]:
 
 
 def run_tests(repo: str) -> dict:
-    """Runs a project's tests (pytest, unittest, npm or cargo, whichever it uses) and reports the outcome."""
+    """Runs a project's tests (pytest, unittest, npm or cargo) and reports the result."""
     r = _find(repo)
     pyproject = (
         (r / "pyproject.toml").read_text(errors="ignore") if (r / "pyproject.toml").exists() else ""

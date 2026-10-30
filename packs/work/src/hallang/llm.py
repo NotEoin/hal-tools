@@ -8,7 +8,7 @@ import json
 import subprocess
 import urllib.request
 
-from .config import shared
+from .settings import shared
 
 
 class Unavailable(Exception):
@@ -50,11 +50,11 @@ def gpu_busy() -> str | None:
 
 def _post(path: str, payload: dict, timeout: float) -> dict:
     url = shared()["ollama_url"].rstrip("/") + path
-    req = urllib.request.Request(
+    req = urllib.request.Request(  # noqa: S310 - the URL is the configured Ollama upstream
         url, data=json.dumps(payload).encode(), headers={"Content-Type": "application/json"}
     )
     try:
-        with urllib.request.urlopen(req, timeout=timeout) as r:
+        with urllib.request.urlopen(req, timeout=timeout) as r:  # noqa: S310 - same upstream URL
             return json.loads(r.read())
     except OSError as e:
         raise Unavailable(f"Ollama: {e}") from e

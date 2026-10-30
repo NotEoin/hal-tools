@@ -41,7 +41,8 @@ def _ask(system: str, text: str) -> str:
 def translate(text: str = "", to: str = "English") -> dict:
     """Translates text into a language."""
     out = _ask(
-        f"Translate the user's text into {to}. Keep the meaning, tone and formatting. Output only the translation.",
+        f"Translate the user's text into {to}. Keep the meaning, tone and formatting. "
+        "Output only the translation.",
         _text(text),
     )
     return {"to": to, "translation": out}
@@ -51,7 +52,8 @@ def proofread(text: str = "", british: bool = True) -> dict:
     """Corrects spelling, grammar and punctuation, changing nothing else, and lists the changes."""
     spelling = "British" if british else "American"
     out = llm.chat_json(
-        f"Proofread the text: fix spelling ({spelling}), grammar and punctuation only; do not rephrase. "
+        f"Proofread the text: fix spelling ({spelling}), grammar and punctuation only; "
+        "do not rephrase. "
         'Reply with JSON: {"corrected": the full corrected text, "changes": [short descriptions]}',
         _text(text),
     )
@@ -59,10 +61,11 @@ def proofread(text: str = "", british: bool = True) -> dict:
 
 
 def rewrite(text: str = "", tone: str = "professional", length: str = "same") -> dict:
-    """Rewrites text in a tone (professional, friendly, formal, casual, concise, persuasive) and length."""
+    """Rewrites text in a tone (professional, friendly, formal, casual, concise) and length."""
     out = _ask(
-        f"Rewrite the user's text in a {tone} tone, {length} length as the original unless told otherwise "
-        f"('shorter', 'longer'). Keep every fact. Output only the rewritten text.",
+        f"Rewrite the user's text in a {tone} tone, {length} length as the original "
+        f"unless told otherwise ('shorter', 'longer'). Keep every fact. "
+        "Output only the rewritten text.",
         _text(text),
     )
     return {"tone": tone, "text": out}
@@ -70,7 +73,8 @@ def rewrite(text: str = "", tone: str = "professional", length: str = "same") ->
 
 def summarise(text: str = "", words: int = 80) -> dict:
     out = _ask(
-        f"Summarise the user's text in at most {int(words)} words of plain prose. Use only the text.",
+        f"Summarise the user's text in at most {int(words)} words of plain prose. "
+        "Use only the text.",
         _text(text),
     )
     return {"summary": out}
@@ -79,7 +83,8 @@ def summarise(text: str = "", words: int = 80) -> dict:
 def explain(text: str = "", audience: str = "someone new to the subject") -> dict:
     """Explains text (a letter, a contract clause, code, jargon) simply."""
     out = _ask(
-        f"Explain the user's text clearly and briefly for {audience}. Say what it means and anything to watch for.",
+        f"Explain the user's text clearly and briefly for {audience}. "
+        "Say what it means and anything to watch for.",
         _text(text),
     )
     return {"explanation": out}
@@ -88,7 +93,8 @@ def explain(text: str = "", audience: str = "someone new to the subject") -> dic
 def reply(message: str = "", intent: str = "", tone: str = "friendly") -> dict:
     """Drafts a reply to a message, saying what the user wants to say."""
     out = _ask(
-        f"Draft a {tone} reply to the message from the user's point of view. What they want to say: "
+        f"Draft a {tone} reply to the message from the user's point of view. "
+        "What they want to say: "
         f"{intent or 'a sensible, helpful reply'}. Output only the reply.",
         _text(message),
     )
