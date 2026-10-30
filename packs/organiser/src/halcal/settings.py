@@ -18,6 +18,12 @@ TABLE = config.register(
             config.Key("all_day_reminder_hour", int, 8, doc="Hour of day for all-day reminders"),
             config.Key("sync_minutes", int, 15, doc="Minutes between CalDAV syncs"),
             config.Key(
+                "import_roots",
+                list,
+                ["~/Documents", "~/Downloads"],
+                doc="Folders `calendar_import` and `calendar_export` may use",
+            ),
+            config.Key(
                 "caldav",
                 dict,
                 {},

@@ -6,7 +6,7 @@ import re
 from datetime import date, datetime, time, timedelta
 from pathlib import Path
 
-from halkit import when
+from halkit import paths, when
 from halkit.paths import config_file
 
 from . import ics, match, store
@@ -210,15 +210,22 @@ def free(
     return slots[:15]
 
 
+def _confine(path: str) -> Path:
+    """The resolved `path`, if it is inside `[calendar].import_roots`; raises `PathNotAllowed`."""
+    return paths.confine(path, [Path(r) for r in settings()["import_roots"]], [])
+
+
 def import_ics(path: str) -> dict:
-    events = ics.parse(Path(path).expanduser().read_text(errors="ignore"))
+    """Imports the events of an .ics file inside `[calendar].import_roots`."""
+    events = ics.parse(_confine(path).read_text(errors="ignore"))
     for e in events:
         store.save(e)
     return {"imported": len(events)}
 
 
-def export_ics(path: str = "~/hal-calendar.ics") -> dict:
-    p = Path(path).expanduser()
+def export_ics(path: str = "~/Documents/hal-calendar.ics") -> dict:
+    """Writes every event to an .ics file inside `[calendar].import_roots`."""
+    p = _confine(path)
     events = store.all_events()
     p.write_text(ics.calendar(events))
     return {"exported": len(events), "path": str(p)}

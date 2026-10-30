@@ -65,3 +65,17 @@ def test_numeric_params_are_bounded(path):
         for p in tool.params:
             if p.type in ("integer", "number"):
                 assert p.minimum is not None and p.maximum is not None, f"{tool.name}.{p.name}"
+
+
+PATH_LIKE = ("path", "folder", "root", "file", "dir", "image", "repo")
+
+
+@pytest.mark.parametrize("path", MANIFESTS, ids=lambda p: p.parent.name)
+def test_path_params_declare_format_and_access(path):
+    for tool in load_manifest(path, source="path").tools:
+        for p in tool.params:
+            is_path = p.format == "path"
+            if any(p.name == w or p.name.endswith("_" + w) for w in PATH_LIKE):
+                assert is_path, f"{tool.name}.{p.name} names a file but has no format = path"
+            if is_path:
+                assert p.access in ("read", "write"), f"{tool.name}.{p.name} has no access"

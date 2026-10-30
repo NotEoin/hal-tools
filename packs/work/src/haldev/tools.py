@@ -11,6 +11,7 @@ import shutil
 from pathlib import Path
 
 from hal_work import proc
+from halkit import paths
 
 from .settings import settings
 
@@ -39,8 +40,11 @@ def _repos() -> list[Path]:
 
 
 def _find(repo: str) -> Path:
-    p = Path(repo).expanduser()
-    if (p / ".git").exists():
+    """A repository by name, or by path when the path is inside `[dev].roots`."""
+    if "/" in repo or repo.startswith("~"):
+        p = paths.confine(repo, [Path(r) for r in settings()["roots"]], [])
+        if not (p / ".git").exists():
+            raise ValueError(f"{repo} is not a git repository")
         return p
     hits = [r for r in _repos() if r.name.lower() == repo.lower()] or [
         r for r in _repos() if repo.lower() in r.name.lower()

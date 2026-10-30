@@ -20,6 +20,22 @@ class CalendarTest(unittest.TestCase):
     def tearDown(self):
         self.tmp.cleanup()
 
+    def test_calendar_refuses_path_outside_its_own_roots(self):
+        from halcal import tools
+        from halkit.paths import PathNotAllowed
+
+        cfg = Path(self.tmp.name) / "roots.toml"
+        cfg.write_text(f'[calendar]\nimport_roots = ["{self.tmp.name}/ok"]\n')
+        os.environ["HAL_CONFIG"] = str(cfg)
+        (Path(self.tmp.name) / "ok").mkdir()
+        elsewhere = Path(self.tmp.name) / "elsewhere.ics"
+        elsewhere.write_text("BEGIN:VCALENDAR\nEND:VCALENDAR\n")
+        with self.assertRaises(PathNotAllowed):
+            tools.import_ics(str(elsewhere))
+        with self.assertRaises(PathNotAllowed):
+            tools.export_ics(str(elsewhere))
+        self.assertEqual(tools.export_ics(f"{self.tmp.name}/ok/out.ics")["exported"], 0)
+
     def test_parses_common_phrases(self):
         from halkit.when import parse
 

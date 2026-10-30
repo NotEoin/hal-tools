@@ -76,6 +76,7 @@ timezone = "Europe/London"
 default_reminders = [15]        # minutes before a timed event
 all_day_reminder_hour = 8       # when an all-day event is announced
 sync_minutes = 15
+import_roots = ["~/Documents", "~/Downloads"]   # folders calendar_import and calendar_export may use
 
 [calendar.caldav]
 url = "https://caldav.icloud.com"

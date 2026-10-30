@@ -1,5 +1,6 @@
 """Tests for finding, duplicates and tidying, in a throwaway folder."""
 
+import os
 import sys
 import tempfile
 import unittest
@@ -7,12 +8,25 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from halfiles import tools
+from halkit.paths import PathNotAllowed
 
 
 class FilesTest(unittest.TestCase):
     def setUp(self):
         self.tmp = tempfile.TemporaryDirectory()
         self.d = Path(self.tmp.name)
+        cfg = self.d.parent / (self.d.name + ".toml")
+        cfg.write_text(f'[files]\nroots = ["{self.d}"]\n')
+        self.addCleanup(cfg.unlink)
+        old = os.environ.get("HAL_CONFIG")
+        os.environ["HAL_CONFIG"] = str(cfg)
+        self.addCleanup(
+            lambda: (
+                os.environ.__setitem__("HAL_CONFIG", old)
+                if old is not None
+                else os.environ.pop("HAL_CONFIG", None)
+            )
+        )
         (self.d / "report final.pdf").write_bytes(b"%PDF" + b"x" * 2_000_000)
         (self.d / "copy of report.pdf").write_bytes(b"%PDF" + b"x" * 2_000_000)
         (self.d / "notes.md").write_text("# Notes\nhello")
@@ -38,6 +52,21 @@ class FilesTest(unittest.TestCase):
         out = tools.tidy_downloads(str(self.d))
         self.assertEqual(out["moved"], {"documents": 3, "images": 1})
         self.assertTrue((self.d / "Images" / "photo.jpg").exists())
+
+    def test_files_tools_refuse_path_outside_their_own_roots(self):
+        with tempfile.TemporaryDirectory() as other:
+            (Path(other) / "secret.md").write_text("no")
+            for call in (
+                lambda: tools.read(str(Path(other) / "secret.md")),
+                lambda: tools.find(root=other),
+                lambda: tools.duplicates(other),
+                lambda: tools.tidy_downloads(other),
+                lambda: tools.folder_size(other),
+                lambda: tools.largest(other),
+                lambda: tools.read(str(self.d / ".." / Path(other).name / "secret.md")),
+            ):
+                with self.assertRaises(PathNotAllowed):
+                    call()
 
 
 if __name__ == "__main__":

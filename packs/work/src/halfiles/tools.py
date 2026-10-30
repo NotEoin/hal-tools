@@ -18,6 +18,7 @@ from datetime import datetime
 from pathlib import Path
 
 from hal_work import proc
+from halkit import paths as halpaths
 
 from . import llm
 from .settings import settings
@@ -92,9 +93,14 @@ KINDS = {
 SIZE = re.compile(r"(\d+(?:\.\d+)?)\s*(b|kb|mb|gb|tb)?", re.I)
 
 
+def _confine(path: str) -> Path:
+    """The resolved `path`, if it is inside one of `[files].roots`; raises `PathNotAllowed`."""
+    return halpaths.confine(path, [Path(r) for r in settings()["roots"]], [])
+
+
 def _roots(root: str = "") -> list[Path]:
     if root:
-        p = Path(root).expanduser()
+        p = _confine(root)
         if not p.is_dir():
             raise ValueError(f"{root} is not a folder")
         return [p]
@@ -183,7 +189,7 @@ def recent(limit: int = 15, folder: str = "") -> list[dict]:
 
 def read(path: str, summarise: bool = False, limit: int = 8000) -> dict:
     """The text of a document (text, code, Markdown, PDF, Word, OpenDocument) or a summary."""
-    p = Path(path).expanduser()
+    p = _confine(path)
     if not p.is_file():
         raise ValueError(f"{path} is not a file")
     ext = p.suffix.lower()
@@ -213,9 +219,9 @@ def read(path: str, summarise: bool = False, limit: int = 8000) -> dict:
     return out
 
 
-def largest(folder: str = "~", limit: int = 12) -> dict:
+def largest(folder: str = "~/Documents", limit: int = 12) -> dict:
     """The biggest folders directly inside a folder, and the biggest files below it."""
-    base = Path(folder).expanduser()
+    base = _confine(folder)
     sizes = {}
     files = []
     for child in base.iterdir():
@@ -245,7 +251,7 @@ def duplicates(folder: str = "~/Downloads", min_size: str = "1mb", limit: int = 
     """Groups of identical files (same size and content) in a folder."""
     by_size: dict[int, list[Path]] = {}
     floor = _bytes(min_size)
-    for p in _walk([Path(folder).expanduser()]):
+    for p in _walk([_confine(folder)]):
         try:
             s = p.stat().st_size
         except OSError:
@@ -271,7 +277,7 @@ def duplicates(folder: str = "~/Downloads", min_size: str = "1mb", limit: int = 
 
 def tidy_downloads(folder: str = "~/Downloads", older_than_days: int = 0) -> dict:
     """Moves loose files in Downloads into folders by type (Documents, Images, Installers, ...)."""
-    base = Path(folder).expanduser()
+    base = _confine(folder)
     cutoff = time.time() - int(older_than_days) * 86400
     moved: dict[str, int] = {}
     for p in base.iterdir():
@@ -296,6 +302,6 @@ def tidy_downloads(folder: str = "~/Downloads", older_than_days: int = 0) -> dic
 
 
 def folder_size(folder: str) -> dict:
-    p = Path(folder).expanduser()
+    p = _confine(folder)
     out = proc.completed(["du", "-sb", str(p)], timeout=600).stdout
     return {"folder": str(p), "size_gb": round(int(out.split()[0]) / 1e9, 2) if out else None}

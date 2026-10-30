@@ -27,6 +27,14 @@ class DevTest(unittest.TestCase):
     def tearDown(self):
         self.tmp.cleanup()
 
+    def test_dev_refuses_repo_path_outside_its_own_roots(self):
+        from halkit.paths import PathNotAllowed
+
+        with tempfile.TemporaryDirectory() as other:
+            subprocess.run(["git", "init", "-q", other], check=True)
+            with self.assertRaises(PathNotAllowed):
+                self.tools._find(other)
+
     def test_repo_found_with_changes(self):
         r = self.tools.repos()
         self.assertEqual(r[0]["repo"], "demo")
