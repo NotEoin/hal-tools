@@ -99,7 +99,7 @@ def open_employment() -> dict:
 
 
 def mark(job: str, status: str, note: str = "") -> str:
-    """Records a job's progress: shortlisted, applied, assessment, interview, offer, rejected, withdrawn, skipped."""
+    """Records a job's progress; `status` is one of the pipeline stages."""
     allowed = {
         "shortlisted",
         "applied",
@@ -116,7 +116,7 @@ def mark(job: str, status: str, note: str = "") -> str:
 
 
 def status_digest() -> str:
-    """The written status digest: what needs attention, new matches and the pipeline (printed, not emailed)."""
+    """The written status digest: what needs attention, new matches and the pipeline."""
     return _jobhunt("digest", "--dry-run", timeout=120)
 
 
