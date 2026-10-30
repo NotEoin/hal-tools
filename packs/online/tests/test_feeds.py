@@ -12,7 +12,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 class FeedsTest(unittest.TestCase):
     def setUp(self):
         self.tmp = tempfile.TemporaryDirectory()
-        os.environ["HAL_DATA"] = self.tmp.name
+        os.environ["HAL_DATA_DIR"] = self.tmp.name
         feed = Path(self.tmp.name) / "f.xml"
         feed.write_text(
             "<rss><channel><title>Blog</title><item><title>First post</title><link>http://x/1</link>"

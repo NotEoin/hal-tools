@@ -22,7 +22,7 @@ from html.parser import HTMLParser
 from zoneinfo import ZoneInfo, available_timezones
 
 from . import llm
-from .config import settings
+from .settings import settings
 
 UA = "Mozilla/5.0 (X11; Linux x86_64) Hal/1.0"
 
@@ -50,7 +50,7 @@ def search(query: str, limit: int = 6) -> list[dict]:
             r"<a rel=\"nofollow\" href=\"([^\"]+)\" class='result-link'>(.*?)</a>", page, re.S
         )
         snippets = re.findall(r"<td class='result-snippet'>(.*?)</td>", page, re.S)
-        for (href, title), snip in zip(links, snippets + [""] * len(links)):
+        for (href, title), snip in zip(links, snippets + [""] * len(links), strict=False):
             target = urllib.parse.parse_qs(urllib.parse.urlparse(html.unescape(href)).query).get(
                 "uddg", [href]
             )[0]
@@ -78,7 +78,9 @@ def _strip(fragment: str) -> str:
 
 
 class _Text(HTMLParser):
-    SKIP = {"script", "style", "nav", "footer", "header", "aside", "form", "noscript", "svg"}
+    SKIP = frozenset(
+        {"script", "style", "nav", "footer", "header", "aside", "form", "noscript", "svg"}
+    )
 
     def __init__(self) -> None:
         super().__init__()
@@ -218,13 +220,13 @@ def wikipedia(topic: str) -> dict:
     title = urllib.parse.quote(topic.strip().replace(" ", "_"))
     try:
         d = _json(f"https://en.wikipedia.org/api/rest_v1/page/summary/{title}?redirect=true")
-    except urllib.error.HTTPError:
+    except urllib.error.HTTPError as err:
         hits = _json(
             "https://en.wikipedia.org/w/api.php?action=opensearch&limit=1&format=json&search="
             + urllib.parse.quote(topic)
         )
         if not hits[1]:
-            raise ValueError(f"Wikipedia has nothing on {topic!r}")
+            raise ValueError(f"Wikipedia has nothing on {topic!r}") from err
         d = _json(
             "https://en.wikipedia.org/api/rest_v1/page/summary/"
             + urllib.parse.quote(hits[1][0].replace(" ", "_"))
@@ -291,9 +293,13 @@ def news(topic: str = "", limit: int = 8) -> list[dict]:
         for it in root.iter():
             if it.tag.split("}")[-1] not in ("item", "entry"):
                 continue
-            get = lambda t: next(
-                (c.text or c.get("href") or "" for c in it if c.tag.split("}")[-1] == t), ""
-            )  # noqa: E731
+
+            def get(name: str, it: ET.Element = it) -> str:
+                for child in it:
+                    if child.tag.split("}")[-1] == name:
+                        return child.text or child.get("href") or ""
+                return ""
+
             title, summary = (
                 (get("title") or "").strip(),
                 _strip(get("description") or get("summary") or ""),

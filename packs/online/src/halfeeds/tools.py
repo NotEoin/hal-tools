@@ -15,7 +15,7 @@ import xml.etree.ElementTree as ET
 from datetime import datetime
 
 from . import llm
-from .config import data_dir
+from .settings import data_dir
 
 UA = {"User-Agent": "Mozilla/5.0 (X11; Linux x86_64) Hal/1.0"}
 
@@ -65,7 +65,7 @@ def save(url: str, summarise: bool = False) -> dict:
 
 def reading_list(include_read: bool = False) -> list[dict]:
     sql = (
-        "SELECT * FROM later"
+        "SELECT * FROM later"  # noqa: S608 - fixed fragments only
         + ("" if include_read else " WHERE read IS NULL")
         + " ORDER BY added DESC"
     )

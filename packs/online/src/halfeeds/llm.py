@@ -8,7 +8,7 @@ import json
 import subprocess
 import urllib.request
 
-from .config import shared
+from .settings import shared
 
 
 class Unavailable(Exception):
