@@ -104,7 +104,7 @@ class Client:
         self.sock.settimeout(2)
         try:
             return struct.unpack("<I", self._recv(REQUEST_PROTOCOL_VERSION))[0]
-        except (socket.timeout, struct.error):
+        except (TimeoutError, struct.error):
             return 0
         finally:
             self.sock.settimeout(5)

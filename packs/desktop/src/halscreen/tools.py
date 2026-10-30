@@ -14,7 +14,7 @@ from datetime import datetime
 from pathlib import Path
 
 from . import llm
-from .config import data_dir, settings, shared
+from .settings import data_dir, settings, shared
 
 DESCRIBE = (
     "You are looking at a screenshot of the user's computer screen. Answer briefly and concretely."

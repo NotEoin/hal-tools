@@ -8,8 +8,8 @@ from __future__ import annotations
 
 import re
 
-from .config import settings
 from .sdk import Client, Device
+from .settings import settings
 
 COLOURS = {
     "red": (255, 0, 0),
@@ -106,7 +106,7 @@ def colour(colour: str, device: str = "", brightness: int = 100) -> dict:
         for d in _targets(c, device):
             c.set_colour(d, rgb)
             done.append(d.name)
-        return {"colour": "#%02x%02x%02x" % rgb, "devices": sorted(set(done))}
+        return {"colour": "#{:02x}{:02x}{:02x}".format(*rgb), "devices": sorted(set(done))}
     finally:
         c.close()
 

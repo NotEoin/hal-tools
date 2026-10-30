@@ -18,7 +18,7 @@ import time
 from datetime import datetime
 from pathlib import Path
 
-from .config import data_dir
+from .settings import data_dir
 
 APP_DIRS = [
     Path("/usr/share/applications"),
@@ -371,7 +371,7 @@ def session() -> dict:
         if sid
         else ""
     )
-    props = dict(l.split("=", 1) for l in info.splitlines() if "=" in l)
+    props = dict(line.split("=", 1) for line in info.splitlines() if "=" in line)
     return {
         "desktop": os.environ.get("XDG_CURRENT_DESKTOP"),
         "display": os.environ.get("XDG_SESSION_TYPE"),

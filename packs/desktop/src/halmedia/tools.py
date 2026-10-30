@@ -12,7 +12,7 @@ import subprocess
 import urllib.parse
 from pathlib import Path
 
-from .config import settings
+from .settings import settings
 
 MPRIS = "org.mpris.MediaPlayer2"
 AUDIO = {".mp3", ".flac", ".m4a", ".ogg", ".opus", ".wav", ".aac", ".wma"}
@@ -93,7 +93,7 @@ def status() -> list[dict]:
     for p in _players(bus):
         try:
             props = _props(bus, p)
-        except Exception:  # noqa: BLE001 - a player that will not answer is left out
+        except Exception:  # noqa: BLE001, S112 - a player that will not answer is left out
             continue
         meta = props.get("Metadata", {})
         out.append(
