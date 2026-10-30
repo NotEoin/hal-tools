@@ -246,24 +246,37 @@ def banners(on: str = "") -> dict:
 # -- clipboard and screen --------------------------------------------------------------
 
 
-def clipboard(text: str | None = None) -> dict:
-    """Reads the clipboard, or copies text to it (needs wl-clipboard or xclip)."""
-    if text is not None:
-        # wl-copy forks a child that keeps the pipes open, so a captured run would wait for it
-        if shutil.which("wl-copy"):
-            subprocess.run(["wl-copy"], input=text, text=True, timeout=5)
-        elif shutil.which("xclip"):
-            subprocess.run(["xclip", "-selection", "clipboard"], input=text, text=True, timeout=5)
-        else:
-            raise RuntimeError(
-                "install wl-clipboard (sudo apt install wl-clipboard) to use the clipboard"
-            )
-        return {"copied": len(text)}
+CLIPBOARD_READ_MAX = 8000  # characters a model can use; a copied book is not useful
+CLIPBOARD_TIMEOUT_S = 5  # wl-copy and xclip return at once
+
+
+def clipboard() -> dict:
+    """Reads the clipboard's text, cut at 8000 characters (needs wl-clipboard or xclip)."""
     if shutil.which("wl-paste"):
-        return {"text": _run("wl-paste", "--no-newline").stdout[:8000]}
+        return {"text": _run("wl-paste", "--no-newline").stdout[:CLIPBOARD_READ_MAX]}
     if shutil.which("xclip"):
-        return {"text": _run("xclip", "-selection", "clipboard", "-o").stdout[:8000]}
+        return {"text": _run("xclip", "-selection", "clipboard", "-o").stdout[:CLIPBOARD_READ_MAX]}
     raise RuntimeError("install wl-clipboard (sudo apt install wl-clipboard) to read the clipboard")
+
+
+def clipboard_set(text: str) -> dict:
+    """Replaces the clipboard's content with `text` (needs wl-clipboard or xclip)."""
+    # wl-copy forks a child that keeps the pipes open, so a captured run would wait for it
+    if shutil.which("wl-copy"):
+        subprocess.run(["wl-copy"], input=text, text=True, timeout=CLIPBOARD_TIMEOUT_S, check=True)
+    elif shutil.which("xclip"):
+        subprocess.run(
+            ["xclip", "-selection", "clipboard"],
+            input=text,
+            text=True,
+            timeout=CLIPBOARD_TIMEOUT_S,
+            check=True,
+        )
+    else:
+        raise RuntimeError(
+            "install wl-clipboard (sudo apt install wl-clipboard) to use the clipboard"
+        )
+    return {"copied": len(text)}
 
 
 def _portal_shot(interactive: bool) -> str | None:

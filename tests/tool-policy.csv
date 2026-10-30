@@ -29,7 +29,8 @@ desktop_apps,desktop,read,false,false,true,true,false,allow
 desktop_audio_devices,desktop,read,false,false,true,true,false,allow
 desktop_audio_output,desktop,act,false,false,true,true,false,allow
 desktop_banners,desktop,act,false,false,true,true,false,allow
-desktop_clipboard,desktop,read,false,true,false,true,false,ask
+desktop_clipboard,desktop,read,false,true,false,false,false,ask
+desktop_clipboard_set,desktop,act,false,false,false,false,false,ask
 desktop_launch,desktop,act,false,false,true,true,false,allow
 desktop_lock,desktop,act,false,false,true,true,false,allow
 desktop_night_light,desktop,act,false,false,true,true,false,allow

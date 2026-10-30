@@ -41,42 +41,48 @@ def _db() -> sqlite3.Connection:
     return con
 
 
-def split_open_target(args: dict) -> dict:
-    """`desktop_open` arguments with the old `target` rewritten to `url` or `path`."""
-    if "target" not in args:
-        return args
-    rest = {k: v for k, v in args.items() if k != "target"}
-    return {**rest, ("url" if URL_RE.match(str(args["target"])) else "path"): args["target"]}
+def upgrade_step(tool: str, args: dict) -> tuple[str, dict]:
+    """A stored step in today's schema: `desktop_open` takes `url` or `path`, not `target`, and
+    `desktop_clipboard` with `text` became `desktop_clipboard_set`."""
+    if tool == "desktop_open" and "target" in args:
+        rest = {k: v for k, v in args.items() if k != "target"}
+        key = "url" if URL_RE.match(str(args["target"])) else "path"
+        return tool, {**rest, key: args["target"]}
+    if tool == "desktop_clipboard" and "text" in args:
+        return "desktop_clipboard_set", args
+    return tool, args
 
 
 def migrate(con: sqlite3.Connection) -> int:
-    """Rewrites stored `desktop_open` steps that still use `target`; returns the rows changed."""
+    """Rewrites stored steps that use a retired tool schema; returns the rows changed."""
     changed = 0
     for row in con.execute("SELECT name, steps FROM scenes").fetchall():
         steps = json.loads(row["steps"])
-        new = [
-            {**st, "args": split_open_target(st.get("args") or {})}
-            if st.get("tool") == "desktop_open" and "target" in (st.get("args") or {})
-            else st
-            for st in steps
-        ]
+        new = []
+        for st in steps:
+            tool, args = upgrade_step(st.get("tool", ""), st.get("args") or {})
+            new.append(
+                {**st, "tool": tool, "args": args}
+                if tool != st.get("tool") or args != (st.get("args") or {})
+                else st
+            )
         if new != steps:
             con.execute(
                 "UPDATE scenes SET steps = ? WHERE name = ?", (json.dumps(new), row["name"])
             )
             changed += 1
     for table in ("schedules", "triggers"):
-        for row in con.execute(f"SELECT id, args FROM {table} WHERE target = 'desktop_open'"):  # noqa: S608 - fixed table names
-            args = json.loads(row["args"] or "{}")
-            if "target" in args:
+        for row in con.execute(f"SELECT id, target, args FROM {table}").fetchall():  # noqa: S608 - fixed table names
+            tool, args = upgrade_step(row["target"], json.loads(row["args"] or "{}"))
+            if (tool, args) != (row["target"], json.loads(row["args"] or "{}")):
                 con.execute(
-                    f"UPDATE {table} SET args = ? WHERE id = ?",  # noqa: S608 - fixed table names
-                    (json.dumps(split_open_target(args)), row["id"]),
+                    f"UPDATE {table} SET target = ?, args = ? WHERE id = ?",  # noqa: S608 - fixed table names
+                    (tool, json.dumps(args), row["id"]),
                 )
                 changed += 1
     if changed:
         con.commit()
-        log.info("rewrote %d stored desktop_open step(s) from target to url or path", changed)
+        log.info("upgraded %d stored routine row(s) to the current tool schemas", changed)
     return changed
 
 

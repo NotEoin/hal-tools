@@ -3,6 +3,7 @@
 import sys
 import unittest
 from pathlib import Path
+from unittest import mock
 
 import pytest
 
@@ -25,6 +26,19 @@ class DesktopTest(unittest.TestCase):
         for kwargs in ({}, {"url": "https://a.example", "path": "/usr"}, {"url": "file:///etc"}):
             with self.assertRaises(ValueError):
                 tools.open_item(**kwargs)
+
+    def test_clipboard_set_pipes_the_text_to_wl_copy(self):
+        with (
+            mock.patch.object(tools.shutil, "which", return_value="/usr/bin/wl-copy"),
+            mock.patch.object(tools.subprocess, "run") as run,
+        ):
+            self.assertEqual(tools.clipboard_set("hello"), {"copied": 5})
+        self.assertEqual(run.call_args.args[0], ["wl-copy"])
+        self.assertEqual(run.call_args.kwargs["input"], "hello")
+
+    def test_clipboard_read_takes_no_text_argument(self):
+        with self.assertRaises(TypeError):
+            tools.clipboard("x")
 
     @pytest.mark.host  # needs a desktop session
     def test_reading_state_changes_nothing(self):

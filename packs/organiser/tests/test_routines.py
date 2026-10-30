@@ -48,7 +48,7 @@ class RoutinesTest(unittest.TestCase):
         nxt = self.tools._db().execute("SELECT at FROM schedules").fetchone()[0]
         self.assertAlmostEqual(nxt - at, 86400)
 
-    def test_stored_desktop_open_target_is_rewritten_to_url_or_path(self):
+    def test_stored_desktop_open_and_clipboard_steps_are_upgraded(self):
         import json
 
         con = self.tools._db()
@@ -62,6 +62,10 @@ class RoutinesTest(unittest.TestCase):
             "INSERT INTO schedules (target, args, at, rrule, label) VALUES (?, ?, 0, '', 'x')",
             ("desktop_open", json.dumps({"target": "https://b.example"})),
         )
+        con.execute(
+            "INSERT INTO triggers (event, target, args) VALUES ('usb', 'desktop_clipboard', ?)",
+            (json.dumps({"text": "hi"}),),
+        )
         con.commit()
         con = self.tools._db()
         scene = json.loads(con.execute("SELECT steps FROM scenes WHERE name='old'").fetchone()[0])
@@ -70,6 +74,8 @@ class RoutinesTest(unittest.TestCase):
         self.assertEqual(scene[2]["args"], {"minutes": 5})
         sched = con.execute("SELECT args FROM schedules").fetchone()[0]
         self.assertEqual(json.loads(sched), {"url": "https://b.example"})
+        trig = con.execute("SELECT target FROM triggers").fetchone()[0]
+        self.assertEqual(trig, "desktop_clipboard_set")
         self.assertEqual(self.tools.migrate(con), 0)
 
 

@@ -133,13 +133,21 @@ enum = ["on", "off"]
 [[tools]]
 name = "desktop_clipboard"
 function = "clipboard"
-description = "Read the clipboard, or copy text to it."
+description = "Read the text on the clipboard."
 tier = "read"
 untrusted_output = true
-reversible = true
-keywords = "copy paste clipboard"
+keywords = "paste clipboard"
+
+[[tools]]
+name = "desktop_clipboard_set"
+function = "clipboard_set"
+description = "Replace the clipboard's content with some text."
+tier = "act"
+keywords = "copy clipboard"
 [tools.params.text]
-description = "text to copy; leave out to read the clipboard"
+description = "text to copy"
+required = true
+content = true
 
 [[tools]]
 name = "desktop_screenshot"
