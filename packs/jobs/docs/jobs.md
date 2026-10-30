@@ -24,11 +24,11 @@ lives in `extensions/hal-jobs` and is installed by the ecosystem installer:
 hal ext add jobs
 ```
 
-The installer renders `systemd/hal-employment.service` and `desktop/hal-employment.desktop`,
-replacing `@ROOT@` with this folder. The service runs `bin/hal-employment-serve`, which starts
+The manifest lists `systemd/hal-employment.service` and `desktop/hal-employment.desktop`
+(`[[units]]` and `[[desktop]]`); the installer renders them, replacing `@ROOT@` with the module folder. The service runs `bin/hal-employment-serve`, which starts
 `jobhunt serve` (Hal Employment, on http://127.0.0.1:8737) in `[jobs].jobhunt_root` with that
-checkout's virtualenv. Its worker screens jobs and drafts packs with the local model, so the unit
-is marked `X-HalGPU=yes` and `hal off` stops it. `bin/hal-employment`, which the desktop launcher
+checkout's virtualenv, reading the setting each time it starts. Its worker screens jobs and drafts
+packs with the local model, so the unit is `gpu = true` and `hal off` stops it. `bin/hal-employment`, which the desktop launcher
 runs, starts the service if needed and opens the app in the browser.
 
 ## Use

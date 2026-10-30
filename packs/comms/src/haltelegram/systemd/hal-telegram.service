@@ -1,0 +1,17 @@
+[Unit]
+Description=Hal Telegram bridge
+PartOf=hal.target
+After=network-online.target
+ConditionPathExists=%h/.config/hal/telegram-token
+
+[Service]
+WorkingDirectory=@ROOT@
+# `hal` and `hal-voice` are found on PATH (uv tool installs them in ~/.local/bin).
+Environment=PYTHONUNBUFFERED=1
+Environment=PATH=%h/.local/bin:/usr/local/bin:/usr/bin:/bin
+ExecStart=@PYTHON@ -m haltelegram
+Restart=on-failure
+RestartSec=15
+
+[Install]
+WantedBy=hal.target

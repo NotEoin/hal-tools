@@ -150,3 +150,6 @@ untrusted_output = true
 reviewable = true
 reversible = true
 timeout = 60
+
+[[units]]
+file = "systemd/hal-calendar-reminders.service"

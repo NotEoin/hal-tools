@@ -102,3 +102,10 @@ timeout = 300
 format = "path"
 access = "read"
 required = true
+
+[[units]]
+file = "systemd/hal-ledger-remind.service"
+enable = false
+
+[[units]]
+file = "systemd/hal-ledger-remind.timer"

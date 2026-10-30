@@ -98,3 +98,10 @@ tier = "write"
 reviewable = true
 [tools.params.name]
 required = true
+
+[[units]]
+file = "systemd/hal-habits-nudge.service"
+enable = false
+
+[[units]]
+file = "systemd/hal-habits-nudge.timer"

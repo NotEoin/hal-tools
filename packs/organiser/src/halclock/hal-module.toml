@@ -96,3 +96,6 @@ maximum = 180
 type = "integer"
 minimum = 1
 maximum = 20
+
+[[units]]
+file = "systemd/hal-clock.service"

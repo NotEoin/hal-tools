@@ -1,0 +1,8 @@
+[Unit]
+Description=Hal %i briefing: spoken, pushed and saved to the daily note
+
+[Service]
+Type=oneshot
+WorkingDirectory=@ROOT@
+Environment=PATH=%h/.local/bin:/usr/local/bin:/usr/bin:/bin
+ExecStart=@PYTHON@ -m halbrief brief kind=%i

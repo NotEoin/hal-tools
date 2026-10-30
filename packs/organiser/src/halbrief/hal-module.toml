@@ -37,3 +37,16 @@ type = "boolean"
 type = "boolean"
 [tools.params.save]
 type = "boolean"
+
+[[units]]
+file = "systemd/hal-briefing@.service"
+enable = false
+
+[[units]]
+file = "systemd/hal-briefing-morning.timer"
+
+[[units]]
+file = "systemd/hal-briefing-midday.timer"
+
+[[units]]
+file = "systemd/hal-briefing-evening.timer"

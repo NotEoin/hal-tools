@@ -83,3 +83,6 @@ reversible = true
 [tools.params.state]
 required = true
 enum = ["idle", "listening", "thinking", "speaking", "alert"]
+
+[[units]]
+file = "systemd/hal-rgb-server.service"

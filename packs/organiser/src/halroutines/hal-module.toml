@@ -121,3 +121,6 @@ type = "integer"
 minimum = 1
 maximum = 1000000
 required = true
+
+[[units]]
+file = "systemd/hal-routines.service"

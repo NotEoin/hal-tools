@@ -23,9 +23,9 @@ cover the job search and the daily briefing.
 
 ## Install
 
-hal-telegram needs Python 3.11 or later and core Hal; voice notes need hal-voice. It lives in
-`extensions/hal-telegram` and is installed by the ecosystem installer, which renders
-`systemd/hal-telegram.service` (`@ROOT@`, `@CORE@`, `@ECOSYSTEM@`) into `~/.config/systemd/user`:
+hal-telegram needs Python 3.11 or later and Hal; voice notes need hal-voice. The manifest lists
+`systemd/hal-telegram.service`, which the installer renders (`@ROOT@`, `@PYTHON@`) into
+`~/.config/systemd/user`:
 
 ```bash
 hal ext add telegram

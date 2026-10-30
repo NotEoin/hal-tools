@@ -164,3 +164,10 @@ timeout = 1800
 [tools.params.job]
 description = "job id, or any unique part of it"
 required = true
+
+[[units]]
+file = "systemd/hal-employment.service"
+gpu = true
+
+[[desktop]]
+file = "desktop/hal-employment.desktop"

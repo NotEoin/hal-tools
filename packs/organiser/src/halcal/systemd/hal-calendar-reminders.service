@@ -1,11 +1,11 @@
 [Unit]
-Description=Hal tasks: due-task reminders and the morning list
+Description=Hal calendar: event reminders by push, desktop and voice, and CalDAV sync
 PartOf=hal.target
-After=graphical-session.target
+After=network-online.target graphical-session.target
 
 [Service]
 WorkingDirectory=@ROOT@
-ExecStart=/usr/bin/python3 -m haltasks.reminders
+ExecStart=@PYTHON@ -m halcal.reminders
 Environment=PYTHONUNBUFFERED=1
 Environment=PATH=%h/.local/bin:/usr/local/bin:/usr/bin:/bin
 Restart=on-failure

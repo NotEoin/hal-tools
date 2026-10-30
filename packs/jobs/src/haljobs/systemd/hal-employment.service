@@ -2,8 +2,6 @@
 Description=Hal Employment: job queue, applications and to-dos on http://127.0.0.1:8737
 PartOf=hal.target
 After=network-online.target graphical-session.target
-# Its worker screens jobs and drafts application packs with the local model.
-X-HalGPU=yes
 
 [Service]
 WorkingDirectory=@ROOT@

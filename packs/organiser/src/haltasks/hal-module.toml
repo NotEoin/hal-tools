@@ -94,3 +94,6 @@ description = "List projects with open to-dos."
 tier = "read"
 reviewable = true
 reversible = true
+
+[[units]]
+file = "systemd/hal-tasks-reminders.service"

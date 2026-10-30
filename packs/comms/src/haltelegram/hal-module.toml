@@ -14,3 +14,6 @@ tier = "read"
 reviewable = true
 reversible = true
 keywords = "telegram phone bot paired chat"
+
+[[units]]
+file = "systemd/hal-telegram.service"
