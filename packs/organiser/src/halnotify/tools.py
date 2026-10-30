@@ -1,4 +1,5 @@
-"""hal-notify's tools: send an alert everywhere it should go, honouring quiet hours and do-not-disturb.
+"""hal-notify's tools: send an alert everywhere it should go, honouring quiet hours and
+do-not-disturb.
 
 Channels: ntfy phone push, the desktop's notification daemon, HAL's voice
 (hal-voice's hal-say) and Telegram (the token and chat that hal-telegram pairs).
@@ -25,7 +26,8 @@ HAL_SAY = Path(__file__).resolve().parents[2] / "hal-voice" / "bin" / "hal-say"
 def _db() -> sqlite3.Connection:
     con = sqlite3.connect(data_dir() / "history.db")
     con.execute(
-        "CREATE TABLE IF NOT EXISTS sent (at TEXT, title TEXT, body TEXT, urgent INTEGER, channels TEXT)"
+        "CREATE TABLE IF NOT EXISTS sent "
+        "(at TEXT, title TEXT, body TEXT, urgent INTEGER, channels TEXT)"
     )
     return con
 
@@ -164,10 +166,12 @@ def dnd(minutes: int = 60) -> str:
 
 def state() -> dict:
     until = _dnd_until()
+    cfg = settings()
+    quiet_from, quiet_until = cfg.get("quiet_from", 22), cfg.get("quiet_until", 8)
     return {
         "quiet": quiet(),
         "dnd_until": until.isoformat(timespec="minutes") if until else None,
-        "quiet_hours": f"{settings().get('quiet_from', 22)}:00 to {settings().get('quiet_until', 8)}:00",
+        "quiet_hours": f"{quiet_from}:00 to {quiet_until}:00",
     }
 
 

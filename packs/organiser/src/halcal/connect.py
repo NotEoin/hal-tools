@@ -1,6 +1,7 @@
-"""Connects a CalDAV account (such as Apple iCloud) from a terminal, asking for the password privately.
+"""Connects a CalDAV account (such as Apple iCloud) from a terminal, asking for the password
+privately.
 
-    python3 -m halcal connect [--url URL] [--username U] [--push-to NAME]
+    hal-organiser calendar-connect [--url URL] [--username U] [--push-to NAME]
 
 The password is read with getpass, so it is never echoed, never an argument and never in shell
 history or a conversation. The credentials are tested before anything is saved; then you choose
@@ -39,7 +40,7 @@ def _choose(cals: list[dict], default: int, ask, out) -> dict:
 
 def main(argv: list[str] | None = None, ask=input, secret=getpass.getpass, out=print) -> int:
     parser = argparse.ArgumentParser(
-        prog="python3 -m halcal connect",
+        prog="hal-organiser calendar-connect",
         description="Connect Hal's calendar to a CalDAV account such as Apple iCloud.",
     )
     parser.add_argument("--url", default=ICLOUD, help=f"CalDAV server (default {ICLOUD})")
@@ -60,8 +61,8 @@ def main(argv: list[str] | None = None, ask=input, secret=getpass.getpass, out=p
             return 1
     if args.url == ICLOUD:
         out(
-            "Use an app-specific password from appleid.apple.com (Sign-In and Security > App-Specific "
-            "Passwords), not your Apple ID password."
+            "Use an app-specific password from appleid.apple.com "
+            "(Sign-In and Security > App-Specific Passwords), not your Apple ID password."
         )
     result = None
     for attempt in range(ATTEMPTS):
@@ -81,7 +82,8 @@ def main(argv: list[str] | None = None, ask=input, secret=getpass.getpass, out=p
                 out("Nothing was saved.")
                 return 1
             out(
-                "Check the email, and that you pasted an app-specific password rather than your usual one."
+                "Check the email, and that you pasted an app-specific password,"
+                " not your usual one."
                 + (" Try again." if attempt < ATTEMPTS - 1 else " Nothing was saved.")
             )
     if result is None:
@@ -109,7 +111,8 @@ def main(argv: list[str] | None = None, ask=input, secret=getpass.getpass, out=p
         out(f"Saved, but the first sync failed: {e}.")
         return 1
     out(
-        f"Synced: {counts['pulled']} pulled, {counts['pushed']} pushed, {counts['deleted']} deleted. "
+        f"Synced: {counts['pulled']} pulled, {counts['pushed']} pushed, "
+        f"{counts['deleted']} deleted. "
         f"The reminder service syncs every {tools.settings().get('sync_minutes', 15)} minutes."
     )
     return 0

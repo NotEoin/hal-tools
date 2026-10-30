@@ -58,8 +58,10 @@ def db() -> sqlite3.Connection:
     con = sqlite3.connect(data_dir() / "calendar.db")
     con.row_factory = sqlite3.Row
     con.executescript("""
-        CREATE TABLE IF NOT EXISTS events (uid TEXT PRIMARY KEY, title TEXT, start TEXT, end TEXT, all_day INTEGER,
-            rrule TEXT, location TEXT, notes TEXT, reminders TEXT, calendar TEXT, href TEXT, etag TEXT,
+        CREATE TABLE IF NOT EXISTS events (uid TEXT PRIMARY KEY, title TEXT, start TEXT, end
+        TEXT, all_day INTEGER,
+            rrule TEXT, location TEXT, notes TEXT, reminders TEXT, calendar TEXT, href TEXT, etag
+            TEXT,
             updated TEXT, deleted INTEGER DEFAULT 0, dirty INTEGER DEFAULT 1);
         CREATE TABLE IF NOT EXISTS reminded (uid TEXT, occurrence TEXT, minutes INTEGER,
             PRIMARY KEY (uid, occurrence, minutes));
@@ -88,8 +90,10 @@ def save(e: Event, dirty: bool = True) -> Event:
     """Stores an event; `dirty` marks it for the next CalDAV push (pulled events are clean)."""
     con = db()
     con.execute(
-        """INSERT OR REPLACE INTO events (uid, title, start, end, all_day, rrule, location, notes, reminders,
-                   calendar, href, etag, updated, deleted, dirty) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,0,?)""",
+        """INSERT OR REPLACE INTO events (uid, title, start, end, all_day, rrule, location,
+        notes, reminders,
+                   calendar, href, etag, updated, deleted, dirty) VALUES
+                   (?,?,?,?,?,?,?,?,?,?,?,?,?,0,?)""",
         (
             e.uid,
             e.title,
@@ -153,7 +157,7 @@ def _add_months(d: datetime, n: int) -> datetime | None:
 
 
 def occurrences(e: Event, start: datetime, end: datetime) -> list[datetime]:
-    """Returns the event's start times that fall in [start, end), overlapping occurrences included."""
+    """Returns the event's start times in [start, end), overlapping occurrences included."""
     length = e.finish() - e.start
     if not e.rrule:
         return [e.start] if e.start < end and e.start + length > start else []

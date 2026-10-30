@@ -128,7 +128,8 @@ def agenda(span: str = "today") -> dict:
 
 
 def find(query: str, days: int = 365) -> list[dict]:
-    """Returns upcoming (and the last month's) occurrences whose title, notes or location contain the
+    """Returns upcoming (and the last month's) occurrences whose title, notes or location contain
+    the
     words; failing that, the events the words most likely mean ('pottery class on friday')."""
     words = query.lower().split()
     now = _now()
@@ -273,8 +274,8 @@ def setup_caldav(
     username: str, password: str, url: str = "https://caldav.icloud.com", push_to: str = ""
 ) -> dict:
     """Tests CalDAV credentials, then stores them: the password in a private file, the rest in
-    [calendar.caldav]. Run by `python3 -m halcal connect`; not a tool, so a password never passes
-    through a conversation. A refused password raises CalDAVError and saves nothing."""
+    [calendar.caldav]. Run by `hal-organiser calendar-connect`; not a tool, so a password never
+    passes through a conversation. A refused password raises CalDAVError and saves nothing."""
     from .caldav import Client
 
     cals = Client(url, username.strip(), password.strip()).calendars()

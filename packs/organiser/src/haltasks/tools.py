@@ -26,8 +26,10 @@ NAMES = {1: "high", 2: "normal", 3: "low"}
 def _db() -> sqlite3.Connection:
     con = sqlite3.connect(data_dir() / "tasks.db")
     con.row_factory = sqlite3.Row
-    con.execute("""CREATE TABLE IF NOT EXISTS tasks (id INTEGER PRIMARY KEY, title TEXT NOT NULL, notes TEXT,
-                   due TEXT, timed INTEGER DEFAULT 0, priority INTEGER DEFAULT 2, tags TEXT, project TEXT,
+    con.execute("""CREATE TABLE IF NOT EXISTS tasks (id INTEGER PRIMARY KEY, title TEXT NOT NULL,
+    notes TEXT,
+                   due TEXT, timed INTEGER DEFAULT 0, priority INTEGER DEFAULT 2, tags TEXT,
+                   project TEXT,
                    rrule TEXT, created TEXT, done TEXT, reminded INTEGER DEFAULT 0)""")
     return con
 
@@ -72,7 +74,8 @@ def add(
     name = title if (due or repeat) else (w.rest or title) if w.start else title
     con = _db()
     cur = con.execute(
-        "INSERT INTO tasks (title, notes, due, timed, priority, tags, project, rrule, created) VALUES (?,?,?,?,?,?,?,?,?)",
+        "INSERT INTO tasks (title, notes, due, timed, priority, tags, project, rrule, created) "
+        "VALUES (?,?,?,?,?,?,?,?,?)",
         (
             name.strip(),
             notes,
@@ -93,7 +96,7 @@ def add(
 
 
 def list_tasks(which: str = "open", project: str = "", tag: str = "") -> dict:
-    """Lists tasks: open, today, overdue, upcoming, done or all, optionally for one project or tag."""
+    """Lists tasks in the `which` group, optionally for one project or tag."""
     sync_from_vault()
     con = _db()
     rows = [

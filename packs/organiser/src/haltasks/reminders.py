@@ -1,4 +1,5 @@
-"""Reminder daemon for tasks with a time: alerts when one falls due, and at 08:00 lists the day's tasks.
+"""Reminder daemon for tasks with a time: alerts when one falls due, and at 08:00 lists the day's
+tasks.
 
 python -m haltasks.reminders
 """

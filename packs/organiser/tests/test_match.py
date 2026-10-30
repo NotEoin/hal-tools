@@ -1,4 +1,4 @@
-"""Tests for finding the event someone means, and for agenda ranges, on a throwaway store at a fixed time."""
+"""Tests for finding the event someone means and for agenda ranges, on a throwaway store."""
 
 import os
 import sys

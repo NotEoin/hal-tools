@@ -161,11 +161,14 @@ class PrivilegeTest(unittest.TestCase):
         from halcal import caldav
 
         replies = {
-            "<d:current-user-principal/>": '<d:multistatus xmlns:d="DAV:"><d:response><d:propstat><d:prop>'
+            "<d:current-user-principal/>": '<d:multistatus xmlns:d="DAV:">'
+            "<d:response><d:propstat><d:prop>"
             "<d:current-user-principal><d:href>/p/</d:href></d:current-user-principal></d:prop></d:propstat>"
             "</d:response></d:multistatus>",
-            "<c:calendar-home-set/>": '<d:multistatus xmlns:d="DAV:" xmlns:c="urn:ietf:params:xml:ns:caldav">'
-            "<d:response><d:propstat><d:prop><c:calendar-home-set><d:href>/home/</d:href></c:calendar-home-set>"
+            "<c:calendar-home-set/>": "<d:multistatus xmlns:d='DAV:' "
+            "xmlns:c='urn:ietf:params:xml:ns:caldav'>"
+            "<d:response><d:propstat><d:prop><c:calendar-home-set>"
+            "<d:href>/home/</d:href></c:calendar-home-set>"
             "</d:prop></d:propstat></d:response></d:multistatus>",
         }
 

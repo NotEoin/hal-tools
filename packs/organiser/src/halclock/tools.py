@@ -23,8 +23,10 @@ def _db() -> sqlite3.Connection:
     con.executescript("""
         CREATE TABLE IF NOT EXISTS alarms (id INTEGER PRIMARY KEY, kind TEXT, label TEXT, at REAL,
             rrule TEXT, created REAL, fired REAL);
-        CREATE TABLE IF NOT EXISTS stopwatch (k TEXT PRIMARY KEY, started REAL, elapsed REAL, laps TEXT);
-        CREATE TABLE IF NOT EXISTS pomodoro (k TEXT PRIMARY KEY, work INTEGER, rest INTEGER, rounds INTEGER,
+        CREATE TABLE IF NOT EXISTS stopwatch (k TEXT PRIMARY KEY, started REAL, elapsed REAL,
+        laps TEXT);
+        CREATE TABLE IF NOT EXISTS pomodoro (k TEXT PRIMARY KEY, work INTEGER, rest INTEGER,
+        rounds INTEGER,
             round INTEGER, phase TEXT, ends REAL);
     """)
     return con
@@ -99,7 +101,8 @@ def _now() -> datetime:
 
 
 def alarm(when_text: str, label: str = "Alarm") -> dict:
-    """Sets an alarm for a time ('7am', 'tomorrow at 6:30', '7 tomorrow morning', 'every weekday at 7').
+    """Sets an alarm for a time ('7am', 'tomorrow at 6:30', '7 tomorrow morning', 'every weekday
+    at 7').
 
     A bare hour is read as the morning ('at 7' is 07:00), as alarms mostly wake people up; say
     'pm' or 'evening' for later.

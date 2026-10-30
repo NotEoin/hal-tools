@@ -138,7 +138,8 @@ def rank(
 
 def describe(occ: dict) -> str:
     when_ = "all day" if occ["all_day"] else datetime.fromisoformat(occ["start"]).strftime("%H:%M")
-    return f"{occ['title']} ({datetime.fromisoformat(occ['start']):%a %-d %b} {when_}, id {occ['uid']})"
+    day = datetime.fromisoformat(occ["start"])
+    return f"{occ['title']} ({day:%a %-d %b} {when_}, id {occ['uid']})"
 
 
 def resolve(event: str, now: datetime | None = None, not_at: str = "") -> store.Event:

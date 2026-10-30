@@ -34,9 +34,9 @@ def account() -> dict:
     cfg = settings().get("caldav", {})
     if not cfg.get("url") or not cfg.get("username"):
         raise CalDAVError(
-            "CalDAV is not set up; the user connects it by running `python3 -m halcal connect` in a "
-            "terminal in the hal-calendar folder (for iCloud: their Apple ID and an app-specific "
-            "password from appleid.apple.com)"
+            "CalDAV is not set up; the user connects it by running "
+            "`hal-organiser calendar-connect` in a terminal (for iCloud: their Apple ID and an "
+            "app-specific password from appleid.apple.com)"
         )
     pw_file = Path(cfg.get("password_file", "~/.config/hal/caldav-password")).expanduser()
     if not pw_file.exists():
@@ -134,9 +134,11 @@ class Client:
         """Returns (href, etag, ics) for events overlapping the window."""
         fmt = lambda d: d.astimezone(UTC).strftime("%Y%m%dT%H%M%SZ")  # noqa: E731
         body = (
-            f'<c:calendar-query xmlns:d="DAV:" xmlns:c="urn:ietf:params:xml:ns:caldav"><d:prop><d:getetag/>'
-            f'<c:calendar-data/></d:prop><c:filter><c:comp-filter name="VCALENDAR"><c:comp-filter name="VEVENT">'
-            f'<c:time-range start="{fmt(start)}" end="{fmt(end)}"/></c:comp-filter></c:comp-filter></c:filter>'
+            '<c:calendar-query xmlns:d="DAV:" xmlns:c="urn:ietf:params:xml:ns:caldav">'
+            "<d:prop><d:getetag/><c:calendar-data/></d:prop>"
+            '<c:filter><c:comp-filter name="VCALENDAR"><c:comp-filter name="VEVENT">'
+            f'<c:time-range start="{fmt(start)}" end="{fmt(end)}"/>'
+            "</c:comp-filter></c:comp-filter></c:filter>"
             f"</c:calendar-query>"
         )
         status, _, data = self.request("REPORT", href, body, "1")

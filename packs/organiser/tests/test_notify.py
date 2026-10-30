@@ -16,7 +16,8 @@ class NotifyTest(unittest.TestCase):
         os.environ["HAL_DATA_DIR"] = self.tmp.name
         cfg = Path(self.tmp.name) / "c.toml"
         cfg.write_text(
-            '[notify]\nntfy_topic = "test"\nquiet_from = 22\nquiet_until = 8\nchannels = ["desktop", "phone"]\n'
+            '[notify]\nntfy_topic = "test"\nquiet_from = 22\nquiet_until = 8\n'
+            'channels = ["desktop", "phone"]\n'
         )
         os.environ["HAL_CONFIG"] = str(cfg)
         from halnotify import tools

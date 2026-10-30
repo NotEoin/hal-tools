@@ -24,9 +24,11 @@ def _db() -> sqlite3.Connection:
     con.row_factory = sqlite3.Row
     con.executescript("""
         CREATE TABLE IF NOT EXISTS scenes (name TEXT PRIMARY KEY, steps TEXT);
-        CREATE TABLE IF NOT EXISTS schedules (id INTEGER PRIMARY KEY, target TEXT, args TEXT, at REAL,
+        CREATE TABLE IF NOT EXISTS schedules (id INTEGER PRIMARY KEY, target TEXT, args TEXT, at
+        REAL,
             rrule TEXT, label TEXT);
-        CREATE TABLE IF NOT EXISTS triggers (id INTEGER PRIMARY KEY, event TEXT, target TEXT, args TEXT,
+        CREATE TABLE IF NOT EXISTS triggers (id INTEGER PRIMARY KEY, event TEXT, target TEXT,
+        args TEXT,
             last REAL DEFAULT 0);
     """)
     return con
@@ -142,7 +144,7 @@ EVENTS = ("idle", "usb_added", "offline", "online", "disk_full", "login")
 
 
 def add_trigger(event: str, target: str, args: dict | str | None = None) -> dict:
-    """Runs a scene or tool when something happens: idle, usb_added, offline, online, disk_full or login."""
+    """Runs a scene or tool when an event in `EVENTS` happens."""
     if event not in EVENTS:
         raise ValueError(f"event must be one of {', '.join(EVENTS)}")
     parsed = json.loads(args) if isinstance(args, str) and args else (args or {})

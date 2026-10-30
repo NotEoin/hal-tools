@@ -1,4 +1,5 @@
-"""Settings for hal-calendar: the [calendar] table of the shared config, read through `halkit.config`.
+"""Settings for hal-calendar: the [calendar] table of the shared config, read through
+`halkit.config`.
 
 A malformed file or an unknown key raises `ConfigError` (REQ-PACK-12); nothing is swallowed.
 """
