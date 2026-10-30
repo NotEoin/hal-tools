@@ -15,7 +15,7 @@ import subprocess
 from datetime import date, datetime, timedelta
 from pathlib import Path
 
-from .config import settings, vault
+from .settings import settings, vault
 
 FIELDS = ("email", "phone", "birthday", "relationship", "company", "address", "last_contact")
 FRONT = re.compile(r"\A---\n(.*?)\n---\n?", re.S)
@@ -201,19 +201,23 @@ def stale(days: int = 60) -> list[dict]:
     return sorted(out, key=lambda x: x["last_contact"])
 
 
+def _vcard_field(card: str, key: str) -> str:
+    """Returns the value of the first `key` line of a vCard body, or an empty string."""
+    for line in card.splitlines():
+        if line.upper().startswith(key) and ":" in line:
+            return line.split(":", 1)[1].strip()
+    return ""
+
+
 def import_vcard(path: str) -> dict:
     """Imports contacts from a .vcf file (exported from a phone, Google or iCloud)."""
     text = re.sub(r"\r?\n[ \t]", "", Path(path).expanduser().read_text(errors="ignore"))
     count = 0
     for card in re.findall(r"BEGIN:VCARD(.*?)END:VCARD", text, re.S):
-        get = lambda key: next(
-            (
-                l.split(":", 1)[1].strip()
-                for l in card.splitlines()  # noqa: E731
-                if l.upper().startswith(key) and ":" in l
-            ),
-            "",
-        )
+
+        def get(key: str, card: str = card) -> str:
+            return _vcard_field(card, key)
+
         name = get("FN")
         if not name:
             continue

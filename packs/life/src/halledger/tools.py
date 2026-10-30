@@ -13,7 +13,7 @@ import sqlite3
 from datetime import date, datetime, timedelta
 from pathlib import Path
 
-from .config import data_dir, settings
+from .settings import data_dir, settings
 
 
 def _db() -> sqlite3.Connection:
@@ -73,7 +73,7 @@ def spend(amount: str, note: str = "", category: str = "", day: str = "") -> dic
 
 def _month_total(con, category: str | None = None, month: str = "") -> int:
     m = month or date.today().strftime("%Y-%m")
-    sql = "SELECT COALESCE(SUM(pence), 0) FROM spend WHERE substr(day, 1, 7) = ?" + (
+    sql = "SELECT COALESCE(SUM(pence), 0) FROM spend WHERE substr(day, 1, 7) = ?" + (  # noqa: S608 - fixed fragments only
         " AND category = ?" if category else ""
     )
     return con.execute(sql, (m, category) if category else (m,)).fetchone()[0]

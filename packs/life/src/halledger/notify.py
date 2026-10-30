@@ -1,13 +1,17 @@
 """Sends an alert through hal-notify when it is installed, else to the desktop and ntfy.
 
-Reads the ntfy topic from the [notify] table of the shared config. Stdlib only.
+Reads the ntfy topic from the [notify] table of the shared config.
 """
 
+import logging
 import shutil
 import subprocess
 import urllib.request
 
-from .config import _file
+from halkit import paths
+from halkit.config import ConfigError, read_toml
+
+log = logging.getLogger(__name__)
 
 
 def notify(title: str, body: str = "", urgent: bool = False, speak: bool = False) -> None:
@@ -35,7 +39,11 @@ def notify(title: str, body: str = "", urgent: bool = False, speak: bool = False
         )
     except (OSError, subprocess.TimeoutExpired):
         pass
-    topic = _file().get("notify", {}).get("ntfy_topic")
+    try:
+        topic = read_toml(paths.config_file()).get("notify", {}).get("ntfy_topic", "")
+    except ConfigError:
+        log.exception("notify config is invalid; skipping the phone channel")
+        topic = ""
     if topic:
         headers = {"Title": title.encode(), **({"Priority": "high"} if urgent else {})}
         try:

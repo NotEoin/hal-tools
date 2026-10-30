@@ -10,7 +10,7 @@ from __future__ import annotations
 import sqlite3
 from datetime import date, datetime, timedelta
 
-from .config import data_dir
+from .settings import data_dir
 
 
 def _db() -> sqlite3.Connection:
