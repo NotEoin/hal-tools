@@ -13,7 +13,9 @@ from halmail import tools
 
 class MailTest(unittest.TestCase):
     def test_encoded_and_folded_headers(self):
-        self.assertEqual(tools._decode("=?utf-8?q?Caf=C3=A9_menu?=\r\n soon"), "Café menu soon")
+        self.assertEqual(
+            tools._decode("=?utf-8?q?Caf=C3=A9_menu?=\r\n soon"), "Caf\u00e9 menu soon"
+        )
 
     def test_html_body_becomes_text(self):
         msg = email.message_from_string(
