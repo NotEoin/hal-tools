@@ -1,16 +1,14 @@
 """Settings for haljobs: the [jobs] table of the shared config, read through `halkit.config`.
 
 A malformed file or an unknown key raises `ConfigError` (REQ-PACK-12); nothing is swallowed.
+`jobhunt_root` has no default: the jobhunt checkout lives wherever the user cloned it, so an
+unset value raises `ConfigError` instead of guessing a path.
 """
 
-import logging
 from collections.abc import Mapping
 from pathlib import Path
 
 from halkit import config, paths
-
-log = logging.getLogger("hal-jobs")
-_warned = False  # the legacy-default warning is logged once per process
 
 TABLE = config.register(
     config.Table(
@@ -19,7 +17,7 @@ TABLE = config.register(
             config.Key(
                 "jobhunt_root",
                 str,
-                "~/src/employment-helper",
+                "",
                 deprecated_alias="jobhunt",
                 doc="Directory of the jobhunt checkout",
             ),
@@ -38,13 +36,10 @@ def settings() -> Mapping[str, object]:
 
 
 def jobhunt_root() -> Path:
-    """Returns the jobhunt checkout; logs one warning if `[jobs]` is absent (old default)."""
-    global _warned
-    if not _warned and "jobs" not in config.read_toml(paths.config_file()):
-        _warned = True
-        log.warning(
-            "[jobs] is not in the config; using the old default jobhunt_root. "
-            "Add [jobs] jobhunt_root = ... to %s",
-            paths.config_file(),
+    """Returns the jobhunt checkout; raises `ConfigError` when `[jobs].jobhunt_root` is unset."""
+    root = str(settings()["jobhunt_root"])
+    if not root:
+        raise config.ConfigError(
+            "jobhunt_root is not set", path=paths.config_file(), table="jobs", key="jobhunt_root"
         )
-    return Path(str(settings()["jobhunt_root"])).expanduser()
+    return Path(root).expanduser()

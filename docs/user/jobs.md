@@ -58,10 +58,9 @@ Settings live in the `[jobs]` table of `~/.config/hal/config.toml`:
 
 ```toml
 [jobs]
-jobhunt_root = "~/src/employment-helper"
+jobhunt_root = "~/src/jobhunt"   # where you cloned jobhunt; required
 employment_url = "http://127.0.0.1:8737/"
 ```
 
-The older key `jobhunt` is still read when `jobhunt_root` is not set. While the `[jobs]` table is
-absent from the config, `jobhunt_root` falls back to the old default and a warning is logged once;
-write the table to silence it.
+`jobhunt_root` has no default: the jobs tools fail with a config error until it is set. The older
+key `jobhunt` is still read when `jobhunt_root` is not set.

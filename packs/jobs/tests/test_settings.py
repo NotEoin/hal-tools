@@ -23,28 +23,22 @@ class SettingsTest(unittest.TestCase):
         loaded, _ = self._load('[jobs]\njobhunt = "/srv/jh"\n')
         self.assertEqual(loaded["jobhunt_root"], "/srv/jh")
 
-    def test_absent_jobs_table_warns_once_and_keeps_the_old_default(self) -> None:
+    def test_unset_jobhunt_root_raises_config_error(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             cfg = Path(tmp) / "config.toml"
             cfg.write_text("")
             with (
                 mock.patch.dict(os.environ, {"HAL_CONFIG": str(cfg)}),
-                mock.patch.object(jobs_settings, "_warned", False),
-                self.assertLogs("hal-jobs", "WARNING") as logs,
+                self.assertRaises(ConfigError),
             ):
-                first = jobs_settings.jobhunt_root()
                 jobs_settings.jobhunt_root()
-        self.assertEqual(first.name, "employment-helper")
-        self.assertEqual(len(logs.records), 1)
 
-    def test_present_jobs_table_does_not_warn(self) -> None:
+    def test_configured_jobhunt_root_is_returned(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             cfg = Path(tmp) / "config.toml"
             cfg.write_text('[jobs]\njobhunt_root = "/srv/jh"\n')
             with (
                 mock.patch.dict(os.environ, {"HAL_CONFIG": str(cfg)}),
-                mock.patch.object(jobs_settings, "_warned", False),
-                self.assertNoLogs("hal-jobs", "WARNING"),
             ):
                 self.assertEqual(jobs_settings.jobhunt_root(), Path("/srv/jh"))
 
