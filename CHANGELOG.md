@@ -4,6 +4,8 @@
 
 ### Changed
 
+- `jobs_mark`, `jobs_shortlist`, `jobs_todo_add` and `jobs_stats` mark their output untrusted, like
+  the other jobs tools: it echoes company, title and to-do text taken from job pages and emails.
 - `jobs_queue` and `jobs_applications` read the Hal Employment command line only. The web API they
   tried first no longer exists, and `[jobs].employment_url` now only sets what `jobs_open` opens.
 - `shell_look` reads the roots in `[tools.shell_look].read_roots` (else `[paths].read_roots`) through

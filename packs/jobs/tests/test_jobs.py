@@ -181,6 +181,14 @@ class ManifestTest(unittest.TestCase):
         self.assertEqual(spec["jobs_pack"]["timeout"], tools.PACK_TIMEOUT)
         self.assertIn("shortlisted", spec["jobs_mark"]["params"]["status"]["enum"])
 
+    def test_every_tool_that_echoes_job_text_marks_its_output_untrusted(self):
+        # jobs_mark, jobs_shortlist, jobs_todo_add and jobs_stats print company, title or to-do
+        # text from job pages and emails, yet reached the agent as trusted output (prompt injection)
+        trusted = {"jobs_open"}  # returns only the configured Hal Employment URL
+        for t in tomllib.loads(MANIFEST.read_text())["tools"]:
+            if t["name"] not in trusted:
+                self.assertIs(t.get("untrusted_output"), True, t["name"])
+
 
 if __name__ == "__main__":
     unittest.main()
