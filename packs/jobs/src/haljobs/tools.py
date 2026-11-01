@@ -1,4 +1,4 @@
-"""hal-jobs' tools: the job search, through jobhunt's command line and Hal Employment's API.
+"""hal-jobs' tools: the job search, through the command line that Hal Employment ships.
 
 jobhunt lives in its own repository (configured as [jobs].jobhunt_root); this module
 only calls it, so it holds no job data itself. Applications are still made in
@@ -7,10 +7,8 @@ Hal Employment, where every submit is pressed by the owner.
 
 from __future__ import annotations
 
-import json
 import os
 import subprocess
-import urllib.request
 from pathlib import Path
 
 from hal_jobs import proc
@@ -33,42 +31,14 @@ def _jobhunt(*args: str, timeout: float = 600) -> str:
     return done.stdout.strip()
 
 
-def _api(path: str) -> dict:
-    url = settings()["employment_url"].rstrip("/") + "/api/" + path
-    with urllib.request.urlopen(url, timeout=10) as r:  # noqa: S310 - the URL is the user-configured local Hal Employment server
-        return json.loads(r.read())
-
-
 def queue() -> dict:
-    """The jobs waiting to be applied for, best first."""
-    try:
-        data = _api("queue")
-        return {
-            "ready": len(data["jobs"]),
-            "reserve": data["reserve"],
-            "jobs": [
-                {
-                    "company": j["company"],
-                    "title": j["title"],
-                    "score": j["score"],
-                    "location": j["location"],
-                }
-                for j in data["jobs"]
-            ],
-        }
-    except OSError:
-        return {"jobs": _jobhunt("queue").splitlines()}
+    """The jobs waiting to be applied for, best first, as the lines `jobhunt queue` prints."""
+    return {"jobs": _jobhunt("queue").splitlines()}
 
 
 def applications() -> list[dict]:
-    """Applications in progress and sent, by stage."""
-    try:
-        return [
-            {"company": j["company"], "title": j["title"], "status": j["status"]}
-            for j in _api("applications")["jobs"]
-        ]
-    except OSError:
-        return [{"line": line} for line in _jobhunt("list", "-s", "all", "-n", "40").splitlines()]
+    """Applications in progress and sent, by stage, as the lines `jobhunt list` prints."""
+    return [{"line": line} for line in _jobhunt("list", "-s", "all", "-n", "40").splitlines()]
 
 
 def todo() -> str:

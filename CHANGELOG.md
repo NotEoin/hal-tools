@@ -4,6 +4,8 @@
 
 ### Changed
 
+- `jobs_queue` and `jobs_applications` read the Hal Employment command line only. The web API they
+  tried first no longer exists, and `[jobs].employment_url` now only sets what `jobs_open` opens.
 - `shell_look` reads the roots in `[tools.shell_look].read_roots` (else `[paths].read_roots`) through
   the hub's path rule, so its hard-deny list and workspace rule apply. It no longer defaults to the
   whole home directory and `/tmp`.

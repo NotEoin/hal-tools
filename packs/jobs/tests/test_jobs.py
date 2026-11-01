@@ -44,6 +44,18 @@ class Sandbox(unittest.TestCase):
             return fn(*args, **kwargs)
 
 
+class LayoutTest(Sandbox):
+    def test_queue_and_applications_read_the_command_line_not_a_web_api(self):
+        # the current jobhunt has no unauthenticated web API, so these must not touch the network
+        fake = FakeJobhunt("one\ntwo")
+        with mock.patch("socket.socket", side_effect=AssertionError("network used")):
+            queued = self.run_with(fake, tools.queue)
+            applied = self.run_with(fake, tools.applications)
+        self.assertEqual(queued, {"jobs": ["one", "two"]})
+        self.assertEqual(applied, [{"line": "one"}, {"line": "two"}])
+        self.assertEqual([c[0][:1] for c in fake.calls], [["queue"], ["list"]])
+
+
 class ArgumentTest(Sandbox):
     def test_option_like_job_id_stays_after_the_separator(self):
         # a job id such as "--help" must reach jobhunt as data, not as an option
