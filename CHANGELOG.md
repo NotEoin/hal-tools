@@ -11,6 +11,7 @@
 
 ### Changed
 
+- README lists requirements, install, run and test; example paths in the user pages no longer use a `Documents` folder.
 - `jobs_mark`, `jobs_shortlist`, `jobs_todo_add` and `jobs_stats` mark their output untrusted, like
   the other jobs tools: it echoes company, title and to-do text taken from job pages and emails.
 - `jobs_queue` and `jobs_applications` read the Hal Employment command line only. The web API they

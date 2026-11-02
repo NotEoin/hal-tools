@@ -19,7 +19,7 @@ phone and writes it into the day's note in the vault.
 
 ### Highlights
 
-- Gathers each part through hal-hub, so a module that is not installed is simply left out.
+- Gathers each part through hal-hub, so a module that is not installed is left out.
 - Written to be spoken: short sentences, no lists or symbols.
 - Morning: weather, today's events, tasks, job search, headlines, computer health.
 - Evening: tomorrow's events, tasks still open, tomorrow's weather, job search.

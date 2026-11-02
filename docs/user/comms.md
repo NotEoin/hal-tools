@@ -70,7 +70,7 @@ Run a tool with `hal-comms call phone_<tool>`:
 
 ```bash
 hal-comms call phone_ring
-hal-comms call phone_send_file path=~/Documents/ticket.pdf
+hal-comms call phone_send_file path=~/ticket.pdf
 ```
 
 ### Configuration

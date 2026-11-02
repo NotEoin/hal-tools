@@ -29,7 +29,7 @@ Run a tool with `hal-system call devices_<tool>`:
 
 ```bash
 hal-system call devices_printers
-hal-system call devices_print path=~/Documents/ticket.pdf copies=1
+hal-system call devices_print path=~/ticket.pdf copies=1
 hal-system call devices_bluetooth_connect device=headphones
 ```
 
