@@ -2,7 +2,7 @@
 
 hal-tools is a uv workspace of eight packs. Each pack is a Python distribution that holds several
 tool modules. The packs depend on `hal-kit` (shared helpers) and `hal-hub` (the manifest, policy
-and runner), both in `../Hal.next/packages`.
+and runner), both in `../Hal/packages`.
 
 ## Layout
 

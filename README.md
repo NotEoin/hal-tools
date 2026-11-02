@@ -68,7 +68,7 @@ Each pack's commands and settings are in its user page, listed in [docs/README.m
 ## Test
 
 ```bash
-uv sync --all-packages    # needs the hal-kit and hal-hub packages of a Hal checkout at ../Hal.next
+uv sync --all-packages    # needs the hal-kit and hal-hub packages of a Hal checkout at ../Hal
 uv run pytest             # hermetic tests only
 uv run ruff check . && uv run ruff format --check .
 ```

@@ -10,9 +10,9 @@ permissions:
 
 env:
   # Development sources of hal-kit and hal-hub (pyproject.toml, [tool.uv.sources]) are the
-  # sibling directory ../Hal.next. Step H-50 replaces this clone with git tag sources.
+  # sibling directory ../Hal, as pyproject.toml expects.
   HAL_REPO: https://github.com/NotEoin/Hal.git
-  HAL_REF: next
+  HAL_REF: main
 
 jobs:
   lint:
@@ -38,7 +38,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v6
       - name: Clone the Hal worktree beside this repository
-        run: git clone --depth 1 --branch "$HAL_REF" "$HAL_REPO" "$GITHUB_WORKSPACE/../Hal.next"
+        run: git clone --depth 1 --branch "$HAL_REF" "$HAL_REPO" "$GITHUB_WORKSPACE/../Hal"
       - run: uv sync --all-packages --frozen
       - name: Run the hermetic tests with no network, no bus and an empty HOME
         run: |
@@ -69,13 +69,13 @@ jobs:
           additional-packages: pipx python3-venv git
 
       - name: Copy the checkout into the WSL filesystem and clone Hal beside it
-        # /mnt/d has no Unix permissions and is slow; pyproject.toml needs ../Hal.next
+        # /mnt/d has no Unix permissions and is slow; pyproject.toml needs ../Hal
         shell: wsl-bash {0}
         run: |
           src="$(wslpath -u "$GITHUB_WORKSPACE" 2>/dev/null || printf %s "$GITHUB_WORKSPACE")"
-          rm -rf "$HOME/hal-tools" "$HOME/Hal.next"
+          rm -rf "$HOME/hal-tools" "$HOME/Hal"
           cp -r "$src" "$HOME/hal-tools"
-          git clone --depth 1 --branch "$HAL_REF" "$HAL_REPO" "$HOME/Hal.next"
+          git clone --depth 1 --branch "$HAL_REF" "$HAL_REPO" "$HOME/Hal"
 
       - name: Install uv
         shell: wsl-bash {0}

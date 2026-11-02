@@ -3,7 +3,7 @@
 The default run is hermetic: no network, no GPU, no desktop session, no real home directory.
 
 ```bash
-uv sync --all-packages    # needs hal-kit and hal-hub in ../Hal.next
+uv sync --all-packages    # needs hal-kit and hal-hub in ../Hal
 uv run pytest             # hermetic tests only
 uv run ruff check .       # lint
 uv run ruff format --check .   # formatting
