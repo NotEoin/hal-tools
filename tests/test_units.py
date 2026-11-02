@@ -16,7 +16,7 @@ PACKS = Path(__file__).resolve().parents[1] / "packs"
 MANIFESTS = sorted(PACKS.glob("*/src/*/hal-module.toml"))
 PLACEHOLDERS = {"@ROOT@", "@HAL@", "@PYTHON@", "@BIN@", "@HOME@", "@STATE@"}
 UNIT_SUFFIXES = {".service", ".timer"}
-MACHINE_PATHS = ("/home/", "src", "hal-ecosystem", ".npm-global")
+MACHINE_PATHS = ("/home/", "/Documents/", "hal-ecosystem", ".npm-global")
 GPU_UNITS = {"hal-employment.service"}
 
 
