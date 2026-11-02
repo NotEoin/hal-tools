@@ -151,6 +151,7 @@ def sleep(hours: float, quality: int = 0, note: str = "") -> dict:
 
 
 def remove(name: str) -> dict:
+    """Deletes a habit and its history."""
     con = _db()
     h = _habit(con, name)
     con.execute("DELETE FROM habits WHERE name = ?", (h["name"],))

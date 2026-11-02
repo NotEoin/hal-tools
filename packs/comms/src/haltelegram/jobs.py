@@ -39,6 +39,7 @@ class Jobs:
         self.hub = hub
 
     def has(self, tool: str) -> bool:
+        """True when the hub offers the tool."""
         return bool(self.hub and self.hub.get(tool))
 
     def call(self, name: str, **args) -> tuple[object, str | None]:
@@ -52,32 +53,41 @@ class Jobs:
         return out.get("result"), None
 
     def tool(self, name: str, **args) -> str:
+        """Calls a hub tool and returns its rendered result, or the problem as text."""
         result, problem = self.call(name, **args)
         return problem or render(result)
 
     def status(self) -> str:
+        """Returns the job search status."""
         return self.tool("jobs_status")
 
     def brief(self) -> str:
+        """Returns the morning briefing before 14:00 local time, the evening one after."""
         kind = "morning" if datetime.now().hour < 14 else "evening"
         return self.tool("briefing_build", kind=kind)
 
     def matches(self) -> str:
+        """Returns the best job matches."""
         return self.tool("jobs_matches")
 
     def queue(self) -> str:
+        """Returns the queued jobs."""
         return self.tool("jobs_queue")
 
     def todo(self, text: str = "") -> str:
+        """Adds a to-do when `text` is given, otherwise returns the to-do list."""
         return self.tool("jobs_todo_add", text=text) if text else self.tool("jobs_todo")
 
     def discard(self, job: str) -> str:
+        """Marks a job as skipped."""
         return self.tool("jobs_mark", job=job, status="skipped")
 
     def applied(self, job: str) -> str:
+        """Marks a job as applied."""
         return self.tool("jobs_mark", job=job, status="applied")
 
     def shortlist(self, job: str) -> str:
+        """Shortlists a job."""
         return self.tool("jobs_shortlist", job=job)
 
     def pack(self, job: str) -> tuple[str, list[Path]]:

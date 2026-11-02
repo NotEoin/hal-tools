@@ -79,6 +79,7 @@ class Watcher:
         self.started = True
 
     def events(self) -> list[str]:
+        """Returns the events seen since the last call, such as `login`."""
         found = ["login"] if self.started else []
         self.started = False
         on = _online()
@@ -101,6 +102,7 @@ class Watcher:
 
 
 def tick(watcher: Watcher, now: float | None = None) -> list[str]:
+    """Runs the schedules and triggers that are due and returns what ran."""
     now = now or time.time()
     con = tools._db()
     ran = []
@@ -130,6 +132,7 @@ def check_hub() -> None:
 
 
 def main() -> None:
+    """Runs the routines loop."""
     check_hub()
     w = Watcher()
     while True:

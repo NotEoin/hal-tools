@@ -26,6 +26,8 @@ PAST_DAYS, FUTURE_DAYS = 30, 400
 
 
 class CalDAVError(Exception):
+    """A CalDAV server answered with an error."""
+
     pass
 
 
@@ -45,6 +47,8 @@ def account() -> dict:
 
 
 class Client:
+    """A minimal CalDAV client using HTTP basic authentication."""
+
     def __init__(self, url: str, username: str, password: str) -> None:
         self.base = url.rstrip("/") + "/"
         token = base64.b64encode(f"{username}:{password}".encode()).decode()
@@ -58,6 +62,7 @@ class Client:
         depth: str | None = None,
         headers: dict | None = None,
     ) -> tuple[int, dict, bytes]:
+        """Sends one CalDAV request and returns the status, headers and body."""
         h = {**self.auth, "Content-Type": "application/xml; charset=utf-8", **(headers or {})}
         if depth is not None:
             h["Depth"] = depth
@@ -132,7 +137,10 @@ class Client:
 
     def events(self, href: str, start: datetime, end: datetime) -> list[tuple[str, str, str]]:
         """Returns (href, etag, ics) for events overlapping the window."""
-        fmt = lambda d: d.astimezone(UTC).strftime("%Y%m%dT%H%M%SZ")  # noqa: E731
+
+        def fmt(d: datetime) -> str:
+            return d.astimezone(UTC).strftime("%Y%m%dT%H%M%SZ")
+
         body = (
             '<c:calendar-query xmlns:d="DAV:" xmlns:c="urn:ietf:params:xml:ns:caldav">'
             "<d:prop><d:getetag/><c:calendar-data/></d:prop>"
@@ -155,6 +163,7 @@ class Client:
         return out
 
     def put(self, cal_href: str, event: store.Event) -> tuple[str, str]:
+        """Uploads an event to a calendar and returns its href and etag."""
         href = cal_href.rstrip("/") + "/" + re.sub(r"[^A-Za-z0-9._-]", "-", event.uid) + ".ics"
         headers = {"Content-Type": "text/calendar; charset=utf-8"}
         headers.update({"If-Match": event.etag} if event.etag else {"If-None-Match": "*"})
@@ -164,12 +173,14 @@ class Client:
         return href, h.get("ETag") or h.get("etag") or ""
 
     def delete(self, href: str, etag: str = "") -> None:
+        """Deletes an event; a missing one is not an error."""
         status, _, _ = self.request("DELETE", href, headers={"If-Match": etag} if etag else None)
         if status >= 400 and status != 404:
             raise CalDAVError(f"DELETE {href}: HTTP {status}")
 
 
 def client() -> Client:
+    """Returns a client for the configured CalDAV account."""
     a = account()
     return Client(a["url"], a["username"], a["password"])
 

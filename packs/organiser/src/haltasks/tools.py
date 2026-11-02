@@ -156,6 +156,7 @@ def done(task: str) -> dict:
 
 
 def undo(task: str) -> dict:
+    """Marks a completed task as open again."""
     con = _db()
     r = _find(con, task, prefer_open=False)
     con.execute("UPDATE tasks SET done = NULL WHERE id = ?", (r["id"],))
@@ -172,6 +173,7 @@ def edit(
     project: str = "",
     notes: str = "",
 ) -> dict:
+    """Changes the fields given for the task that best matches."""
     con = _db()
     r = _find(con, task)
     if title:
@@ -199,6 +201,7 @@ def edit(
 
 
 def delete(task: str) -> dict:
+    """Deletes the task that best matches."""
     con = _db()
     r = _find(con, task)
     con.execute("DELETE FROM tasks WHERE id = ?", (r["id"],))
@@ -208,6 +211,7 @@ def delete(task: str) -> dict:
 
 
 def projects() -> list[dict]:
+    """Returns the projects that have open tasks, with their counts."""
     rows = (
         _db()
         .execute("""SELECT project, COUNT(*) n FROM tasks WHERE done IS NULL AND project != ''

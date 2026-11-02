@@ -154,6 +154,7 @@ def _resolve(event: str) -> store.Event:
 
 
 def delete(event: str) -> dict:
+    """Deletes the event that best matches the text."""
     e = _resolve(event)
     store.delete(e.uid)
     return {
@@ -164,6 +165,7 @@ def delete(event: str) -> dict:
 
 
 def move(event: str, when_text: str) -> dict:
+    """Moves the event that best matches the text to a new time."""
     target = when.parse(when_text, _now())
     e = match.resolve(
         event,
@@ -232,12 +234,14 @@ def export_ics(path: str = "~/Documents/hal-calendar.ics") -> dict:
 
 
 def sync() -> dict:
+    """Synchronises with the CalDAV account."""
     from .caldav import sync as run
 
     return run()
 
 
 def calendars() -> list[dict]:
+    """Returns the calendars of the CalDAV account."""
     from .caldav import client
 
     return client().calendars()

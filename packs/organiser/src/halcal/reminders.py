@@ -79,6 +79,7 @@ def fire(now: datetime | None = None) -> int:
 
 
 def main() -> None:
+    """Runs the reminder and calendar sync loop."""
     last_sync = 0.0
     while True:
         fire()

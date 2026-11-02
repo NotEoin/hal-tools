@@ -9,6 +9,7 @@ from . import tools
 
 
 def main() -> None:
+    """Sends a reminder for each subscription renewing within 3 days, once per renewal date."""
     con = tools._db()
     for s in tools.renewals_due(3):
         if s["reminded"] != s["on"]:

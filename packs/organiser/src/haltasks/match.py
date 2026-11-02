@@ -143,6 +143,7 @@ def stem(word: str) -> str:
 
 
 def words(text: str) -> list[str]:
+    """Returns the stemmed words of a text."""
     return [stem(w) for w in _WORD.findall(text.lower())]
 
 
@@ -171,6 +172,7 @@ def query_words(task: str) -> list[str]:
 
 
 def task_id(task: str) -> int | None:
+    """Returns the number in a phrase such as "task 4", or None."""
     m = re.fullmatch(r"\s*(?:task|to-?do|item|number|no\.?)?\s*#?\s*(\d+)\s*", str(task), re.I)
     return int(m[1]) if m else None
 

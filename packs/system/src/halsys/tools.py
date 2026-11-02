@@ -70,6 +70,7 @@ def cpu() -> dict:
 
 
 def memory() -> dict:
+    """Returns total, used and available memory."""
     m = _meminfo()
     used = m["MemTotal"] - m["MemAvailable"]
     return {
@@ -189,6 +190,7 @@ def temperatures() -> dict:
 
 
 def battery() -> dict | None:
+    """Returns the first battery's percent and status, or None when there is none."""
     for b in Path("/sys/class/power_supply").glob("BAT*"):
 
         def read(name: str, base: Path = b) -> str | None:
@@ -301,6 +303,7 @@ def services(failed_only: bool = True) -> dict:
 
 
 def service_status(name: str, user: bool = True) -> dict:
+    """Returns the state of a systemd unit."""
     scope = ["--user"] if user else []
     out = _run(
         "systemctl",
@@ -315,6 +318,7 @@ def service_status(name: str, user: bool = True) -> dict:
 
 
 def service_restart(name: str, user: bool = True) -> dict:
+    """Restarts a systemd unit."""
     scope = ["--user"] if user else []
     cmd = (
         ["systemctl", *scope, "restart", name] if user else ["pkexec", "systemctl", "restart", name]

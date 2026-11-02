@@ -42,6 +42,7 @@ def _money(pence: int) -> str:
 
 
 def categorise(note: str) -> str:
+    """Returns the category whose keywords appear in a note."""
     low = note.lower()
     for cat, words in settings()["categories"].items():
         if any(re.search(rf"\b{re.escape(w)}", low) for w in words):
@@ -115,6 +116,7 @@ def summary(month: str = "") -> dict:
 
 
 def recent(limit: int = 15) -> list[dict]:
+    """Returns the latest entries, newest first."""
     return [
         {
             "id": r["id"],
@@ -151,6 +153,7 @@ def subscription(name: str, amount: str, period: str = "monthly", next_payment: 
 
 
 def subscriptions() -> dict:
+    """Returns the subscriptions and their monthly total."""
     rows = _db().execute("SELECT * FROM subs ORDER BY next").fetchall()
     per_month = sum(
         r["pence"] * {"weekly": 52 / 12, "monthly": 1, "yearly": 1 / 12}[r["period"]] for r in rows
@@ -171,6 +174,7 @@ def subscriptions() -> dict:
 
 
 def cancel_subscription(name: str) -> dict:
+    """Deletes a subscription by name."""
     con = _db()
     con.execute("DELETE FROM subs WHERE lower(name) = lower(?)", (name,))
     con.commit()
@@ -181,7 +185,11 @@ def import_csv(path: str) -> dict:
     """Imports a bank statement CSV, finding its columns; repeated rows are skipped."""
     rows = list(csv.reader(Path(path).expanduser().read_text(errors="ignore").splitlines()))
     head = [h.strip().lower() for h in rows[0]]
-    col = lambda *names: next((i for i, h in enumerate(head) if any(n in h for n in names)), None)  # noqa: E731
+
+    def col(*names: str) -> int | None:
+        """Returns the index of the first header that contains one of `names`."""
+        return next((i for i, h in enumerate(head) if any(n in h for n in names)), None)
+
     di, ni = col("date"), col("description", "details", "name", "payee", "reference", "merchant")
     ai, outi = col("amount", "value"), col("paid out", "debit", "money out")
     if di is None or ni is None or (ai is None and outi is None):

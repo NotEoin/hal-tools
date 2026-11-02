@@ -104,6 +104,7 @@ def wifi() -> dict:
 
 
 def public_ip() -> dict:
+    """Returns the public IP address and its rough location, from an outside service."""
     with _open("https://ipinfo.io/json", timeout=10) as r:
         geo = json.loads(r.read())
     return {

@@ -225,6 +225,7 @@ def send(to: str, subject: str, body: str, account: str = "", reply_to: str = ""
 
 
 def accounts() -> list[str]:
+    """Returns the configured mail accounts as `name: address`; raises when none is set up."""
     if not settings()["accounts"]:
         raise ValueError(NO_ACCOUNT_MESSAGE)
     return [f"{k}: {v['address']}" for k, v in settings()["accounts"].items()]

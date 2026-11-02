@@ -126,6 +126,7 @@ def pull(model: str) -> dict:
 
 
 def delete(model: str) -> dict:
+    """Deletes a local model."""
     _api("/api/delete", {"model": model}, method="DELETE")
     return {"deleted": model}
 

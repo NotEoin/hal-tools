@@ -33,6 +33,7 @@ def _ok(done: subprocess.CompletedProcess) -> None:
 
 
 def suspend() -> dict:
+    """Suspends the machine; refuses under WSL2."""
     _refuse_on_wsl2("suspend")
     _ok(_run("systemctl", "suspend"))
     return {"suspending": True}
@@ -59,6 +60,7 @@ def shutdown(minutes: int = 0) -> dict:
 
 
 def cancel_shutdown() -> dict:
+    """Cancels a scheduled shutdown."""
     _run("shutdown", "-c")
     return {"cancelled": True}
 
@@ -102,6 +104,7 @@ def battery() -> dict:
 
 
 def uptime() -> dict:
+    """Returns how long the machine has been up."""
     s = float(Path("/proc/uptime").read_text().split()[0])
     return {
         "uptime": (

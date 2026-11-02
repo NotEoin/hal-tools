@@ -79,6 +79,7 @@ def repos(dirty_only: bool = False) -> list[dict]:
 
 
 def status(repo: str) -> dict:
+    """Returns a repository's branch and short status, and its stash list."""
     r = _find(repo)
     return {
         "repo": r.name,
@@ -88,6 +89,7 @@ def status(repo: str) -> dict:
 
 
 def log(repo: str, limit: int = 10) -> list[str]:
+    """Returns the latest commits of a repository, one line each."""
     return _git(
         _find(repo), "log", f"-{int(limit)}", "--format=%h %ad %s", "--date=short"
     ).splitlines()

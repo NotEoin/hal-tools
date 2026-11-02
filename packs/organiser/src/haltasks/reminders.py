@@ -46,6 +46,7 @@ def check(now: datetime | None = None) -> int:
 
 
 def main() -> None:
+    """Runs the vault sync and reminder loop."""
     while True:
         tools.sync_from_vault()
         check()

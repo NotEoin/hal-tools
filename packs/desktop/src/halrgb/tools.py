@@ -113,6 +113,7 @@ def colour(colour: str, device: str = "", brightness: int = 100) -> dict:
 
 
 def off(device: str = "") -> dict:
+    """Turns the lights off."""
     return colour("off", device)
 
 
@@ -142,6 +143,7 @@ def effect(effect: str, device: str = "") -> dict:
 
 
 def profiles() -> list[str]:
+    """Returns the names of the saved lighting profiles."""
     c = _client()
     try:
         return c.profiles()

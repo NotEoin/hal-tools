@@ -19,6 +19,8 @@ CODES = ["MO", "TU", "WE", "TH", "FR", "SA", "SU"]
 
 @dataclass
 class Event:
+    """One calendar event."""
+
     title: str
     start: datetime
     end: datetime | None = None
@@ -33,11 +35,13 @@ class Event:
     etag: str = ""
 
     def finish(self) -> datetime:
+        """Returns the end time, a default length when none is set."""
         if self.end:
             return self.end
         return self.start + (timedelta(days=1) if self.all_day else timedelta(hours=1))
 
     def as_dict(self, occurrence: datetime | None = None) -> dict:
+        """Returns the event, or one occurrence of it, as a plain dict."""
         start = occurrence or self.start
         end = start + (self.finish() - self.start)
         return {
@@ -55,6 +59,7 @@ class Event:
 
 
 def db() -> sqlite3.Connection:
+    """Opens the calendar database and creates its tables."""
     con = sqlite3.connect(data_dir() / "calendar.db")
     con.row_factory = sqlite3.Row
     con.executescript("""
@@ -116,6 +121,7 @@ def save(e: Event, dirty: bool = True) -> Event:
 
 
 def delete(uid: str) -> None:
+    """Marks an event deleted."""
     con = db()
     # Synced events are kept as tombstones until the deletion reaches the server.
     con.execute(
@@ -132,11 +138,13 @@ def dirty() -> list[Event]:
 
 
 def get(uid: str) -> Event | None:
+    """Returns the event with this uid, or None."""
     r = db().execute("SELECT * FROM events WHERE uid = ? AND deleted = 0", (uid,)).fetchone()
     return _row(r) if r else None
 
 
 def all_events(include_deleted: bool = False) -> list[Event]:
+    """Returns every event, including deleted ones when asked."""
     sql = "SELECT * FROM events" + (  # noqa: S608 - fixed fragments only, no user input
         "" if include_deleted else " WHERE deleted = 0"
     )
@@ -208,5 +216,6 @@ def between(start: datetime, end: datetime) -> list[dict]:
 
 
 def day_bounds(d: date) -> tuple[datetime, datetime]:
+    """Returns the start of a day and the start of the next."""
     start = datetime.combine(d, time())
     return start, start + timedelta(days=1)

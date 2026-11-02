@@ -81,6 +81,7 @@ def stem(word: str) -> str:
 
 
 def words(text: str) -> list[str]:
+    """Returns the stemmed words of a text."""
     return [stem(w) for w in _WORD.findall(text.lower())]
 
 
@@ -137,6 +138,7 @@ def rank(
 
 
 def describe(occ: dict) -> str:
+    """Returns a one-line description of an occurrence, with its id."""
     when_ = "all day" if occ["all_day"] else datetime.fromisoformat(occ["start"]).strftime("%H:%M")
     day = datetime.fromisoformat(occ["start"])
     return f"{occ['title']} ({day:%a %-d %b} {when_}, id {occ['uid']})"

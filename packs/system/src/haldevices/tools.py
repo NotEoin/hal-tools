@@ -54,6 +54,7 @@ def _bt_device(name: str) -> str:
 
 
 def bluetooth_connect(device: str) -> dict:
+    """Connects a paired Bluetooth device."""
     addr = _bt_device(device)
     out = _run("bluetoothctl", "connect", addr, timeout=20)
     return {
@@ -63,11 +64,13 @@ def bluetooth_connect(device: str) -> dict:
 
 
 def bluetooth_disconnect(device: str) -> dict:
+    """Disconnects a Bluetooth device."""
     _run("bluetoothctl", "disconnect", _bt_device(device), timeout=15)
     return {"disconnected": device}
 
 
 def bluetooth_power(on: bool = True) -> dict:
+    """Turns the Bluetooth adapter on or off."""
     _bt_ready()
     _run("bluetoothctl", "power", "on" if on else "off")
     return {"powered": bool(on)}

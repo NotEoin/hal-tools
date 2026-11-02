@@ -99,6 +99,7 @@ def search(query: str, limit: int = 15) -> list[dict]:
 
 
 def is_installed(name: str) -> dict:
+    """Returns whether a package is installed, and its version."""
     status = _run("dpkg-query", "-W", "-f=${Status} ${Version}", name)
     snap = name in _run("snap", "list") if shutil.which("snap") else False
     return {

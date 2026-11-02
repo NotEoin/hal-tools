@@ -90,6 +90,7 @@ def rewrite(text: str = "", tone: str = "professional", length: str = "same") ->
 
 
 def summarise(text: str = "", words: int = 80) -> dict:
+    """Summarises a text in at most `words` words."""
     out = _ask(
         f"Summarise the user's text in at most {int(words)} words of plain prose. "
         "Use only the text.",

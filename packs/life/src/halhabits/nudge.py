@@ -9,6 +9,7 @@ from . import tools
 
 
 def main() -> None:
+    """Sends a reminder listing today's habits that are not done, if any."""
     left = [h for h in tools.today() if not h["complete"]]
     if left:
         send(

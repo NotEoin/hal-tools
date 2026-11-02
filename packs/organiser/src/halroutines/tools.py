@@ -186,6 +186,7 @@ def save_scene(name: str, steps: list | str) -> dict:
 
 
 def delete_scene(name: str) -> dict:
+    """Deletes a scene by name."""
     con = _db()
     con.execute("DELETE FROM scenes WHERE lower(name) = lower(?)", (name,))
     con.commit()
@@ -234,6 +235,7 @@ def stored_steps(row: sqlite3.Row) -> list[dict]:
 
 
 def schedules() -> list[dict]:
+    """Returns the scheduled routines."""
     return [
         {
             "id": r["id"],
@@ -247,6 +249,7 @@ def schedules() -> list[dict]:
 
 
 def unschedule(which: str) -> dict:
+    """Removes the schedules that match."""
     con = _db()
     rows = [
         r
@@ -281,6 +284,7 @@ def add_trigger(event: str, steps: list | dict | str, label: str) -> dict:
 
 
 def triggers() -> list[dict]:
+    """Returns the event triggers."""
     return [
         {"id": r["id"], "when": r["event"], "label": r["target"], "runs": _runs(stored_steps(r))}
         for r in _db().execute("SELECT * FROM triggers")
@@ -288,6 +292,7 @@ def triggers() -> list[dict]:
 
 
 def remove_trigger(trigger_id: int) -> dict:
+    """Removes a trigger by id."""
     con = _db()
     con.execute("DELETE FROM triggers WHERE id = ?", (int(trigger_id),))
     con.commit()

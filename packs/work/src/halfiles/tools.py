@@ -311,6 +311,7 @@ def tidy_downloads(folder: str = "~/Downloads", older_than_days: int = 0) -> dic
 
 
 def folder_size(folder: str) -> dict:
+    """Returns the size of a folder inside the allowed roots."""
     p = _confine(folder)
     out = proc.completed(["du", "-sb", str(p)], timeout=600).stdout
     return {"folder": str(p), "size_gb": round(int(out.split()[0]) / 1e9, 2) if out else None}

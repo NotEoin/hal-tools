@@ -57,6 +57,7 @@ def digest() -> str:
 
 
 def status_counts() -> str:
+    """Returns the job counts from the Hal Employment app."""
     return _jobhunt("stats")
 
 

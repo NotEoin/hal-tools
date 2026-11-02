@@ -375,6 +375,7 @@ def screenshot(path: str = "") -> dict:
 
 
 def lock() -> dict:
+    """Locks the desktop session; refuses under WSL2, which has none."""
     if hostplatform.is_wsl2():
         raise RuntimeError(
             "there is no desktop session to lock under WSL2; lock Windows with Win+L "

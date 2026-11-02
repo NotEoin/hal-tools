@@ -26,6 +26,8 @@ UPDATE_MODE = 1101
 
 @dataclass
 class Mode:
+    """One lighting mode of a device."""
+
     index: int
     name: str
     raw: bytes  # the mode's bytes as received, re-sent to select it
@@ -33,6 +35,8 @@ class Mode:
 
 @dataclass
 class Device:
+    """One RGB device and the modes it offers."""
+
     index: int
     name: str
     kind: int
@@ -63,6 +67,8 @@ class _Reader:
 
 
 class Client:
+    """A client for the OpenRGB SDK server."""
+
     def __init__(self, host: str = "127.0.0.1", port: int = 6742, name: str = "Hal") -> None:
         try:
             self.sock = socket.create_connection((host, port), timeout=5)
@@ -75,6 +81,7 @@ class Client:
         self._send(0, SET_CLIENT_NAME, name.encode() + b"\0")
 
     def close(self) -> None:
+        """Closes the connection."""
         self.sock.close()
 
     def _send(self, device: int, packet: int, data: bytes = b"") -> None:
@@ -110,10 +117,12 @@ class Client:
             self.sock.settimeout(5)
 
     def count(self) -> int:
+        """Returns how many devices the server has."""
         self._send(0, REQUEST_CONTROLLER_COUNT)
         return struct.unpack("<I", self._recv(REQUEST_CONTROLLER_COUNT))[0]
 
     def device(self, index: int) -> Device:
+        """Returns the device at `index`."""
         self._send(index, REQUEST_CONTROLLER_DATA, struct.pack("<I", self.version))
         r = _Reader(self._recv(REQUEST_CONTROLLER_DATA))
         r.take("I")
@@ -147,6 +156,7 @@ class Client:
         return Device(index, name, kind, leds, active, modes, zones)
 
     def devices(self) -> list[Device]:
+        """Returns every device."""
         return [self.device(i) for i in range(self.count())]
 
     def set_colour(self, dev: Device, rgb: tuple[int, int, int]) -> None:
@@ -157,14 +167,17 @@ class Client:
         self._send(dev.index, UPDATE_LEDS, struct.pack("<I", 4 + len(payload)) + payload)
 
     def set_mode(self, dev: Device, mode: Mode) -> None:
+        """Switches a device to a mode."""
         payload = struct.pack("<i", mode.index) + mode.raw
         self._send(dev.index, UPDATE_MODE, struct.pack("<I", 4 + len(payload)) + payload)
 
     def profiles(self) -> list[str]:
+        """Returns the names of the saved profiles."""
         self._send(0, REQUEST_PROFILE_LIST)
         r = _Reader(self._recv(REQUEST_PROFILE_LIST))
         r.take("I")
         return [r.string() for _ in range(r.take("H"))]
 
     def load_profile(self, name: str) -> None:
+        """Loads a saved profile by name."""
         self._send(0, REQUEST_LOAD_PROFILE, name.encode() + b"\0")

@@ -72,6 +72,7 @@ def save(url: str, summarise: bool = False) -> dict:
 
 
 def reading_list(include_read: bool = False) -> list[dict]:
+    """Returns the saved reading list, unread items only unless `include_read` is set."""
     sql = (
         "SELECT * FROM later"  # noqa: S608 - fixed fragments only
         + ("" if include_read else " WHERE read IS NULL")
@@ -109,6 +110,7 @@ def subscribe(url: str, name: str = "") -> dict:
 
 
 def unsubscribe(name: str) -> dict:
+    """Removes the feeds whose name or URL matches."""
     con = _db()
     n = con.execute("DELETE FROM feeds WHERE name LIKE ? OR url = ?", (f"%{name}%", name)).rowcount
     con.commit()
@@ -116,6 +118,7 @@ def unsubscribe(name: str) -> dict:
 
 
 def feeds() -> list[dict]:
+    """Returns the subscribed feeds."""
     con = _db()
     return [
         {

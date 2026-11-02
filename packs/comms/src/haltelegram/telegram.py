@@ -20,6 +20,7 @@ class Telegram:
         self.files = f"https://api.telegram.org/file/bot{token}"
 
     def call(self, method: str, timeout: float = 70, **params) -> dict:
+        """Calls a Bot API method and returns its decoded reply."""
         data = urllib.parse.urlencode({k: v for k, v in params.items() if v is not None}).encode()
         with urllib.request.urlopen(f"{self.base}/{method}", data=data, timeout=timeout) as r:  # noqa: S310 - https URL on the fixed Telegram API host
             reply = json.loads(r.read())
@@ -28,6 +29,7 @@ class Telegram:
         return reply["result"]
 
     def upload(self, method: str, field: str, path: Path, **params) -> dict:
+        """Sends a file to a Bot API method as a multipart upload."""
         boundary = uuid.uuid4().hex
         body = b""
         for key, value in params.items():
@@ -48,6 +50,7 @@ class Telegram:
             return json.loads(r.read())
 
     def download(self, file_id: str, dest: Path) -> Path:
+        """Downloads a file by its Telegram id to `dest` and returns `dest`."""
         info = self.call("getFile", file_id=file_id)
         urllib.request.urlretrieve(f"{self.files}/{info['file_path']}", dest)  # noqa: S310 - https URL on the fixed Telegram API host
         return dest

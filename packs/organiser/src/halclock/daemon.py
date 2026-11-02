@@ -22,6 +22,7 @@ def _next(at: float, rrule: str) -> float:
 
 
 def tick(now: float | None = None) -> int:
+    """Fires the timers and alarms that are due and returns how many fired."""
     now = now or time.time()
     con = tools._db()
     fired = 0
@@ -75,6 +76,7 @@ def tick(now: float | None = None) -> int:
 
 
 def main() -> None:
+    """Runs the timer loop."""
     while True:
         tick()
         time.sleep(POLL)

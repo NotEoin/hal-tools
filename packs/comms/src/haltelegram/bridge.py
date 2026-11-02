@@ -62,6 +62,8 @@ def parse(text: str) -> tuple[str | None, str]:
 
 
 class Bridge:
+    """Connects one paired Telegram chat to a Hal agent session and to the job commands."""
+
     def __init__(self, bot, spawn_agent: Callable[[], AcpClient] | None = None, hub=None) -> None:
         self.bot = bot
         self.spawn_agent = spawn_agent
@@ -151,6 +153,7 @@ class Bridge:
 
     # -- messages ------------------------------------------------------------------
     def handle(self, message: dict) -> None:
+        """Handles one incoming Telegram message: pairing, then commands or a chat turn."""
         chat = message["chat"]["id"]
         text = (message.get("text") or "").strip()
         if self.chat is None:
@@ -184,6 +187,7 @@ class Bridge:
                     self.bot.upload("sendVoice", "voice", note, chat_id=chat)
 
     def respond(self, chat: int, text: str) -> str:
+        """Returns the reply to a text message from the paired chat."""
         command, arg = parse(text)
         if command is None:
             return self.chat_reply(chat, text)

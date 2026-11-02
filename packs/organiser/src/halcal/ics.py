@@ -37,6 +37,7 @@ END:VTIMEZONE""",
 
 
 def local_zone() -> ZoneInfo:
+    """Returns the configured time zone."""
     return ZoneInfo(settings().get("timezone", "Europe/London"))
 
 
@@ -211,4 +212,5 @@ def calendar(events: list[Event]) -> str:
 
 
 def today_local() -> date:
+    """Returns today's date in the configured time zone."""
     return datetime.now(local_zone()).date()

@@ -39,6 +39,7 @@ def _choose(cals: list[dict], default: int, ask, out) -> dict:
 
 
 def main(argv: list[str] | None = None, ask=input, secret=getpass.getpass, out=print) -> int:
+    """Asks for the CalDAV details, checks them and saves the account."""
     parser = argparse.ArgumentParser(
         prog="hal-organiser calendar-connect",
         description="Connect Hal's calendar to a CalDAV account such as Apple iCloud.",

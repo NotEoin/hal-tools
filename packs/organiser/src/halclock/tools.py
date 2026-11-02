@@ -125,6 +125,7 @@ def alarm(when_text: str, label: str = "Alarm") -> dict:
 
 
 def list_all() -> dict:
+    """Returns the pending timers and alarms."""
     con = _db()
     rows = con.execute("SELECT * FROM alarms WHERE fired IS NULL ORDER BY at").fetchall()
     out = {"timers": [], "alarms": []}

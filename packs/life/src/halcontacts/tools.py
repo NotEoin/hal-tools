@@ -134,6 +134,7 @@ def add(
 
 
 def get(name: str) -> dict:
+    """Returns one contact's details."""
     p = _find(name)
     meta, body = _read(p)
     return {
