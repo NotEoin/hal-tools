@@ -4,7 +4,9 @@ Every unit is listed in its module's manifest as `[[units]]`, uses only 06's pla
 from the pack environment, and carries no machine path.
 """
 
+import os
 import re
+import subprocess
 from pathlib import Path
 
 import pytest
@@ -70,3 +72,15 @@ def test_employment_unit_runs_the_launcher_that_reads_jobhunt_root_at_run_time()
     assert "ExecStart=@ROOT@/bin/hal-employment-serve" in text
     launcher = (root / "bin/hal-employment-serve").read_text()
     assert "jobhunt_root" in launcher and (root / "bin/hal-employment-serve").stat().st_mode & 0o111
+
+
+def test_employment_launcher_without_jobhunt_root_exits_naming_the_setting(tmp_path) -> None:
+    # Regression: the launcher fell back to a default checkout path in the owner's home folder.
+    config = tmp_path / "config.toml"
+    config.write_text("[jobs]\n")
+    launcher = PACKS / "jobs/src/haljobs/bin/hal-employment-serve"
+    run = subprocess.run(
+        [str(launcher)], env={"HAL_CONFIG": str(config), "PATH": os.environ["PATH"]},
+        capture_output=True, text=True, timeout=30, check=False,
+    )
+    assert run.returncode == 1 and "[jobs].jobhunt_root is not set" in run.stderr

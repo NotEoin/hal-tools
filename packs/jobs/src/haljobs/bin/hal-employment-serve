@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Runs Hal Employment (jobhunt's web app) from the jobhunt checkout named by [jobs].jobhunt_root
-# in ~/.config/hal/config.toml (default ~/src/employment-helper), with its virtualenv.
+# in ~/.config/hal/config.toml, with its virtualenv. There is no default: it exits when unset.
 #
 #   hal-employment-serve [--port N]
 set -euo pipefail
@@ -13,9 +13,14 @@ try:
     jobs = tomllib.loads(path.read_text()).get("jobs", {})
 except (OSError, tomllib.TOMLDecodeError):
     jobs = {}
-print(Path(jobs.get("jobhunt_root") or jobs.get("jobhunt") or "~/src/employment-helper").expanduser())
+root = jobs.get("jobhunt_root") or jobs.get("jobhunt")
+print(Path(root).expanduser() if root else "")
 PY
 )"
+if [ -z "$ROOT" ]; then
+  echo "[jobs].jobhunt_root is not set; set it in ~/.config/hal/config.toml to your jobhunt checkout" >&2
+  exit 1
+fi
 if [ ! -d "$ROOT/jobhunt" ]; then
   echo "jobhunt not found at $ROOT; set [jobs].jobhunt_root in ~/.config/hal/config.toml" >&2
   exit 1

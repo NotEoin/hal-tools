@@ -36,7 +36,7 @@
 - `desktop_clipboard` takes no arguments; writing is the new `desktop_clipboard_set` (asks).
 - `desktop_open` takes `url` (https only) or `path`, exactly one.
 - `system_processes` and `models_gpu` return process names only, never command lines.
-- `jobs`: while `[jobs]` is absent the old `jobhunt_root` default applies, with a one-time warning.
+- `jobs`: `[jobs].jobhunt_root` has no default; the launcher exits with a message naming it when unset.
 - Units are listed in each manifest as `[[units]]`, use `@PYTHON@`, and no longer carry machine paths
   or `hal-tts`. Only `hal-employment.service` is a GPU unit.
 
