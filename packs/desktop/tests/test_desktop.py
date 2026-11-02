@@ -48,3 +48,30 @@ class DesktopTest(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+def _fake_release(tmp_path, monkeypatch, text):
+    release = tmp_path / "osrelease"
+    release.write_text(text + "\n")
+    monkeypatch.setenv("HAL_TOOLS_OSRELEASE", str(release))
+
+
+def test_lock_refuses_under_wsl2_because_there_is_no_session(tmp_path, monkeypatch):
+    _fake_release(tmp_path, monkeypatch, "5.15.153.1-microsoft-standard-WSL2")
+    monkeypatch.setattr(tools, "_run", lambda *cmd: pytest.fail(f"ran {cmd}"))
+    with pytest.raises(RuntimeError, match="Win\\+L"):
+        tools.lock()
+
+
+def test_volume_without_wpctl_under_wsl2_points_at_pulseaudio(tmp_path, monkeypatch):
+    _fake_release(tmp_path, monkeypatch, "5.15.153.1-microsoft-standard-WSL2")
+    monkeypatch.setattr(tools.shutil, "which", lambda name: None)
+    with pytest.raises(RuntimeError, match="PulseAudio"):
+        tools.volume()
+
+
+def test_volume_without_wpctl_on_linux_says_to_install_wireplumber(tmp_path, monkeypatch):
+    _fake_release(tmp_path, monkeypatch, "6.8.0-generic")
+    monkeypatch.setattr(tools.shutil, "which", lambda name: None)
+    with pytest.raises(RuntimeError, match="wireplumber"):
+        tools.volume()

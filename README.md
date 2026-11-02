@@ -18,6 +18,10 @@ the policy engine, not the tool, decides what runs.
 Status: work in progress, ported to the Hal 0.1 interfaces. Safe defaults: no mail account, no
 personal paths, every fetch through the egress rules, every Telegram turn through `hal acp`.
 
+Platforms: Linux. Windows works through WSL2 (see
+[docs/howto/run-on-windows-with-wsl2.md](docs/howto/run-on-windows-with-wsl2.md)); native Windows and
+macOS are unsupported.
+
 ## Install
 
 ```bash

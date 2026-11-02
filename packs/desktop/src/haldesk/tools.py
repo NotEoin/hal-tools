@@ -18,7 +18,7 @@ import time
 from datetime import datetime
 from pathlib import Path
 
-from hal_desktop import proc
+from hal_desktop import hostplatform, proc
 
 from .settings import data_dir
 
@@ -33,6 +33,17 @@ APP_DIRS = [
 
 def _run(*cmd: str, timeout: float = 15) -> subprocess.CompletedProcess[str]:
     return proc.completed(cmd, timeout=timeout)
+
+
+def _need_wpctl() -> None:
+    """Raises with advice when `wpctl` is missing; WSLg serves PulseAudio, not PipeWire."""
+    if shutil.which("wpctl") is None:
+        hint = (
+            f" (WSLg offers PulseAudio only; use `pactl`, see {hostplatform.DOCS_HINT})"
+            if hostplatform.is_wsl2()
+            else " (install wireplumber)"
+        )
+        raise RuntimeError("`wpctl` is not installed, so sound cannot be controlled" + hint)
 
 
 def _gset(schema: str, key: str, value: str | None = None) -> str:
@@ -144,6 +155,7 @@ def open_item(url: str = "", path: str = "") -> dict:
 
 def volume(level: int | None = None, change: int = 0, mute: str = "") -> dict:
     """Reads or sets the output volume (0 to 100), nudges it, or mutes it (on, off, toggle)."""
+    _need_wpctl()
     sink = "@DEFAULT_AUDIO_SINK@"
     if mute:
         _run("wpctl", "set-mute", sink, {"on": "1", "off": "0"}.get(mute, "toggle"))
@@ -165,6 +177,7 @@ def volume(level: int | None = None, change: int = 0, mute: str = "") -> dict:
 
 def audio_devices() -> dict:
     """Speakers and microphones, with the defaults marked."""
+    _need_wpctl()
     text = _run("wpctl", "status").stdout
     out: dict = {"outputs": [], "inputs": []}
     section = None
@@ -362,6 +375,11 @@ def screenshot(path: str = "") -> dict:
 
 
 def lock() -> dict:
+    if hostplatform.is_wsl2():
+        raise RuntimeError(
+            "there is no desktop session to lock under WSL2; lock Windows with Win+L "
+            f"(see {hostplatform.DOCS_HINT})"
+        )
     _run("loginctl", "lock-session")
     return {"locked": True}
 

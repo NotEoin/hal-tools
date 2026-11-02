@@ -13,6 +13,7 @@
 | [user/policy.md](user/policy.md) | Tool tiers, defaults and how to change a decision |
 | [howto/use-a-pack-from-any-harness.md](howto/use-a-pack-from-any-harness.md) | Run a pack's tools in any MCP harness |
 | [howto/add-a-mail-account.md](howto/add-a-mail-account.md) | Configure a mail account |
+| [howto/run-on-windows-with-wsl2.md](howto/run-on-windows-with-wsl2.md) | Run the packs on Windows 11 through WSL2 |
 | [howto/enable-the-host-shell.md](howto/enable-the-host-shell.md) | Widen the folders `shell_look` may read |
 | [howto/allow-a-website-for-web-read.md](howto/allow-a-website-for-web-read.md) | Let `web_read` fetch a new site |
 | [dev/architecture.md](dev/architecture.md) | How packs, manifests, the runner and halkit fit together |

@@ -10,11 +10,21 @@ import re
 import subprocess
 from pathlib import Path
 
-from hal_system import proc
+from hal_system import hostplatform, proc
 
 
 def _run(*cmd: str) -> subprocess.CompletedProcess:
     return proc.completed(cmd, timeout=30)
+
+
+def _refuse_on_wsl2(what: str) -> None:
+    """Raises under WSL2, which has no power state of its own to suspend, restart or tune."""
+    if hostplatform.is_wsl2():
+        raise RuntimeError(
+            f"{what} is not available under WSL2: the Linux side has no power state. Use "
+            "`wsl --shutdown` in Windows PowerShell to stop WSL, or Windows' own power menu "
+            f"(see {hostplatform.DOCS_HINT})"
+        )
 
 
 def _ok(done: subprocess.CompletedProcess) -> None:
@@ -23,12 +33,14 @@ def _ok(done: subprocess.CompletedProcess) -> None:
 
 
 def suspend() -> dict:
+    _refuse_on_wsl2("suspend")
     _ok(_run("systemctl", "suspend"))
     return {"suspending": True}
 
 
 def restart(minutes: int = 0) -> dict:
     """Restarts now, or in some minutes."""
+    _refuse_on_wsl2("restart")
     if int(minutes) > 0:
         _ok(_run("shutdown", "-r", f"+{int(minutes)}"))
         return {"restart_in_minutes": int(minutes)}
@@ -38,6 +50,7 @@ def restart(minutes: int = 0) -> dict:
 
 def shutdown(minutes: int = 0) -> dict:
     """Shuts down now, or in some minutes."""
+    _refuse_on_wsl2("shutdown")
     if int(minutes) > 0:
         _ok(_run("shutdown", "-h", f"+{int(minutes)}"))
         return {"shutdown_in_minutes": int(minutes)}
@@ -64,6 +77,7 @@ def scheduled() -> dict:
 
 def profile(mode: str = "") -> dict:
     """Reads or sets the power profile: power-saver, balanced or performance."""
+    _refuse_on_wsl2("power profiles")
     if mode:
         _ok(_run("powerprofilesctl", "set", mode))
     return {

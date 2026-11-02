@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+### Added
+
+- WSL2 support: `power_suspend`, `power_restart`, `power_shutdown` and `power_profile` refuse with
+  advice under WSL2, `desktop_lock` says there is no session to lock, and the volume tools say when
+  `wpctl` is missing. `HAL_TOOLS_OSRELEASE` fakes the kernel release in tests. New how-to:
+  `docs/howto/run-on-windows-with-wsl2.md`. A `wsl` CI job runs the hermetic suite.
+
 ### Changed
 
 - `jobs_mark`, `jobs_shortlist`, `jobs_todo_add` and `jobs_stats` mark their output untrusted, like
