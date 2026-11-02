@@ -31,6 +31,31 @@ class BriefingTest(unittest.TestCase):
         self.assertEqual(text.count("Good "), 1)
 
 
+class BriefCommandTest(unittest.TestCase):
+    # regression: the timers ran `brief kind=...`, which the pack command line did not know
+    def test_brief_command_delivers_the_named_kind(self):
+        from halbrief import __main__ as cli
+
+        with mock.patch.object(tools, "brief") as deliver:
+            self.assertEqual(cli.brief(["kind=jobs"]), 0)
+        deliver.assert_called_once_with("jobs")
+
+    def test_brief_command_rejects_an_unknown_kind(self):
+        from halbrief import __main__ as cli
+
+        with mock.patch.object(tools, "brief") as deliver:
+            self.assertEqual(cli.brief(["kind=lunch"]), 2)
+        deliver.assert_not_called()
+
+    def test_every_timer_starts_a_known_kind(self):
+        from halbrief import __main__ as cli
+
+        folder = Path(__file__).resolve().parents[1] / "src/halbrief/systemd"
+        for timer in folder.glob("hal-briefing-*.timer"):
+            kind = timer.read_text().split("hal-briefing@", 1)[1].split(".service", 1)[0]
+            self.assertIn(kind, cli.KINDS, timer.name)
+
+
 class TimerTest(unittest.TestCase):
     def test_morning_briefing_comes_after_quiet_hours(self):
         timer = (
