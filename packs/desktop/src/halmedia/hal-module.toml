@@ -4,8 +4,9 @@ schema = 2
 pack = "desktop"
 name = "media"
 summary = "Control any media player (Spotify, browser, VLC) and play local music"
-# PyGObject (D-Bus) lives in the system Python, so the hub runs this module there.
-exec = ["/usr/bin/python3", "-m", "halmedia", "--stdin"]
+# PyGObject (D-Bus) comes from the system Python: the pack's env is a system env
+# (`[tool.hal-pack] env = "system"`), which the hub runs this module in.
+python = "halmedia.tools"
 
 [[tools]]
 name = "media_status"

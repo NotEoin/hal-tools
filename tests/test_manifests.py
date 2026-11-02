@@ -79,3 +79,16 @@ def test_path_params_declare_format_and_access(path):
                 assert is_path, f"{tool.name}.{p.name} names a file but has no format = path"
             if is_path:
                 assert p.access in ("read", "write"), f"{tool.name}.{p.name} has no access"
+
+
+@pytest.mark.parametrize("path", MANIFESTS, ids=lambda p: p.parent.name)
+def test_exec_modules_run_on_their_packs_interpreter(path):
+    # regression: desktop modules ran /usr/bin/python3, which cannot import the pack or hal-hub
+    exec_argv = tomllib.loads(path.read_text())["module"].get("exec")
+    if exec_argv and exec_argv[0].endswith("python3"):
+        pytest.fail(f"{path}: exec runs {exec_argv[0]}, not the pack's {{python}}")
+
+
+def test_desktop_pack_env_sees_the_system_pygobject():
+    pyproject = tomllib.loads((ROOT / "packs/desktop/pyproject.toml").read_text())
+    assert pyproject["tool"]["hal-pack"]["env"] == "system"

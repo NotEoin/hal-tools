@@ -4,8 +4,9 @@ schema = 2
 pack = "desktop"
 name = "screen"
 summary = "Sees the screen with a local vision model: describe it, read its text, explain an error, look at images"
-# PyGObject (screenshots) lives in the system Python, so the hub runs this module there.
-exec = ["/usr/bin/python3", "-m", "halscreen", "--stdin"]
+# PyGObject (screenshots) comes from the system Python: the pack's env is a system env
+# (`[tool.hal-pack] env = "system"`), which the hub runs this module in.
+python = "halscreen.tools"
 
 [[tools]]
 name = "screen_describe"

@@ -15,6 +15,11 @@ screen = "halscreen"
 media = "halmedia"
 rgb = "halrgb"
 
+[tool.hal-pack]
+# PyGObject has no wheels and needs system headers to build, so the env is made with the system
+# python and its site packages (which hold `gi`), plus this pack and its dependencies
+env = "system"
+
 [build-system]
 requires = ["hatchling>=1.25,<2"]
 build-backend = "hatchling.build"
