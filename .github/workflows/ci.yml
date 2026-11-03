@@ -12,7 +12,7 @@ env:
   # Development sources of hal-kit and hal-hub (pyproject.toml, [tool.uv.sources]) are the
   # sibling directory ../Hal, as pyproject.toml expects.
   HAL_REPO: https://github.com/NotEoin/Hal.git
-  HAL_REF: main
+  HAL_REF: v0.1.0
 
 jobs:
   lint:
