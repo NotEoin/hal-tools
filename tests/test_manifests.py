@@ -92,3 +92,16 @@ def test_exec_modules_run_on_their_packs_interpreter(path):
 def test_desktop_pack_env_sees_the_system_pygobject():
     pyproject = tomllib.loads((ROOT / "packs/desktop/pyproject.toml").read_text())
     assert pyproject["tool"]["hal-pack"]["env"] == "system"
+
+
+# modules whose tools talk TCP to a daemon on 127.0.0.1; a worker without network has its own
+# loopback, so these must declare network (bubblewrap cannot open the host's loopback alone)
+LOCAL_DAEMON_MODULES = {"rgb": "OpenRGB SDK server on 127.0.0.1:6742"}
+
+
+@pytest.mark.parametrize("module", sorted(LOCAL_DAEMON_MODULES))
+def test_tools_that_reach_a_local_daemon_declare_network(module):
+    """Regression: every rgb tool failed with "SDK server is not running" under the sandbox."""
+    path = next(p for p in MANIFESTS if p.parent.name == f"hal{module}")
+    tools = load_manifest(path, source="path").tools
+    assert all(t.network for t in tools), LOCAL_DAEMON_MODULES[module]

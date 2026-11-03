@@ -11,6 +11,9 @@
 
 ### Fixed
 
+- The `rgb_*` tools declare network. They talk to OpenRGB's SDK server on 127.0.0.1:6742, and
+  a tool without network runs in its own network namespace under Hal's sandbox, so every call
+  failed with "OpenRGB's SDK server is not running" while it was.
 - The `hal-telegram` unit starts the bridge (`python -m haltelegram.cli`). Before, it ran
   `python -m haltelegram`, which printed the pack usage and restarted every 15 seconds.
 - `jobs_open` asks the desktop's OpenURI portal (over the session bus, with `gdbus`) to open Hal

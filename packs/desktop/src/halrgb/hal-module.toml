@@ -5,12 +5,15 @@ pack = "desktop"
 name = "rgb"
 summary = "RGB lighting through OpenRGB: colours, brightness, effects, profiles, and lights that show Hal's state"
 python = "halrgb.tools"
+# Every tool talks to OpenRGB's SDK server on 127.0.0.1:6742 over TCP. A tool without network runs
+# in its own network namespace, whose loopback is not the host's, so each one declares network.
 
 [[tools]]
 name = "rgb_colour"
 function = "colour"
 description = "Set the RGB lights (RAM, graphics card, motherboard, or all) to a colour such as red, warm white or #ff8800, at a brightness."
 tier = "act"
+network = true
 reviewable = true
 reversible = true
 keywords = "lights light lighting colour color rgb leds glow set make"
@@ -29,6 +32,7 @@ name = "rgb_off"
 function = "off"
 description = "Turn the RGB lights off."
 tier = "act"
+network = true
 reviewable = true
 reversible = true
 keywords = "lights off dark rgb"
@@ -39,6 +43,7 @@ name = "rgb_effect"
 function = "effect"
 description = "Switch the lights to a built-in effect such as rainbow, breathing or spectrum cycle."
 tier = "act"
+network = true
 reviewable = true
 reversible = true
 keywords = "rainbow breathing effect animation pattern lights"
@@ -51,6 +56,7 @@ name = "rgb_profiles"
 function = "profiles"
 description = "List the lighting profiles saved in OpenRGB."
 tier = "read"
+network = true
 reviewable = true
 reversible = true
 
@@ -59,6 +65,7 @@ name = "rgb_profile"
 function = "profile"
 description = "Load a lighting profile saved in OpenRGB."
 tier = "act"
+network = true
 reviewable = true
 reversible = true
 keywords = "lighting profile scene preset"
@@ -70,6 +77,7 @@ name = "rgb_devices"
 function = "devices"
 description = "List the RGB devices with their LEDs and effects."
 tier = "read"
+network = true
 reviewable = true
 reversible = true
 
@@ -78,6 +86,7 @@ name = "rgb_state"
 function = "state"
 description = "Show one of Hal's states on the lights: idle, listening, thinking, speaking or alert."
 tier = "act"
+network = true
 reviewable = true
 reversible = true
 [tools.params.state]
