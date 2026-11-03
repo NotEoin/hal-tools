@@ -8,7 +8,6 @@ Hal Employment, where every submit is pressed by the owner.
 from __future__ import annotations
 
 import os
-import subprocess
 from pathlib import Path
 
 from hal_jobs import proc
@@ -16,6 +15,7 @@ from hal_jobs import proc
 from .settings import jobhunt_root, settings
 
 SYSTEM_PYTHON = "/usr/bin/python3"
+PORTAL_TIMEOUT = 15  # seconds; the portal answers at once, or shows its app chooser and returns
 PACK_TIMEOUT = 1800  # seconds; drafting a pack runs the local model and searches the web
 
 
@@ -62,14 +62,41 @@ def status_counts() -> str:
 
 
 def open_employment() -> dict:
-    """Opens Hal Employment in the browser."""
-    subprocess.Popen(
-        ["gio", "open", "--", settings()["employment_url"]],
-        stdout=subprocess.DEVNULL,
-        stderr=subprocess.DEVNULL,
-        start_new_session=True,
-    )
-    return {"opened": settings()["employment_url"]}
+    """Opens Hal Employment in the browser, through the desktop's OpenURI portal.
+
+    Hal runs tools in a sandbox with its own process and network namespaces, so a browser
+    started from here (`gio open`, `xdg-open`) dies with the sandbox or cannot reach the app, and
+    `systemd-run --user` cannot reach the user manager. The portal is asked over the session bus
+    and launches the browser in the user's session instead. Raises when the portal refuses or is
+    missing, so Hal never reports a page it did not open.
+    """
+    url = settings()["employment_url"]
+    try:
+        done = proc.completed(
+            [
+                "gdbus",
+                "call",
+                "--session",
+                "--dest",
+                "org.freedesktop.portal.Desktop",
+                "--object-path",
+                "/org/freedesktop/portal/desktop",
+                "--method",
+                "org.freedesktop.portal.OpenURI.OpenURI",
+                "",
+                url,
+                "{}",
+            ],
+            timeout=PORTAL_TIMEOUT,
+        )
+    except OSError as exc:
+        raise RuntimeError(
+            f"could not open {url}: gdbus is missing ({exc}); open it in a browser"
+        ) from exc
+    if done.returncode:
+        detail = (done.stderr or done.stdout).strip()[-200:]
+        raise RuntimeError(f"the desktop did not open {url} ({detail}); open it in a browser")
+    return {"opened": url}
 
 
 def mark(job: str, status: str, note: str = "") -> str:

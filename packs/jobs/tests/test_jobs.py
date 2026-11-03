@@ -81,6 +81,32 @@ class ArgumentTest(Sandbox):
         self.assertEqual(seen[-1], str(python))
 
 
+class OpenTest(Sandbox):
+    # regression: `gio open` inside Hal's sandbox died with it, yet the tool reported success,
+    # so Hal said it had opened Hal Employment when nothing opened
+
+    def test_open_asks_the_desktop_portal_outside_the_sandbox(self):
+        fake = FakeJobhunt()
+        self.assertEqual(
+            self.run_with(fake, tools.open_employment), {"opened": "http://127.0.0.1:8737/"}
+        )
+        argv = fake.calls[0][0]  # the fake keeps what follows the first three words
+        self.assertIn("org.freedesktop.portal.OpenURI.OpenURI", argv)
+        self.assertIn("http://127.0.0.1:8737/", argv)
+
+    def test_a_refused_portal_is_an_error_not_a_claim_of_success(self):
+        fake = FakeJobhunt(returncode=1, stderr="No such interface")
+        with self.assertRaisesRegex(RuntimeError, "did not open http://127.0.0.1:8737/"):
+            self.run_with(fake, tools.open_employment)
+
+    def test_missing_gdbus_is_an_error_naming_the_url(self):
+        def missing(*args, **kwargs):
+            raise FileNotFoundError("gdbus")
+
+        with self.assertRaisesRegex(RuntimeError, "gdbus is missing"):
+            self.run_with(missing, tools.open_employment)
+
+
 class MarkTest(Sandbox):
     def test_unknown_status_is_refused(self):
         with self.assertRaises(ValueError):

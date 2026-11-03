@@ -9,6 +9,13 @@
   `wpctl` is missing. `HAL_TOOLS_OSRELEASE` fakes the kernel release in tests. New how-to:
   `docs/howto/run-on-windows-with-wsl2.md`. A `wsl` CI job runs the hermetic suite.
 
+### Fixed
+
+- `jobs_open` asks the desktop's OpenURI portal (over the session bus, with `gdbus`) to open Hal
+  Employment. Before, it started `gio open` inside Hal's tool sandbox, where the browser died with
+  the sandbox, and it reported success anyway. It now raises when the portal refuses or `gdbus`
+  is missing, naming the URL to open by hand.
+
 ### Changed
 
 - README lists requirements, install, run and test; example paths in the user pages no longer use a `Documents` folder.
