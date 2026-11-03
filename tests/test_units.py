@@ -80,7 +80,11 @@ def test_employment_launcher_without_jobhunt_root_exits_naming_the_setting(tmp_p
     config.write_text("[jobs]\n")
     launcher = PACKS / "jobs/src/haljobs/bin/hal-employment-serve"
     run = subprocess.run(
-        [str(launcher)], env={"HAL_CONFIG": str(config), "PATH": os.environ["PATH"]},
-        capture_output=True, text=True, timeout=30, check=False,
+        [str(launcher)],
+        env={"HAL_CONFIG": str(config), "PATH": os.environ["PATH"]},
+        capture_output=True,
+        text=True,
+        timeout=30,
+        check=False,
     )
     assert run.returncode == 1 and "[jobs].jobhunt_root is not set" in run.stderr
