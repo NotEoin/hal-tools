@@ -9,7 +9,7 @@ WorkingDirectory=@ROOT@
 # `hal` and `hal-voice` are found on PATH (uv tool installs them in ~/.local/bin).
 Environment=PYTHONUNBUFFERED=1
 Environment=PATH=%h/.local/bin:/usr/local/bin:/usr/bin:/bin
-ExecStart=@PYTHON@ -m haltelegram
+ExecStart=@PYTHON@ -m haltelegram.cli
 Restart=on-failure
 RestartSec=15
 

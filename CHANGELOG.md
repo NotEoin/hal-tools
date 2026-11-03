@@ -11,6 +11,8 @@
 
 ### Fixed
 
+- The `hal-telegram` unit starts the bridge (`python -m haltelegram.cli`). Before, it ran
+  `python -m haltelegram`, which printed the pack usage and restarted every 15 seconds.
 - `jobs_open` asks the desktop's OpenURI portal (over the session bus, with `gdbus`) to open Hal
   Employment. Before, it started `gio open` inside Hal's tool sandbox, where the browser died with
   the sandbox, and it reported success anyway. It now raises when the portal refuses or `gdbus`

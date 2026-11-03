@@ -1,6 +1,6 @@
 """Human-only Telegram commands, run as `hal-comms telegram` (never a tool).
 
-hal-comms telegram                run the bridge
+hal-comms telegram                run the bridge (the unit runs `python -m haltelegram.cli`)
 hal-comms telegram token TOKEN    save the bot token from @BotFather (owner-only file)
 hal-comms telegram status         whether a token is saved and a chat paired
 hal-comms telegram unpair         forget the paired chat; the next start shows a new code
@@ -54,3 +54,7 @@ def main(argv: list[str] | None = None) -> int:
         return 0
     print(__doc__, file=sys.stderr)
     return 2
+
+
+if __name__ == "__main__":
+    sys.exit(main())

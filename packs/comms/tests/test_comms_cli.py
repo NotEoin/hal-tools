@@ -34,3 +34,23 @@ def test_cli_refuses_private_function_names(capsys):
     assert hal_comms.main(["call", "mail__run"]) != 0
     assert hal_comms.main(["call", "--stdin", "_run"]) != 0
     assert "unknown_tool" in capsys.readouterr().err
+
+
+def test_telegram_unit_starts_the_bridge(monkeypatch):
+    """Regression: the unit ran `python -m haltelegram`, which printed usage and crash-looped."""
+    import runpy
+
+    import haltelegram.bridge
+
+    unit = Path(__file__).resolve().parents[1] / "src/haltelegram/systemd/hal-telegram.service"
+    lines = unit.read_text().splitlines()
+    exec_start = next(line for line in lines if line.startswith("ExecStart="))
+    _, flag, module, *args = exec_start.split()
+    assert flag == "-m"
+    started = []
+    monkeypatch.setattr(haltelegram.bridge, "run", lambda: started.append(True) or 0)
+    monkeypatch.setattr("sys.argv", [module, *args])
+    with pytest.raises(SystemExit) as done:
+        runpy.run_module(module, run_name="__main__", alter_sys=False)
+    assert done.value.code == 0
+    assert started == [True]
